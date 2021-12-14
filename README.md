@@ -1,8 +1,10 @@
-# InfVar
-- the working repo of the research project of density forecasts.
+# InfVar 
+
+- the working repo of the research project of density forecasts: How Do Agents Form Inflation Expectations? Evidence from the Forecast Uncertainty
 - Tao Wang
 - Johns Hopkins University 
 
+## [Most recent draft](/InfVar.pdf)
 ## Data 
 
 - for replication, one needs download following data and put them into the folder workingfolder/SurveyData/SCE/
