@@ -7,7 +7,7 @@
 ## [Most recent draft](/InfVar.pdf)
 ## Data 
 
-- for replication, one needs download following data and put them into the folder workingfolder/SurveyData/SCE/
+- for replication, one needs to download following data and put them into the folder workingfolder/SurveyData/SCE/
 - InfExpSCEProbIndM.dta: https://www.dropbox.com/s/25zly7fk4c9fbwf/InfExpSCEProbIndM.dta?dl=0 
 - NYFED_SCE_13_16.dta: https://www.dropbox.com/s/rqzo1ypb08no5by/NYFED_SCE_13_16.dta?dl=0 
 - NYFED_SCE_17_19.dta: https://www.dropbox.com/s/964vt24chjk3yxh/NYFED_SCE_17_19.dta?dl=0 
