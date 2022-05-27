@@ -8,8 +8,9 @@
 
 
 clear
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
+global big_data_folder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"
 
@@ -20,10 +21,9 @@ set more off
 
 *** import SCE xls to dta
 
-use "${folder}/SCE/NYFED_SCE_13_16.dta",clear
-
-append using "${folder}/SCE/NYFED_SCE_17_19.dta",force
-append using  "${folder}/SCE/NYFED_SCE_20.dta",force
+use "${big_data_folder}/SCE/NYFED_SCE_13_16.dta",clear
+append using "${big_data_folder}/SCE/NYFED_SCE_17_19.dta",force
+append using  "${big_data_folder}/SCE/NYFED_SCE_20.dta",force
 
 sort date
 unique userid
