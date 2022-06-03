@@ -6,7 +6,7 @@
 clear
 set more off 
 
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
 global surveyfolder "NYFEDSurvey"
 global otherdatafolder "OtherData"
