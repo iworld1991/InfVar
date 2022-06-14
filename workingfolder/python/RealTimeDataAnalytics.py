@@ -26,7 +26,6 @@ InfCPICMRT = InfCPICMRT[-InfCPICMRT.date.isnull()]
 InfCPIMRT=pd.read_stata('../OtherData/InfCPIMRealTime.dta')  
 InfCPIMRT = InfCPIMRT[-InfCPIMRT.date.isnull()]
 
-# # + {"code_folding": []}
 ## deal with dates = 
 dateM_cpic = pd.to_datetime(InfCPICMRT['date'],format='%Y%m%d')
 dateM_cpi  = pd.to_datetime(InfCPIMRT['date'],format='%Y%m%d')

@@ -6,9 +6,9 @@
 clear
 
 
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
-global folder "${mainfolder}/SurveyData/"
-global surveyfolder "NYFEDSurvey"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
+*global folder "${mainfolder}/SurveyData/"
+*global surveyfolder "NYFEDSurvey"
 global otherdatafolder "OtherData"
 global sum_graph_folder "${mainfolder}/${otherdatafolder}"
 
