@@ -4,7 +4,7 @@
 
 clear
 set more off
-global folder "/Users/Myworld/Dropbox/ExpProject/workingfolder/SurveyData"
+global folder "/Users/Myworld/Dropbox/InfVar/workingfolder/SurveyData"
 global datafolder "/SPF/individual"
 
 cd ${folder}/${datafolder}

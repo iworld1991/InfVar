@@ -8,7 +8,7 @@
 
 clear 
 set more off 
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
 global datafolder "${mainfolder}/SurveyData/SPF/individual"
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"

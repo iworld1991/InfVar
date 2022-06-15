@@ -5,8 +5,8 @@
 clear
 set more off
 
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
-global folder "/Users/Myworld/Dropbox/ExpProject/workingfolder/SurveyData"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
+global folder "/Users/Myworld/Dropbox/InfVar/workingfolder/SurveyData"
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"
 global datafolder "${folder}/SPF"
@@ -22,7 +22,7 @@ cd ${datafolder}
 
 
 foreach var in NGDP UNEMP CPI CORECPI PCE COREPCE CPI5YR PCE5YR CPI10 PCE10{
-import excel "${datafolder}/Dispersion.xlsx", sheet("`var'") cellrange(A10) firstrow clear 
+import excel "${datafolder}/Dispersion_1.xlsx", sheet("`var'") cellrange(A10) firstrow clear 
 save `var'.dta,replace 
 }
 

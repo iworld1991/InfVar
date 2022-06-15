@@ -3,30 +3,17 @@
 **  from SPF. It creats the InfExpSPFProbIndQ.dta file to be imported into DensEst.py
 **   for density and moment estimation. The output of that is InfExpSPFDstIndQ.dta."
 ** That data will be processed by the do file next to this. *********************
+*note: date SPFmicrodata is downloaded from https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/individual-forecasts
 ********************************************************************************* 
 
 clear 
 set more off 
-cd "/Users/Myworld/Dropbox/ExpProject/workingfolder/SurveyData/SPF/individual"
+cd "/Users/Myworld/Dropbox/InfVar/workingfolder/SurveyData/SPF/individual"
 
 /*
 foreach var in PRCCPI PRCPCE{
-forvalues i=1/5{
-   import excel "/Users/Myworld/Dropbox/ExpProject/workingfolder/SurveyData/SPF/individual/micro`i'.xlsx", sheet("`var'") firstrow clear 
-   save "`var'`i'.dta",replace 
-} 
-   use `var'1,clear
-   append using `var'2,force
-   rm "`var'2.dta"
-   append using `var'3,force
-   rm "`var'3.dta"
-   append using `var'4,force
-   rm "`var'4.dta"
-   append using `var'5,force
-   rm "`var'5.dta"
-   duplicates drop YEAR QUARTER ID INDUSTRY, force 
-   save `var',replace 
-   rm "`var'1.dta"
+   import excel "/Users/Myworld/Dropbox/InfVar/workingfolder/SurveyData/SPF/individual/SPFmicrodata.xlsx", sheet("`var'") firstrow clear 
+   save "`var'.dta",replace 
 }
 
 use PRCCPI, clear
@@ -92,4 +79,4 @@ label var `var'20 "prob `var' <0% from y to y+1(Q4 YoY)"
 
 save InfExpSPFProbIndQ,replace
 
-
+** need to estimated density first with this data, which generates InfExpSPFDstIndQ.dta

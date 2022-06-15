@@ -17,9 +17,17 @@ global sum_graph_folder "${mainfolder}/${otherdatafolder}"
 cd "${mainfolder}/${otherdatafolder}"
 
 import excel "${mainfolder}/${otherdatafolder}/RealTimeData/pcpiMvMd.xlsx", sheet("pcpi") firstrow
-foreach var in PCPI98M11-PCPI19M8{
+
+** get all variables that need to destring 
+quietly describe, varlist
+local vars `r(varlist)'
+local omit DATE
+local all_var : list vars - omit
+
+foreach var in `all_var'{
 destring `var', force replace 
 }
+
 
 gen year = substr(DATE,1,4)
 gen month = substr(DATE,6,2)
@@ -39,7 +47,14 @@ save InfCPIMRealTime,replace
 clear
 import excel "${mainfolder}/${otherdatafolder}/RealTimeData/pcpixMvMd.xlsx", sheet("pcpix") firstrow
 
-foreach var in PCPIX98M11-PCPIX19M8{
+
+** get all variables that need to destring 
+quietly describe, varlist
+local vars `r(varlist)'
+local omit DATE
+local all_var : list vars - omit
+
+foreach var in `all_var'{
 destring `var', force replace 
 }
 

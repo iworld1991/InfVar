@@ -365,7 +365,7 @@ foreach mom in mean var{
 
 save "${folder}/SCE/InfExpSCEProbIndM",replace 
 
-/*
+
 ***************************************
 **   Histograms of Moments  ***********
 ** Maybe replaced by kernel desntiy **
