@@ -1,6 +1,8 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
+global shadowfolder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
+
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"
 
@@ -20,13 +22,13 @@ log using "${mainfolder}/pop_log",replace
 
 use "${folder}/SCE/InfExpSCEProbPopM",clear 
 
-merge 1:1 year month using "${mainfolder}/OtherData/RecessionDateM.dta", keep(match)
+merge 1:1 year month using "${mainfolder}/OtherData/RecessionDateM.dta", keep(match master)
 rename _merge  recession_merge
 
 merge 1:1 year month using "${mainfolder}/OtherData/InfM.dta",keep(match using master)
 rename _merge inflation_merge 
 
-merge 1:1 year month using "${folder}/MichiganSurvey/InfExpMichM.dta"
+merge 1:1 year month using "${shadowfolder}/MichiganSurvey/InfExpMichM.dta"
 rename inf_exp InfExpMichMed 
 rename _merge michigan_merge 
 
@@ -82,7 +84,7 @@ label var SPFPCE_FE "1-yr-ahead forecast error(SPF PCE)"
 *****************************
 
 
-/*
+
 **************************
 ** Single series charts **
 **************************
@@ -93,7 +95,7 @@ foreach var in Q9_mean Q9_var Q9_iqr Q9_cent50 Q9_disg ///
 			   CPI_ct50 PCE_ct50 CORECPI_ct50 COREPCE_ct50{
 local var_lb: var label `var'
 tsline `var' if `var'!=.,title("`var_lb'") xtitle("Time") ytitle("")
-graph export "${sum_graph_folder}/`var'", as(png) replace 
+graph export "${sum_graph_folder}/`var'.png", as(png) replace 
 }
 
 
@@ -111,14 +113,14 @@ twoway (tsline Q9_mean)  (tsline Q9_cent50,lp("dash")) ///
 						 xtitle("Time") ytitle("") ///
 						 legend(label(1 "Mean Expectation(SCE)") label(2 "Median Expectation(SCE)") ///
 						        label(3 "Median Expectation(Michigan)") label(4 "Mean Expectation(SPF)"))
-graph export "${sum_graph_folder}/mean_med", as(png) replace
+graph export "${sum_graph_folder}/mean_med.png", as(png) replace
 
 twoway (tsline Q9_mean, ytitle(" ",axis(1))) ///
        (tsline Q9_var,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if Q9_mean!=., ///
 	   title("1-yr-ahead Expected Inflation (SCE)") xtitle("Time") ///
 	   legend(label(1 "Average Expectation") label(2 "Average Uncertainty(RHS)"))
-graph export "${sum_graph_folder}/mean_var", as(png) replace 
+graph export "${sum_graph_folder}/mean_var.png", as(png) replace 
 
 
 
@@ -127,7 +129,7 @@ twoway (tsline Q9_mean, ytitle(" ",axis(1))) ///
 	   if Q9_mean!=., ///
 	   title("1-yr-ahead Expected Inflation") xtitle("Time") ///
 	   legend(label(1 "Average Expectation") label(2 "Disagreements(RHS)"))
-graph export "${sum_graph_folder}/mean_disg", as(png) replace 
+graph export "${sum_graph_folder}/mean_disg.png", as(png) replace 
 
 
 twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
@@ -135,7 +137,7 @@ twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
 	   if CORECPI_disg!=., ///
 	   title("Disagreements in 1-yr-ahead Inflation") xtitle("Time") ///
 	   legend(label(1 "Disagreements (SCE)") label(2 "Disagreements(SPF)(RHS)"))
-graph export "${sum_graph_folder}/disg_disg", as(png) replace 
+graph export "${sum_graph_folder}/disg_disg.png", as(png) replace 
 
 
 twoway (tsline Q9_var, ytitle(" ",axis(1))) ///
@@ -145,8 +147,7 @@ twoway (tsline Q9_var, ytitle(" ",axis(1))) ///
 	   legend(label(1 "Uncertainty (SCE)")  /// 
 	          label(2 "Uncertainty (SPF CPI)(RHS)")) 
 			  
-graph export "${sum_graph_folder}/var_var", as(png) replace 
-
+graph export "${sum_graph_folder}/var_var.png", as(png) replace 
 
 
 
@@ -155,28 +156,28 @@ twoway (tsline CORECPI_disg, ytitle(" ",axis(1))) ///
 	   if Q9_disg!=., ///
 	   title("1-yr-ahead Expected Inflation(SPF)") xtitle("Time") ///
 	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
-graph export "${sum_graph_folder}/var_disg2", as(png) replace 
+graph export "${sum_graph_folder}/var_disg2.png", as(png) replace 
 
 
 twoway (tsline Q9_mean) (tsline CORECPI1y,lp("longdash")) ///
-       (tsline Inf1yf_PCEPI,lp("dash")) ///
+       (tsline Inf1yf_PCE,lp("dash")) ///
        (tsline Inf1yf_CPIAU,lp("shortdash")) ///
 	   (tsline Inf1yf_CPICore,lp("dash_dot")) ///
 	   if Q9_mean!=., ///
 	   title("1-yr-ahead Expected Inflation") xtitle("Time") ytitle("") ///
 	   legend(label(1 "Mean Forecast(SCE)") label(2 "Mean Forecast(SPF)") label(3 "Realized Inflation(PCE)") ///
 	          label(4 "Realized Inflation(Headline CPI)") label(5 "Realized Inflation(Core CPI)"))
-graph export "${sum_graph_folder}/mean_true", as(png) replace
+graph export "${sum_graph_folder}/mean_true.png", as(png) replace
 
 
-twoway (tsline Q9_mean)  (tsline Inf1y_PCEPI,lp("dash")) ///
+twoway (tsline Q9_mean)  (tsline Inf1yf_PCE,lp("dash")) ///
        (tsline Inf1y_CPIAU,lp("shortdash")) ///
 	   (tsline Inf1y_CPICore,lp("dash_dot")) ///
 	   if Q9_mean!=., ///
 	   title("1-yr-ahead Expected Inflation") xtitle("Time") ytitle("") ///
 	   legend(label(1 "Mean Expectation") label(2 "Past Inflation(PCE)") ///
 	          label(3 "Past Inflation(Headline CPI)") label(4 "Past Inflation(Core CPI)"))
-graph export "${sum_graph_folder}/mean_past", as(png) replace
+graph export "${sum_graph_folder}/mean_past.png", as(png) replace
 
 
 twoway (tsline SCE_FE,ytitle("",axis(1)))  (tsline SPFCPI_FE, yaxis(2) lp("dash")) ///
@@ -186,7 +187,7 @@ twoway (tsline SCE_FE,ytitle("",axis(1)))  (tsline SPFCPI_FE, yaxis(2) lp("dash"
 						 xtitle("Time") ytitle("") ///
 						 legend(label(1 "SCE") label(2 "SPF CPI(RHS)") ///
 						 label(3 "SPF PCE(RHS)"))
-graph export "${sum_graph_folder}/fe_fe", as(png) replace
+graph export "${sum_graph_folder}/fe_fe.png", as(png) replace
 
 
 
@@ -196,7 +197,7 @@ twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
 	   if Q9_disg!=., ///
 	   title("1-yr-ahead Expected Inflation(SCE)") xtitle("Time") ///
 	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
-graph export "${sum_graph_folder}/var_disgSCEM", as(png) replace 
+graph export "${sum_graph_folder}/var_disgSCEM.png", as(png) replace 
 
 
 twoway (tsline SCE_FE, ytitle(" ",axis(1))) ///
@@ -204,7 +205,7 @@ twoway (tsline SCE_FE, ytitle(" ",axis(1))) ///
 	   if Q9_var!=., ///
 	   title("1-yr-ahead Expected Inflation(SCE)") xtitle("Time") ///
 	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)")) 
-graph export "${sum_graph_folder}/fe_varSCEM", as(png) replace
+graph export "${sum_graph_folder}/fe_varSCEM.png", as(png) replace
 
 pwcorr Inf1yf_CPIAU Q9_var, star(0.05)
 local rho: display %4.2f r(rho) 
@@ -216,7 +217,7 @@ twoway (tsline Inf1yf_CPIAU,ytitle(" ",axis(1))lp("shortdash") lwidth(thick)) //
 	          label(2 "Average Uncertainty(RHS)") size(sml)) ///
 	   caption("{superscript:Corr Coeff: `rho'}", ///
 	   justification(left) position(11) size(large))
-graph export "${sum_graph_folder}/true_varSCEM", as(png) replace 
+graph export "${sum_graph_folder}/true_varSCEM.png", as(png) replace 
 */
 
 ***********************************************************************************
@@ -247,7 +248,7 @@ twoway (tsline `var',ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
 	   legend(size(large) col(1)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
 	   justification(left) position(11) size(large))
-graph export "${sum_graph_folder}/`var'_varSCEM", as(png) replace
+graph export "${sum_graph_folder}/`var'_varSCEM.png", as(png) replace
 }
 
 
@@ -259,7 +260,7 @@ twoway (tsline Q9_varp25, ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
 	   title("SCE") xtitle("Time") ///
 	   legend(label(1 "25 percentile of uncertainty") label(2 "75 percentile of uncertainty") ///
 	          label(3 "50 percentile of uncertainty") col(1)) 
-graph export "${sum_graph_folder}/IQRvarSCEM", as(png) replace 
+graph export "${sum_graph_folder}/IQRvarSCEM.png", as(png) replace 
 
 
 
@@ -270,7 +271,7 @@ twoway (tsline Q9_meanp25, ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) //
 	   title("SCE") xtitle("Time") ///
 	   legend(label(1 "25 percentile of forecast") label(2 "75 percentile of forecast") ///
 	          label(3 "50 percentile of forecast") col(1)) 
-graph export "${sum_graph_folder}/IQRmeanSCEM", as(png) replace 
+graph export "${sum_graph_folder}/IQRmeanSCEM.png", as(png) replace 
 */
 
 
@@ -464,7 +465,7 @@ foreach mom in Mean Var{
 
 
 
-/*
+
 *******************************************************
 **** Autoregression on the levels of population moments
 ********************************************************
@@ -539,7 +540,7 @@ foreach mom in FE{
 }
 
 **********************************************
-*** Revision Efficiency Test Using FE       **
+*** Forecast Error Efficiency Test      **
 **********************************************
 
 foreach mom in FE{
@@ -549,9 +550,10 @@ foreach mom in FE{
    eststo `var'_`mom'_lag6: reg  InfExp_`mom' l(6/8).InfExp_Mean, robust
    eststo `var'_`mom'_arlag712: reg  InfExp_`mom' l(6/12).InfExp_`mom', robust
    eststo `var'_`mom'_arlag12: reg  InfExp_`mom' l(12).InfExp_`mom', robust
+   eststo `var'_`mom'_lag12: reg  InfExp_`mom' l(12).InfExp_Mean, robust
  }
 }
-esttab using "${sum_table_folder}/FEEfficiencySCEM.csv", mtitles drop(_cons) se(%8.3f) scalars(N r2 ar2)  replace
+esttab using "${sum_table_folder}/FEEfficiencySCEM.csv", mtitles se(%8.3f) scalars(N r2 ar2)  replace
 */
 
 ***************************************************
@@ -593,7 +595,8 @@ esttab using "${sum_table_folder}/RVEfficiencySCEM.csv", mtitles b(%8.3f) se(%8.
 
 foreach mom in Var{
    foreach var in SCE{
-    ttest `var'_`mom'_rv =0
+   replace InfExp_`mom'_rv =  `var'_`mom' - l12.`var'_`mom'1
+   ttest InfExp_`mom'_rv =0
  }
 }
 

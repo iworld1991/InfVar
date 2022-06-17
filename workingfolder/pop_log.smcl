@@ -1,0 +1,207 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}/Users/Myworld/Dropbox/InfVar/workingfolder/pop_log.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}15 Jun 2022, 22:24:05
+{txt}
+{com}. 
+. ****************************************
+. **** Population Moments Analysis ******
+. ****************************************
+. 
+. ***********************
+. **   Merge other data**
+. ***********************
+. 
+. use "${c -(}folder{c )-}/SCE/InfExpSCEProbPopM",clear 
+{txt}
+{com}. 
+. merge 1:1 year month using "${c -(}mainfolder{c )-}/OtherData/RecessionDateM.dta", keep(match master)
+{res}{txt}{p 0 7 2}
+(note: variable
+year was 
+int, now float to accommodate using data's values)
+{p_end}
+{p 0 7 2}
+(note: variable
+month was 
+byte, now float to accommodate using data's values)
+{p_end}
+
+{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}              35
+{txt}{col 9}from master{col 30}{res}              35{txt}  (_merge==1)
+{col 9}from using{col 30}{res}               0{txt}  (_merge==2)
+
+{col 5}matched{col 30}{res}              63{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}. rename _merge  recession_merge
+{res}{txt}
+{com}. 
+. merge 1:1 year month using "${c -(}mainfolder{c )-}/OtherData/InfM.dta",keep(match using master)
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}             807
+{txt}{col 9}from master{col 30}{res}               0{txt}  (_merge==1)
+{col 9}from using{col 30}{res}             807{txt}  (_merge==2)
+
+{col 5}matched{col 30}{res}              98{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}. rename _merge inflation_merge 
+{res}{txt}
+{com}. 
+. merge 1:1 year month using "${c -(}shadowfolder{c )-}/MichiganSurvey/InfExpMichM.dta"
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}             201
+{txt}{col 9}from master{col 30}{res}             201{txt}  (_merge==1)
+{col 9}from using{col 30}{res}               0{txt}  (_merge==2)
+
+{col 5}matched{col 30}{res}             704{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}. rename inf_exp InfExpMichMed 
+{res}{txt}
+{com}. rename _merge michigan_merge 
+{res}{txt}
+{com}. 
+. ***********************************************
+. ** create quarter variable to match with spf
+. *********************************************
+. 
+. gen quarter = .
+{txt}(905 missing values generated)
+
+{com}. replace quarter=1 if month<4 & month >=1
+{txt}(228 real changes made)
+
+{com}. replace quarter=2 if month<7 & month >=4
+{txt}(227 real changes made)
+
+{com}. replace quarter=3 if month<10 & month >=7
+{txt}(225 real changes made)
+
+{com}. replace quarter=4 if month<=12 & month >=10
+{txt}(225 real changes made)
+
+{com}. 
+. merge m:1 year quarter using "${c -(}folder{c )-}/SPF/individual/InfExpSPFPointPopQ.dta",keep(match using master)
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}             262
+{txt}{col 9}from master{col 30}{res}             261{txt}  (_merge==1)
+{col 9}from using{col 30}{res}               1{txt}  (_merge==2)
+
+{col 5}matched{col 30}{res}             644{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}. rename _merge spf_merge 
+{res}{txt}
+{com}. 
+. 
+. merge m:1 year quarter using "${c -(}folder{c )-}/SPF/InfExpSPFDstPopQ.dta",keep(match using master)
+{res}{txt}{p 0 7 2}
+(note: variable
+year was 
+float, now double to accommodate using data's values)
+{p_end}
+{p 0 7 2}
+(note: variable
+quarter was 
+float, now double to accommodate using data's values)
+{p_end}
+
+{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}             720
+{txt}{col 9}from master{col 30}{res}             720{txt}  (_merge==1)
+{col 9}from using{col 30}{res}               0{txt}  (_merge==2)
+
+{col 5}matched{col 30}{res}             186{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}. rename _merge spf_dst_merge 
+{res}{txt}
+{com}. 
+. 
+. *************************
+. ** Declare time series **
+. **************************
+. 
+. gen date2=string(year)+"m"+string(month)
+{txt}
+{com}. gen date3= monthly(date2,"YM")
+{txt}(1 missing value generated)
+
+{com}. format date3 %tm 
+{txt}
+{com}. 
+. drop date2 date 
+{txt}
+{com}. rename date3 date
+{res}{txt}
+{com}. 
+. tsset date
+{res}{txt}{col 9}time variable:  {res}{col 25}date, 1947m1 to 2022m5
+{txt}{col 17}delta:  {res}1 month
+{txt}
+{com}. sort year quarter month 
+{txt}
+{com}. 
+. 
+. ******************************
+. *** Computing some measures **
+. ******************************
+. 
+. gen SCE_FE = Q9_mean - Inf1yf_CPIAU
+{txt}(810 missing values generated)
+
+{com}. label var SCE_FE "1-yr-ahead forecast error"
+{txt}
+{com}. 
+. gen SPFCPI_FE = CORECPI1y - Inf1yf_CPICore
+{txt}(733 missing values generated)
+
+{com}. label var SPFCPI_FE "1-yr-ahead forecast error(SPF CPI)"
+{txt}
+{com}. 
+. gen SPFPCE_FE = COREPCE1y - Inf1yf_PCECore
+{txt}(734 missing values generated)
+
+{com}. label var SPFPCE_FE "1-yr-ahead forecast error(SPF PCE)"
+{txt}
+{com}. 
+. 
+. *****************************
+. ****    Summary Charts ******
+. *****************************
+. 
+. 
+. 
+. **************************
+. ** Single series charts **
+. **************************
+. 
+. foreach var in Q9_mean Q9_var Q9_iqr Q9_cent50 Q9_disg ///
+>                CPI1y PCE1y CORECPI1y COREPCE1y ///
+>                            CPI_disg PCE_disg CORECPI_disg COREPCE_disg ///
+>                            CPI_ct50 PCE_ct50 CORECPI_ct50 COREPCE_ct50{c -(}
+{txt}  2{com}. local var_lb: var label `var'
+{txt}  3{com}. tsline `var' if `var'!=.,title("`var_lb'") xtitle("Time") ytitle("")
+{txt}  4{com}. graph export "${c -(}sum_graph_folder{c )-}/`var'.png", as(png) replace 
+{txt}  5{com}. {c )-}
+{res}{txt}(file /Users/Myworld/Dropbox/InfVar/workingfolder/graphs/pop/Q9_mean.png written in PNG format)
+{res}{txt}(file /Users/Myworld/Dropbox/InfVar/workingfolder/graphs/pop/Q9_var.png written in PNG format)
+{res}{txt}(file /Users/Myworld/Dropbox/InfVar/workingfolder/graphs/pop/Q9_iqr.png written in PNG format)
+{res}{txt}(file /Users/Myworld/Dropbox/InfVar/workingfolder/graphs/pop/Q9_cent50.png written in PNG format)
+{res}{txt}(file /Users/Myworld/Dropbox/InfVar/workingfolder/graphs/pop/Q9_disg.png written in PNG format)
+{res}{txt}(file /Users/Myworld/Dropbox/InfVar/workingfolder/graphs/pop/CPI1y.png written in PNG format)
+{res}{txt}(file /Users/Myworld/Dropbox/InfVar/workingfolder/graphs/pop/PCE1y.png written in PNG format)
+{res}

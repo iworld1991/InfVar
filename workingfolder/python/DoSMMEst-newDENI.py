@@ -2424,7 +2424,7 @@ def Objseniar_joint(paras):
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
 
-# + code_folding=[117]
+# + code_folding=[1]
 @jitclass(model_data)
 class DENIHybridAR:
     def __init__(self,
@@ -2846,75 +2846,55 @@ denisv0.GetRealization(xx_realized)
 
 # #### Real-time Inflation data
 
-# + code_folding=[0]
-## CPI Core
-InfCPICMRT=pd.read_stata('../OtherData/InfCPICMRealTime.dta')  
-InfCPICMRT = InfCPICMRT[-InfCPICMRT.date.isnull()]
+# + code_folding=[]
+import pandas as pd
+real_time_index = pd.read_excel('../OtherData/RealTimeData/RealTimeInfQ.xlsx')
 
-## CPI 
-InfCPIMRT=pd.read_stata('../OtherData/InfCPIMRealTime.dta')  
-InfCPIMRT = InfCPIMRT[-InfCPIMRT.date.isnull()]
-
-## dealing with dates 
-dateM_cpic = pd.to_datetime(InfCPICMRT['date'],format='%Y%m%d')
-dateM_cpi = pd.to_datetime(InfCPIMRT['date'],format='%Y%m%d')
-
-InfCPICMRT.index = pd.DatetimeIndex(dateM_cpic,freq='infer')
-InfCPIMRT.index = pd.DatetimeIndex(dateM_cpi,freq='infer')
-
-
-# + code_folding=[0]
-## a function that turns vintage matrix to a one-dimension vector of real time data
-def GetRealTimeData(matrix):
-    periods = len(matrix)
-    real_time = np.zeros(periods)
-    for i in range(periods):
-        real_time[i] = matrix.iloc[i,i+1]
-    return real_time
-
-
-## generate real-time series 
-matrix_cpic = InfCPICMRT.copy().drop(columns=['date','year','month'])
-matrix_cpi = InfCPIMRT.copy().drop(columns=['date','year','month'])
-
-real_time_cpic = pd.Series(GetRealTimeData(matrix_cpic) )
-real_time_cpi =  pd.Series(GetRealTimeData(matrix_cpi) ) 
-real_time_cpic.index =  InfCPICMRT.index #+ pd.DateOffset(months=1) 
-real_time_cpi.index = InfCPIMRT.index #+ pd.DateOffset(months=1)
+real_time_index.index = pd.to_datetime(real_time_index['DATE'],format='%Y%m%d')
+real_time_index = real_time_index.drop(columns=['DATE'])
 
 ## turn index into yearly inflation
-real_time_index = pd.concat([real_time_cpic,real_time_cpi], join='inner', axis=1)
+#real_time_index = pd.concat([real_time_cpic,real_time_cpi], join='inner', axis=1)
 real_time_index.columns=['RTCPI','RTCPICore']
 real_time_inf = real_time_index.pct_change(periods=12)*100
+real_time_inf = real_time_inf.dropna()
 # -
 
 # #### Inflation data 
 
-# + code_folding=[0]
-#################
-### quarterly ###
-#################
-
-InfQ = pd.read_stata('../OtherData/InfShocksQClean.dta')
-InfQ = InfQ[-InfQ.date.isnull()]
-dateQ2 = pd.to_datetime(InfQ['date'],format='%Y%m%d')
-dateQ_str2 = dateQ2 .dt.year.astype(int).astype(str) + \
-             "Q" + dateQ2 .dt.quarter.astype(int).astype(str)
-InfQ.index = pd.DatetimeIndex(dateQ_str2,freq='infer')
-InfQ = InfQ[['Inf1y_CPICore',
-            'Inf1yf_CPICore']].dropna()
+# + code_folding=[]
 ###############
 ## monthly ### 
-###############
+##############
 
-## inflation data monthly
-InfM = pd.read_stata('../OtherData/InfShocksMClean.dta')
+InfM = pd.read_stata('../OtherData/InfM.dta')
 InfM = InfM[-InfM.date.isnull()]
 dateM = pd.to_datetime(InfM['date'],format='%Y%m%d')
-#dateM_str = dateM .dt.year.astype(int).astype(str) + \
-#             "M" + dateM .dt.month.astype(int).astype(str)
+dateM_str = dateM .dt.year.astype(int).astype(str) + \
+             "M" + dateM .dt.month.astype(int).astype(str)
 InfM.index = pd.DatetimeIndex(dateM,freq='infer')
+
+###############
+## quarterly ##
+###############
+
+InfQ = InfM.resample('Q').last()
+dateQ = pd.to_datetime(InfQ['date'],format='%Y%m%d')
+
+dateQ_str = dateQ.dt.year.astype(int).astype(str) + \
+             "Q" + dateQ.dt.quarter.astype(int).astype(str)
+
+InfQ.index = pd.DatetimeIndex(dateQ_str,freq='infer')
+
+
+###########################
+#keep only needed variables 
+############################
+
 InfM = InfM['Inf1yf_CPIAU'].dropna()
+
+InfQ = InfQ[['Inf1y_CPICore',
+            'Inf1yf_CPICore']].dropna()
 # -
 
 # #### Expectation data
@@ -3044,7 +3024,7 @@ print(sigmaM_est)
 
 # #### Data moments 
 
-# + code_folding=[]
+# + code_folding=[0]
 #####################################
 ## preparing data moments
 #####################################

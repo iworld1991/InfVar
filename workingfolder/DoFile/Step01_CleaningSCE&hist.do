@@ -393,7 +393,7 @@ label var Q9c_mean "2-yr-ahead forecast of inflation"
     twoway (kdensity `var'_`mom' if `var'_`mom'!=.,lcolor(red) lwidth(thick) ), ///
 	       by(year,title("Distribution of `lb'",size(med)) note("")) xtitle("Mean forecast") ///
 		   ytitle("Fraction of population")
-	graph export "${sum_graph_folder}/hist/`var'`mom'_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'_hist.png", as(png) replace 
 }
 }
 
@@ -410,7 +410,7 @@ foreach var in SCE{
     twoway (kdensity `var'_`mom' if `var'_`mom'!=.,lcolor(blue) lwidth(thick)), ///
 	       by(year,title("Distribution of `lb'",size(med)) note("")) xtitle("Uncertainty") ///
 		   ytitle("Fraction of population")
-	graph export "${sum_graph_folder}/hist/`var'`mom'_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'_hist.png", as(png) replace 
 }
 }
 
@@ -427,7 +427,7 @@ foreach var in SCE{
 	       by(year,title("Distribution of Mean Forecast",size(med)) note("")) xtitle("Mean forecast") ///
 		   ytitle("Fraction of population") ///
 		   legend(label(1 "1-year-ahead") label(2 "2-year-ahead") col(1))
-	graph export "${sum_graph_folder}/hist/`var'`mom'01_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'01_hist.png", as(png) replace 
 }
 }
 
@@ -442,7 +442,7 @@ foreach var in SCE{
 	       by(year,title("Distribution of Uncertainty",size(med)) note("")) xtitle("Uncertainty") ///
 		   ytitle("Fraction of population") ///
 		   legend(label(1 "1-year-ahead") label(2 "2-year-ahead")  col(1))
-	graph export "${sum_graph_folder}/hist/`var'`mom'01_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'01_hist.png", as(png) replace 
 }
 }
 

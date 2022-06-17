@@ -175,7 +175,7 @@ foreach mom in Var {
 label var PRCCPIMean1 "forecast of CPI"
 label var PRCPCEMean1 "forecast of PCE"
 
-/*
+png)
 ** These are charts for paper draft.
 foreach mom in Mean{
    foreach var in PRCCPI PRCPCE{
@@ -184,7 +184,7 @@ foreach mom in Mean{
 	       xline(0) ///
 	       by(year,title("Distribution of revision in `lb'") note("")) ytitle("Fraction of population") ///
 		   xtitle("Revision in mean forecast")
-	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_true_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_true_hist.png", as(png) replace 
  }
 }
 
@@ -199,7 +199,7 @@ foreach mom in Var{
 	       xline(0) ///
 	       by(year,title("Distribution of revision in `lb'") note("")) ytitle("Fraction of population") ///
 		   xtitle("Revision in uncertainty")
-	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_true_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_true_hist.png", as(png) replace 
  }
 }
 
@@ -213,7 +213,7 @@ foreach mom in Mean{
 	       by(year,title("Distribution of `lb'") note("")) ytitle("Fraction of population") ///
 		   xtitle("Mean forecast") ///
 		   note("") 
-	graph export "${sum_graph_folder}/hist/`var'`mom'1_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'1_hist.png", as(png) replace 
  }
 }
 
@@ -224,7 +224,7 @@ foreach mom in Var{
 	       by(year,title("Distribution of `lb'") note("")) ytitle("Fraction of population") ///
 		   xtitle("Uncertainty") ///
 		   note("")
-	graph export "${sum_graph_folder}/hist/`var'`mom'1_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'1_hist.png", as(png) replace 
  }
 }
 
@@ -237,7 +237,7 @@ foreach mom in Var{
 		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
 	       by(year,title("Distribution of `lb'")) ytitle("Fraction of population") ///
 		   xtitle("Revision in uncertainty")
-	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_hist.png", as(png) replace 
  }
 }
 
@@ -249,7 +249,7 @@ foreach mom in Mean{
 	       (kdensity `var'`mom'f0, n(50) lpattern(dash) fcolor(ltblue)), ///
 		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
 	       by(year,title("Distribution of `lb'")) ytitle("Fraction of population")
-	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_hist.png", as(png) replace 
  }
 }
 
@@ -262,7 +262,7 @@ foreach mom in Mean{
 	       (histogram `var'`mom'1,bin(10) fcolor(none) lcolor(red)), by(year,title("Distribution of `lb'")) ///
 		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
 		   xtitle("Mean forecast")
-	graph export "${sum_graph_folder}/hist/`var'`mom'_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'_hist.png", as(png) replace 
  }
 }
 
@@ -274,7 +274,7 @@ foreach mom in Var{
 	       (histogram `var'`mom'1,bin(20) fcolor(none) lcolor(red)), by(year,title("Distribution of `lb'")) ///
 		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
 		   xtitle("Uncertainty") 
-	graph export "${sum_graph_folder}/hist/`var'`mom'_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'_hist.png", as(png) replace 
  }
 }
 
@@ -287,7 +287,7 @@ foreach mom in Var{
     twoway (kdensity  `var'`mom'0, n(30)) ///
 	       (kdensity `var'`mom'1, n(30) fcolor(ltblue)), by(year,title("Distribution of `lb'")) ///
 		   legend(order(1 "Nowcasting" 2 "Forecasting" ))
-	graph export "${sum_graph_folder}/hist/`var'`mom'_hist", as(png) replace 
+	graph export "${sum_graph_folder}/hist/`var'`mom'_hist.png", as(png) replace 
  }
 }
 */

@@ -1,6 +1,7 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
+global shadowfolder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"
 
@@ -20,13 +21,13 @@ log using "${mainfolder}/pop_log",replace
 
 use "${folder}/SCE/InfExpSCEProbPopM",clear 
 
-merge 1:1 year month using "${mainfolder}/OtherData/RecessionDateM.dta", keep(match)
+merge 1:1 year month using "${mainfolder}/OtherData/RecessionDateM.dta", keep(match master)
 rename _merge  recession_merge
 
 merge 1:1 year month using "${mainfolder}/OtherData/InfM.dta",keep(match using master)
 rename _merge inflation_merge 
 
-merge 1:1 year month using "${folder}/MichiganSurvey/InfExpMichM.dta"
+merge 1:1 year month using "${shadowfolder}/MichiganSurvey/InfExpMichM.dta"
 rename inf_exp InfExpMichMed 
 rename _merge michigan_merge 
 
@@ -153,7 +154,7 @@ sort year quarter
 
 order date year quarter 
 
-/*
+
 ********************************************************
 *** Multiple series charts Quarterly (Moments Only)  ***
 ********************************************************
@@ -168,7 +169,7 @@ twoway (tsline Q9_mean) (tsline InfExpMichMed, lp("dash_dot")) ///
 						        label(2 "Median Expectation(Michigan)") ///
 								label(3 "Mean Expectation CPI (SPF)") ///
 								label(4 "Mean Expectation PCE (SPF)") col(1))
-graph export "${sum_graph_folder}/mean_medQ", as(png) replace
+graph export "${sum_graph_folder}/mean_medQ.png", as(png) replace
 
 
 twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
@@ -176,7 +177,7 @@ twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
 	   if CORECPI_disg!=., ///
 	   title("Disagreements in 1-yr-ahead Inflation") xtitle("Time") ///
 	   legend(label(1 "Disagreements (SCE)") label(2 "Disagreements(SPF)(RHS)"))
-graph export "${sum_graph_folder}/disg_disgQ", as(png) replace 
+graph export "${sum_graph_folder}/disg_disgQ.png", as(png) replace 
 
 
 twoway (tsline Q9_var, ytitle(" ",axis(1)) lp("solid") ) ///
@@ -188,7 +189,7 @@ twoway (tsline Q9_var, ytitle(" ",axis(1)) lp("solid") ) ///
 	          label(2 "Uncertainty (SPF CPI)(RHS)") ///
 			  label(3 "Uncertainty (SPF PCE)(RHS)") col(1)) 
 			  
-graph export "${sum_graph_folder}/var_varQ", as(png) replace 
+graph export "${sum_graph_folder}/var_varQ.png", as(png) replace 
 
 
 twoway (tsline SCE_FE)  (tsline SPFCPI_FE, yaxis(2) lp("dash")) ///
@@ -198,7 +199,7 @@ twoway (tsline SCE_FE)  (tsline SPFCPI_FE, yaxis(2) lp("dash")) ///
 						 xtitle("Time") ytitle("") ///
 						 legend(col(1) label(1 "SCE") label(2 "SPF CPI (RHS)") ///
 						                label(3 "SPF PCE(RHS)"))
-graph export "${sum_graph_folder}/fe_feQ", as(png) replace
+graph export "${sum_graph_folder}/fe_feQ.png", as(png) replace
 
 
 
@@ -207,7 +208,7 @@ twoway (tsline SPFCPI_FE, ytitle(" ",axis(1))) ///
 	   if PRCCPIVar1mean!=., ///
 	   title("1-yr-ahead Expected Inflation (SPF CPI)") xtitle("Time") ///
 	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)"))
-graph export "${sum_graph_folder}/fe_varSPFSPIQ", as(png) replace 
+graph export "${sum_graph_folder}/fe_varSPFSPIQ.png", as(png) replace 
 
 
 twoway (tsline SPFPCE_FE, ytitle(" ",axis(1))) ///
@@ -215,7 +216,7 @@ twoway (tsline SPFPCE_FE, ytitle(" ",axis(1))) ///
 	   if PRCPCEVar1mean!=., ///
 	   title("1-yr-ahead Expected Inflation (SPF PCE)") xtitle("Time") ///
 	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)"))
-graph export "${sum_graph_folder}/fe_varSPFPCEQ", as(png) replace 
+graph export "${sum_graph_folder}/fe_varSPFPCEQ.png", as(png) replace 
 
 
 
@@ -224,7 +225,7 @@ twoway (tsline CPI_disg, ytitle(" ",axis(1))) ///
 	   if PRCCPIVar1mean!=., ///
 	   title("1-yr-ahead Expected Inflation(SPF CPI)") xtitle("Time") ///
 	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
-graph export "${sum_graph_folder}/var_disgSPFCPIQ", as(png) replace 
+graph export "${sum_graph_folder}/var_disgSPFCPIQ.png", as(png) replace 
 
 
 twoway (tsline PCE_disg, ytitle(" ",axis(1))) ///
@@ -232,10 +233,10 @@ twoway (tsline PCE_disg, ytitle(" ",axis(1))) ///
 	   if PRCPCEVar1mean!=., ///
 	   title("1-yr-ahead Expected Inflation(SPF PCE)") xtitle("Time") ///
 	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
-graph export "${sum_graph_folder}/var_disgSPFPCEQ", as(png) replace 
+graph export "${sum_graph_folder}/var_disgSPFPCEQ.png", as(png) replace 
 */
 
-/*
+
 *****************************************
 ** These are the charts for paper draft 
 ****************************************
@@ -247,7 +248,7 @@ twoway (tsline PRCCPIMean1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash"
 	   title("SPF(CPI)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of forecast") label(2 "75 pctile of forecast") ///
 	          label(3 "50 pctile of forecast") col(1)) 
-graph export "${sum_graph_folder}/IQRmeanCPIQ", as(png) replace 
+graph export "${sum_graph_folder}/IQRmeanCPIQ.png", as(png) replace 
 
 
 twoway (tsline PRCPCEMean1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash")) ///
@@ -257,7 +258,7 @@ twoway (tsline PRCPCEMean1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash"
 	   title("SPF(PCE)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of forecast") label(2 "75 pctile of forecast") ///
 	          label(3 "50 pctile of forecast") col(1)) 
-graph export "${sum_graph_folder}/IQRmeanPCEQ", as(png) replace 
+graph export "${sum_graph_folder}/IQRmeanPCEQ.png", as(png) replace 
 
 
 twoway (tsline PRCCPIVar1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash")) ///
@@ -267,7 +268,7 @@ twoway (tsline PRCCPIVar1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash")
 	   title("SPF(CPI)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of uncertainty") label(2 "75 pctile of uncertainty") ///
 	          label(3 "50 pctile of uncertainty") col(1)) 
-graph export "${sum_graph_folder}/IQRvarCPIQ", as(png) replace 
+graph export "${sum_graph_folder}/IQRvarCPIQ.png", as(png) replace 
 
 
 twoway (tsline PRCPCEVar1p25, ytitle(" ",axis(1)) lwidth(thick) lp("shortdash")) ///
@@ -277,7 +278,7 @@ twoway (tsline PRCPCEVar1p25, ytitle(" ",axis(1)) lwidth(thick) lp("shortdash"))
 	   title("SPF(PCE)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of uncertainty") label(2 "75 pctile of uncertainty") ///
 	          label(3 "50 pctile of uncertainty") col(1)) 
-graph export "${sum_graph_folder}/IQRvarPCEQ", as(png) replace 
+graph export "${sum_graph_folder}/IQRvarPCEQ.png", as(png) replace 
 
 
 
@@ -317,7 +318,7 @@ twoway (tsline `var',ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
 	   legend(size(large) col(1)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
 	   justification(left) position(11) size(vlarge))
-graph export "${sum_graph_folder}/`var'_varSPFCPIQ", as(png) replace
+graph export "${sum_graph_folder}/`var'_varSPFCPIQ.png", as(png) replace
 }
 
 foreach var in Inf1yf_PCECore SPFPCE_abFE COREPCE_disg{
@@ -330,7 +331,7 @@ twoway (tsline `var',ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
 	   legend(size(large) col(1)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
 	   justification(left) position(11) size(vlarge))
-graph export "${sum_graph_folder}/`var'_varSPFPCEQ", as(png) replace
+graph export "${sum_graph_folder}/`var'_varSPFPCEQ.png", as(png) replace
 }
 
 */
@@ -460,7 +461,7 @@ gen InfExp_Var0 =.
 
 ******************************
 
-/*
+
 *******************************************************
 **** Autoregression on the levels of population moments
 ********************************************************
@@ -525,14 +526,6 @@ foreach mom in FE{
 }
 }
 
-
-gen const=1
-
-foreach mom in FE{
-   foreach var in SPFCPI SPFPCE{
-      
-}
-}
 
 
 

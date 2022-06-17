@@ -1,5 +1,5 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
 global sum_graph_folder "${mainfolder}/graphs/ind"
 global sum_table_folder "${mainfolder}/tables"
@@ -152,14 +152,20 @@ foreach mom in FE{
    foreach var in SPFCPI SPFPCE{
    replace InfExp_Mean = `var'_Mean
    replace InfExp_`mom' = `var'_`mom'
-   eststo `var'_`mom'_bias: reg InfExp_`mom',robust 
-   eststo `var'_`mom'_lag4: reg  InfExp_`mom' l(4).InfExp_Mean, robust
-   eststo `var'_`mom'_arlag4: reg InfExp_`mom' l(4).InfExp_`mom',robust
-   eststo `var'_`mom'_arlag13: reg  InfExp_`mom' l(1/3).InfExp_`mom', robust
+   eststo `var'_`mom'_bias: reg InfExp_`mom' i.date,robust 
+   estadd local hast "Yes",replace
+   
+   eststo `var'_`mom'_lag4: reg  InfExp_`mom' l(4).InfExp_Mean i.date, robust
+   estadd local hast "Yes",replace
+   eststo `var'_`mom'_arlag4: reg InfExp_`mom' l(4).InfExp_`mom' i.date,robust
+   estadd local hast "Yes",replace
+   eststo `var'_`mom'_arlag13: reg  InfExp_`mom' l(1/3).InfExp_`mom' i.date, robust
+   estadd local hast "Yes",replace
 
  }
 }
-esttab using "${sum_table_folder}/ind/FEEfficiencySPFIndQ.csv", mtitles se(%8.3f) scalars(N r2) replace
+esttab using "${sum_table_folder}/ind/FEEfficiencySPFIndQ.csv", mtitles se(%8.3f) ///
+           stats(N r2 hast,label("N" "R2" "Time FE")) drop(*.date) replace
 
 ***************************************************
 *** Revision Efficiency Test Using Mean Revision **
@@ -234,7 +240,7 @@ foreach var in SPFCPI SPFPCE{
 esttab using "${sum_table_folder}/ind/ChEfficiencySPFIndQ.csv", mtitles b(%8.3f) se(%8.3f) scalars(N r2) sfmt(%8.3f %8.3f %8.3f) replace
 
 
-/*
+
 *****************************************
 ***  Revesion Efficiency test on level **
 *****************************************
@@ -345,7 +351,7 @@ foreach mom in FE{
 						 xrescale note("")) legend(col(2) /// 
 						 order(1 "95% CI" 2 "IRF") symx(*.5) size(vsmall))  ///
 						 xtitle("Quarters") 
-   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_shocks_nmp", as(png) replace
+   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_shocks_nmp.png", as(png) replace
    
    * MP shocks plots
    capture irf graph dm, set(`mom') impulse(mp1ut_shock ED8ut_shock) ///
@@ -353,7 +359,7 @@ foreach mom in FE{
 						 xrescale note("")) legend(col(2) /// 
 						 order(1 "95% CI" 2 "IRF") symx(*.5) size(vsmall))  ///
 						 xtitle("Quarters") 
-   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_mpshocks", as(png) replace
+   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_mpshocks.png", as(png) replace
    
 }
 
@@ -379,7 +385,7 @@ foreach mom in Var{
 						 xrescale note("")) legend(col(2) /// 
 						 order(1 "95% CI" 2 "IRF") symx(*.5) size(vsmall))  ///
 						 xtitle("Quarters") 
-   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_ab_ashocks_nmp", as(png) replace
+   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_ab_ashocks_nmp.png", as(png) replace
    
    * Non-MP shocks 
    capture irf graph dm, set(`mom') impulse(mp1ut_abshock ED8ut_abshock) ///
@@ -387,7 +393,7 @@ foreach mom in Var{
 						 xrescale note("")) legend(col(2) /// 
 						 order(1 "95% CI" 2 "IRF") symx(*.5) size(vsmall))  ///
 						 xtitle("Quarters") 
-   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_ab_mpshocks", as(png) replace
+   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_ab_mpshocks.png", as(png) replace
 }
 */
 

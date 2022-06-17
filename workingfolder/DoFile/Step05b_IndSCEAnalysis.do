@@ -1,6 +1,7 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/ExpProject/workingfolder"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
+global shadowfolder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
 global sum_graph_folder "${mainfolder}/graphs/ind"
 global sum_table_folder "${mainfolder}/tables"
 
@@ -15,7 +16,7 @@ log using "${mainfolder}/indSCE_log",replace
 **  Clean and Merge Data **
 ***************************
 
-use "${folder}/SCE/InfExpSCEProbIndM",clear 
+use "${shadowfolder}/SCE/InfExpSCEProbIndM",clear 
 
 duplicates report year month userid
 
@@ -277,7 +278,7 @@ foreach mom in FE{
 						 xrescale note("")) legend(col(2) /// 
 						 order(1 "95% CI" 2 "IRF") symx(*.5) size(vsmall))  ///
 						 xtitle("Quarters") 
-   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_shocks_nmp", as(png) replace
+   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_shocks_nmp.png", as(png) replace
    
    * MP shocks plots
    capture irf graph dm, set(`mom') impulse(mp1ut_shock ED8ut_shock) ///
@@ -285,7 +286,7 @@ foreach mom in FE{
 						 xrescale note("")) legend(col(2) /// 
 						 order(1 "95% CI" 2 "IRF") symx(*.5) size(vsmall))  ///
 						 xtitle("Quarters") 
-   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_mpshocks", as(png) replace
+   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_mpshocks.png", as(png) replace
    
 }
 
@@ -310,7 +311,7 @@ foreach mom in Var{
 						 xrescale note("")) legend(col(2) /// 
 						 order(1 "95% CI" 2 "IRF") symx(*.5) size(vsmall))  ///
 						 xtitle("Quarters") 
-   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_ab_ashocks_nmp", as(png) replace
+   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_ab_ashocks_nmp.png", as(png) replace
    
    * Non-MP shocks 
    capture irf graph dm, set(`mom') impulse(mp1ut_abshock ED8ut_abshock) ///
@@ -318,7 +319,7 @@ foreach mom in Var{
 						 xrescale note("")) legend(col(2) /// 
 						 order(1 "95% CI" 2 "IRF") symx(*.5) size(vsmall))  ///
 						 xtitle("Quarters") 
-   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_ab_mpshocks", as(png) replace
+   capture graph export "${sum_graph_folder}/irf/moments/SPF`mom'_ab_mpshocks.png", as(png) replace
 }
 */
 
