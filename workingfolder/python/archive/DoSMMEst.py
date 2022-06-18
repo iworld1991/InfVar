@@ -16,7 +16,7 @@
 
 # ## SMM Estimation of Theories of Expectation Formation with Inflation Expectation
 #
-# - The codes are organized in following ways
+# - The code is organized in following ways
 #
 #   1. Each pair of a theory of expectation formation (re, se, ni, de, denim etc) and an assumed process of inflation process (ar1 or sv)  are encapsulated in a specific python class. 
 #     - the class initializes corresponding parameters of the inflation process and expectation formation 
@@ -40,6 +40,10 @@ from statsmodels.tsa.api import AutoReg as AR
 import copy as cp
 
 pd.options.display.float_format = '{:,.2f}'.format
+
+plt.style.use('ggplot')
+
+lw = 4
 
 
 # -
@@ -1008,7 +1012,7 @@ def Objsear_joint(paras):
 # ### Noisy Information (NI) + AR1
 #
 
-# + code_folding=[]
+# + code_folding=[1]
 @njit
 def SteadyStateVar(process_para,
                    exp_para):
@@ -1022,13 +1026,7 @@ def SteadyStateVar(process_para,
     return nowcast_var_ss
 
 
-# -
-
-SteadyStateVar(np.array([0.9,0.1]),
-              np.array([0.0,0.2]))
-
-
-# + code_folding=[2, 14, 18, 117, 151]
+# + code_folding=[1, 2, 14, 18, 117, 151]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -2424,7 +2422,7 @@ def Objseniar_joint(paras):
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
 
-# + code_folding=[1]
+# + code_folding=[1, 117]
 @jitclass(model_data)
 class DENIHybridAR:
     def __init__(self,
@@ -2456,7 +2454,7 @@ class DENIHybridAR:
         
         ## parameters 
         ρ,σ = self.process_para
-        theta,sigma_pr = self.exp_para
+        theta,sigma_pb,sigma_pr = self.exp_para
 
         #######################
         ## using uncertainty at steady state of the Kalman filtering
@@ -2769,7 +2767,7 @@ class DENIHybridSV:
                       'VarATV':VarATV_sim}
         return SMMMoments
 
-# + code_folding=[]
+# + code_folding=[0]
 ## intialize the ar instance 
 deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.4,0.3]),
                        process_para = np.array([ρ0,σ0]),
@@ -2862,7 +2860,7 @@ real_time_inf = real_time_inf.dropna()
 
 # #### Inflation data 
 
-# + code_folding=[]
+# +
 ###############
 ## monthly ### 
 ##############
@@ -2891,15 +2889,16 @@ InfQ.index = pd.DatetimeIndex(dateQ_str,freq='infer')
 #keep only needed variables 
 ############################
 
-InfM = InfM['Inf1yf_CPIAU'].dropna()
+InfM = InfM[['Inf1y_CPIAU',
+            'Inf1yf_CPIAU']]
 
 InfQ = InfQ[['Inf1y_CPICore',
-            'Inf1yf_CPICore']].dropna()
+            'Inf1yf_CPICore']]
 # -
 
 # #### Expectation data
 
-# + code_folding=[0]
+# + code_folding=[]
 ## expectation data from SPF 
 
 PopQ = pd.read_stata('../SurveyData/InfExpQ.dta')  
@@ -2919,14 +2918,20 @@ dateM_str = dateM.dt.year.astype(int).astype(str) + \
 PopM.index = pd.DatetimeIndex(dateM)
 SCECPI = PopM[['SCE_Mean','SCE_FE','SCE_Disg','SCE_Var',
               'SCE_Mean_rd','SCE_FE_rd','SCE_Disg_rd','SCE_Var_rd']].dropna(how='any')
-# -
 
-SCECPI.mean()
+# +
+print('SCE:\n')
+print(SCECPI.mean())
+
+print('\n')
+
+print('SPF:\n')
+print(SPFCPI.mean())
 
 # + code_folding=[]
 ## Combine expectation data and real-time data 
 
-SPF_est= pd.concat([SPFCPI,
+SPF_est = pd.concat([SPFCPI,
                     real_time_inf,
                     InfQ], join='inner', axis=1)
 SCE_est = pd.concat([SCECPI,
@@ -2936,11 +2941,11 @@ SCE_est = pd.concat([SCECPI,
 
 # #### History data 
 
-# + code_folding=[0]
+# + code_folding=[]
 ## process parameters estimation AR1 
 # period filter 
 start_t='1995-01-01'
-end_t = '2019-03-30'   
+end_t = '2022-06-30'   
 
 ######################
 ### quarterly data ##
@@ -2952,7 +2957,7 @@ CPICQ = InfQ['Inf1y_CPICore'].copy().loc[start_t:end_t]
 ### monthly data ##
 ###################
 
-CPIM = InfM.copy().loc[start_t:end_t]
+CPIM = InfM['Inf1y_CPIAU'].copy().loc[start_t:end_t]
 
 # + code_folding=[]
 ## hisotries data, the series ends at the same dates with real-time data but startes earlier 
@@ -2985,13 +2990,10 @@ realized_CPI = np.array(SCE_est['Inf1yf_CPIAU'])
 
 # #### AR1 parameters 
 
-# + code_folding=[0]
+# + code_folding=[]
 ######################
 ### quarterly data ##
 #####################
-
-#Y = np.array(CPICQ[4:])
-#X = np.array(CPICQ[:-4])
 
 CPICQ_demean = CPICQ
 
@@ -3024,7 +3026,7 @@ print(sigmaM_est)
 
 # #### Data moments 
 
-# + code_folding=[0]
+# + code_folding=[]
 #####################################
 ## preparing data moments
 #####################################
@@ -3153,7 +3155,7 @@ print(dict(data_moms_dct_SCE))
 
 # ### Data moments
 
-# + code_folding=[0]
+# + code_folding=[]
 ## real time and history 
 
 ################
@@ -3178,8 +3180,6 @@ process_paraM_est_ar = np.array([rhoM_est,
 # #### SV  parameters and data  
 
 # + code_folding=[0]
-## process parameters estimation for SV 
-
 ################
 ## quarterly ##
 ################
@@ -3188,12 +3188,6 @@ process_paraM_est_ar = np.array([rhoM_est,
 ### exporting inflation series for process estimation using UCSV model in matlab
 
 CPICQ.to_excel("../OtherData/CPICQ.xlsx")  ## this is for matlab estimation of UCSV model
-
-### import the estimated results 
-CPICQ_UCSV_Est = pd.read_excel('../OtherData/UCSVestQ.xlsx',
-                               header = None)  
-CPICQ_UCSV_Est.columns = ['sd_p_est','sd_t_est','p']  ## Loading ucsv model estimates 
-
 
 ################
 ## monthly ####
@@ -3204,13 +3198,80 @@ CPICQ_UCSV_Est.columns = ['sd_p_est','sd_t_est','p']  ## Loading ucsv model esti
 ### exporting monthly inflation series for process estimation using UCSV model in matlab
 CPIM.to_excel("../OtherData/CPIM.xlsx")  ## this is for matlab estimation of UCSV model
 
+##########################################################################
+##########################################################################
+##########################################################################
+## use matlab code stockwatson.m to estimate UCSV model before moving on!
+##########################################################################
+##########################################################################
+##########################################################################
+##########################################################################
+
+
+## process parameters estimation for SV 
+
+################
+## quarterly ##
+################
+
 ### import the estimated results 
-CPIM_UCSV_Est = pd.read_excel('../OtherData/UCSVestM.xlsx',header=None)  
-CPIM_UCSV_Est.columns = ['sd_p_est','sd_t_est','p']  ## Loading ucsv model estimates 
+CPICQ_UCSV_Est = pd.read_excel('../OtherData/UCSVestQ.xlsx')  
+CPICQ_UCSV_Est.index = pd.to_datetime(CPICQ_UCSV_Est['date'],format='%Y%m%d')
+CPICQ_UCSV_Est = CPICQ_UCSV_Est.drop(columns=['date'])
+CPICQ_UCSV_Est = CPICQ_UCSV_Est.rename(columns = {'sd_eps':'sd_p_est',
+                                      'sd_eta':'sd_t_est',
+                                      'tau':'p'})  ## Loading ucsv model estimates 
+
+
+
+################
+## monthly ####
+################
+
+### import the estimated results 
+CPIM_UCSV_Est = pd.read_excel('../OtherData/UCSVestM.xlsx')  
+CPIM_UCSV_Est.index =pd.to_datetime(CPIM_UCSV_Est['date'],format='%Y%m%d')
+CPIM_UCSV_Est = CPIM_UCSV_Est.drop(columns=['date'])
+CPIM_UCSV_Est = CPIM_UCSV_Est.rename(columns = {'sd_eps':'sd_p_est',
+                                                'sd_eta':'sd_t_est',
+                                                'tau':'p'})  ## Loading ucsv model estimates 
 
 ########################################################################################
 ## be careful with the order, I define eta as the permanent and eps to be the tansitory 
  ######################################################################################
+    
+
+### quarterly plot 
+
+plt.figure(figsize=(10,5))
+plt.plot(CPICQ_UCSV_Est['sd_p_est'],
+         'r--',
+          lw = lw,
+         label='permanent volitility')
+plt.plot(CPICQ_UCSV_Est['sd_t_est'],
+         'k-.',
+         lw = lw,
+         label='transitory volitility')
+plt.title('Estimated Stochastic Volatility of Core CPI Inflation')
+plt.ylabel('std')
+plt.legend(loc=1)
+plt.savefig('../graphs/inflation/UCSVQ.png')
+    
+### monthly plot 
+
+plt.figure(figsize=(10,5))
+plt.plot(CPIM_UCSV_Est['sd_p_est'],
+         'r--',
+          lw = lw,
+         label='permanent volitility')
+plt.plot(CPIM_UCSV_Est['sd_t_est'],
+         'k-.',
+         lw = lw,
+         label='transitory volitility')
+plt.title('Estimated Stochastic Volatility of CPI Inflation')
+plt.ylabel('std')
+plt.legend(loc=1)
+plt.savefig('../graphs/inflation/UCSVM.png')
 
 # + code_folding=[0]
 #########################################################
@@ -3291,7 +3352,7 @@ process_paraM_est_sv = np.array([0.2])
 
 # ### Estimation 
 
-# + code_folding=[4, 11, 23, 33, 60, 63, 68, 71, 76, 88, 99, 108, 116, 126, 136, 147, 151, 156, 161, 167, 186, 229, 287]
+# + code_folding=[4, 11, 23, 33, 51, 60, 63, 68, 71, 76, 82, 88, 99, 108, 116, 126, 136, 147, 151, 156, 161, 167, 186, 229, 287]
 agents_list = ['SPF','SCE']
 
 process_list = ['AR','SV']
@@ -3793,7 +3854,7 @@ for agent_id,agent in enumerate(agents_list):
                     smm_this = {}
                     smm_joint_list.append(smm_this)
 
-# + code_folding=[1]
+# + code_folding=[]
 ## model moments 
 smm_model = pd.DataFrame(smm_list,
                          columns = list(smm_list[0].keys()),
