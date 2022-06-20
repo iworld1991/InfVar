@@ -18,4 +18,8 @@
 
 - [Python](/workingfolder/python)
   - [SMM estimation](/workingfolder/python/DoSMMEst.ipynb), which imports model classes from 
-     - [Model Class](/workingfolder/python/SMMEst.ipynb)
+     - [Model Class](/workingfolder/python/SMMEst.ipynb), which tests if each model could correctly identify model parameters using various moments. 
+
+```python
+
+```
