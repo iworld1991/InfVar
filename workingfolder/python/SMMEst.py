@@ -18,7 +18,7 @@
 #
 # - The code is organized in following ways
 #
-#   1. Each pair of a theory of expectation formation (re, se, ni, de, denim etc) and an assumed process of inflation process (ar1 or sv)  are encapsulated in a specific python class. 
+#   1. Each pair of a theory of expectation formation (re, se, ni, de, deni etc) and an assumed process of inflation process (ar1 or sv)  are encapsulated in a specific python class.
 #     - the class initializes corresponding parameters of the inflation process and expectation formation 
 #     - and embodies a specific function that generates all the simulated moments of both inflation and expectations 
 #     
@@ -30,9 +30,6 @@ import numpy as np
 from scipy.optimize import minimize
 from numba import njit, float64, int64
 from numba.experimental import jitclass
-import pandas as pd
-lw = 4
-pd.options.display.float_format = '{:,.2f}'.format
 
 
 # ## Model 
@@ -258,6 +255,45 @@ def ParaEst(ObjSpec,
     return parameter 
 
 
+# + code_folding=[0, 3]
+### Some jitted functions that are needed (https://github.com/numba/numba/issues/1269)
+
+@njit
+def np_apply_along_axis(func1d, axis, arr):
+    assert arr.ndim == 2
+    assert axis in [0, 1]
+    if axis == 0:
+        result = np.empty(arr.shape[1])
+        for i in range(len(result)):
+            result[i] = func1d(arr[:, i])
+    else:
+        result = np.empty(arr.shape[0])
+        for i in range(len(result)):
+            result[i] = func1d(arr[i, :])
+    return result
+
+@njit
+def np_mean(array, axis):
+    return np_apply_along_axis(np.mean, axis, array)
+
+@njit
+def np_std(array, axis):
+    return np_apply_along_axis(np.std, axis, array)
+
+@njit
+def np_var(array, axis):
+    return np_apply_along_axis(np.var, axis, array)
+
+@njit
+def np_max(array, axis):
+    return np_apply_along_axis(np.max, axis, array)
+
+
+@njit
+def np_min(array, axis):
+    return np_apply_along_axis(np.min, axis, array)
+
+
 # -
 
 # ### Rational Expectation (RE) + AR1
@@ -273,7 +309,7 @@ model_data = [
 ]
 
 
-# + code_folding=[2, 14, 18, 34, 39, 73]
+# + code_folding=[1, 2, 14, 18, 34, 39, 73]
 @jitclass(model_data)
 class RationalExpectationAR:
     def __init__(self,
@@ -362,6 +398,95 @@ class RationalExpectationAR:
         return SMMMoments
 
 
+# -
+
+# ### Some simulated data 
+#
+# - Creating some simulated inflation data following AR1 and UCSV process separately 
+
+# + code_folding=[0]
+if __name__ == "__main__":
+       
+    ## first, simulate some AR1 inflation with known parameters 
+    ρ0,σ0 = 0.95,0.1
+    history0 = SimAR1(ρ0,
+                      σ0,
+                      200)
+    real_time0 = history0[11:-2] 
+    realized0 = history0[12:-1]
+
+# + code_folding=[0]
+if __name__ == "__main__":
+    ### create a RESV instance 
+
+    p0_fake = 0
+    γ_fake = 0.1
+    σs_now_fake = [0.2,0.3]
+
+    ucsv_fake = SimUCSV(γ_fake,
+                        nobs = 200,
+                        p0 = p0_fake,
+                        ) 
+
+    xx_real_time,xx_p_real_time,vol_p_real_time,vol_t_real_time = ucsv_fake  
+
+    xx_realized = xx_real_time[1:-1]
+
+    xx_real_time= np.array([xx_real_time,
+                            xx_p_real_time,
+                            vol_p_real_time,
+                            vol_t_real_time]
+                          )[:,0:-2]
+# -
+
+# #### Estimation the parameters of the inflation process jointly using both inflation and rational expectation forecasts
+#
+# - For instance, the example below shows that how ATV of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
+#
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+
+
+    ## initialize an re instance 
+    rear0 = RationalExpectationAR(exp_para = np.array([]),
+                                  process_para = np.array([ρ0,σ0]),
+                                  real_time = real_time0,
+                                  history = history0,
+                                  horizon = 1)
+    
+    rear0.GetRealization(realized0) 
+
+
+    ## fake data moments dictionary 
+    data_mom_dict_re = rear0.SMM()
+
+    ## specific objective function for estimation 
+    moments0 = [#'InfAV',
+               #'InfVar',
+               'InfATV'] ## helps identify rho
+    
+    moments1 = ['FE', ## 
+                'Var'] ## helps identify sigma
+
+    ## specific objective function 
+    def Objrear(paras):
+        scalor = ObjGen(rear0,
+                        paras= paras,
+                        data_mom_dict = data_mom_dict_re,
+                        moment_choice = moments1,
+                        how = 'joint')
+        return scalor
+    
+    ## invoke estimation
+
+    est = ParaEst(Objrear,
+            para_guess = (0.5,0.2))
+    
+    print('True parameters: ',str(np.array([ρ0,σ0])))
+    print('Estimates: ',str(est))
+    
 # -
 
 # ### Rational Expectation (RE) + SV
@@ -477,144 +602,23 @@ class RationalExpectationSV:
         return SMMMoments
 
 
-# + code_folding=[0, 7]
+# + code_folding=[0]
 if __name__ == "__main__":
     ### create a RESV instance 
-
-    p0_fake = 0
-    γ_fake = 0.1
-    σs_now_fake = [0.2,0.3]
-
-    ucsv_fake = SimUCSV(γ_fake,
-                        nobs = 200,
-                        p0 = p0_fake,
-                        ) 
-
-    xx_real_time,xx_p_real_time,vol_p_real_time,vol_t_real_time = ucsv_fake  
-
-    xx_realized = xx_real_time[1:-1]
-
-    xx_real_time= np.array([xx_real_time,
-                            xx_p_real_time,
-                            vol_p_real_time,
-                            vol_t_real_time]
-                          )[:,0:-2]
-
-
-    ## initialize 
     resv = RationalExpectationSV(exp_para = np.array([]),
                                  process_para = np.array([0.1]),
                                  real_time = xx_real_time,
                                  history = xx_real_time) ## history does not matter here, 
 
     ## get the realization 
-
     resv.GetRealization(xx_realized)
-# -
-
-# #### Estimation inflation only 
-
-# + code_folding=[0, 17, 32]
-if __name__ == "__main__":
-
-
-    ## generate an instance of the model
-
-    ρ0,σ0 = 0.95,0.1
-
-    history0 = SimAR1(ρ0,
-                      σ0,
-                      200)
-    real_time0 = history0[11:-2]
-
-    realized0 = history0[12:-1]
-
-
-    ## initialize an re instance 
-
-    rear0 = RationalExpectationAR(exp_para = np.array([]),
-                                  process_para = np.array([ρ0,σ0]),
-                                  real_time = real_time0,
-                                  history = history0,
-                                  horizon = 1)
-
-    rear0.GetRealization(realized0)
-
-
-    ## fake data moments dictionary 
-
-    data_mom_dict_re = rear0.SMM()
-
-
-    ## specific objective function for estimation 
-    moments0 = ['InfAV',
-               'InfVar',
-               'InfATV']
-
-
-    ## specific objective function 
-
-    def Objrear(paras):
-        scalor = ObjGen(rear0,
-                        paras= paras,
-                        data_mom_dict = data_mom_dict_re,
-                        moment_choice = moments0,
-                        how = 'process')
-        return scalor
-
-# + code_folding=[]
-##if __name__ == "__main__":
-    ## invoke estimation
-
-    #ParaEst(Objrear,
-    #        para_guess = (0.8,0.1)
-    #       )
 
 
 # -
 
 # ### Sticky Expectation (SE) + AR1
 
-# + code_folding=[3]
-### Some jitted functions that are needed (https://github.com/numba/numba/issues/1269)
-
-@njit
-def np_apply_along_axis(func1d, axis, arr):
-    assert arr.ndim == 2
-    assert axis in [0, 1]
-    if axis == 0:
-        result = np.empty(arr.shape[1])
-        for i in range(len(result)):
-            result[i] = func1d(arr[:, i])
-    else:
-        result = np.empty(arr.shape[0])
-        for i in range(len(result)):
-            result[i] = func1d(arr[i, :])
-    return result
-
-@njit
-def np_mean(array, axis):
-    return np_apply_along_axis(np.mean, axis, array)
-
-@njit
-def np_std(array, axis):
-    return np_apply_along_axis(np.std, axis, array)
-
-@njit
-def np_var(array, axis):
-    return np_apply_along_axis(np.var, axis, array)
-
-@njit
-def np_max(array, axis):
-    return np_apply_along_axis(np.max, axis, array)
-
-
-@njit
-def np_min(array, axis):
-    return np_apply_along_axis(np.min, axis, array)
-
-
-# + code_folding=[2, 18, 81]
+# + code_folding=[1, 2, 18, 81]
 @jitclass(model_data)
 class StickyExpectationAR:
     def __init__(self,
@@ -745,11 +749,133 @@ class StickyExpectationAR:
         return SMMMoments
 
 
+# + code_folding=[0]
+if __name__ == "__main__":
+
+
+    ## initialize the ar instance 
+    sear0 = StickyExpectationAR(exp_para = np.array([0.2]),
+                                process_para = np.array([ρ0,σ0]),
+                                real_time = real_time0,
+                                history = history0,
+                                horizon = 1)
+
+    sear0.GetRealization(realized0)
+# -
+
+# #### Estimating SE with RE 
+#
+# - The example below shows that a SEAR class correctly identifies the update rate lambda to be 1 if expectation moments from rational expectation are used.
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+    ## only expectation estimation 
+
+    moments0 = ['FE',
+               'FEATV'] ## or FE+Var, or FE + Disg
+
+    def Objsear_re(paras):
+        scalar = ObjGen(sear0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_re,
+                        moment_choice = moments0,
+                        how = 'expectation')
+        return scalar
+
+
+    ## invoke estimation 
+    Est = ParaEst(Objsear_re,
+            para_guess = (0.2),
+            method='Nelder-Mead',
+            bounds = ((0,1),)
+           )
+
+    
+    print('True parameters: ',str(np.array(1.0))) ## rational expectations 
+    print('Estimates: ',str(Est))
+# -
+
+# #### Estimating SE with SE 
+#
+# - SEAR SMM correctly identifies rigidity parameter in SE 
+
+# + code_folding=[0]
+if __name__ == "__main__":
+    ## get a fake data moment dictionary under a different parameter 
+    
+    exp_para_fake = np.array([0.4])
+    sear1 = StickyExpectationAR(exp_para = exp_para_fake,
+                                process_para = np.array([ρ0,σ0]),
+                                real_time = real_time0,
+                                history = history0,
+                                horizon = 1)
+    sear1.GetRealization(realized0)
+    data_mom_dict_se = sear1.SMM()
+
+    moments0 = ['FEATV', ## autocovariance of FE is critical to identify lambda in SE
+               #'Disg',   ## or Disg alone is also enough 
+               #'Var'
+               ]
+    def Objsear_se(paras):
+        scalar = ObjGen(sear0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_se,
+                        moment_choice = moments0,
+                        how = 'expectation')
+        return scalar
+
+
+    ## invoke estimation 
+    Est = ParaEst(Objsear_se,
+           para_guess = (0.2),
+            method='Nelder-Mead',
+            bounds = ((0,1),))
+    print('True parameter',str(exp_para_fake))  
+    print('Estimates: ',str(Est))
+# -
+
+# #### Joint Estimation 
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+    ## for joint estimation 
+
+
+    moments1 = ['InfAV',
+                'InfVar',
+                'InfATV',
+                'FE',
+                'FEVar',
+                'FEATV',
+                'Disg']
+
+    def Objsear_joint(paras):
+        scalar = ObjGen(sear0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_se,
+                        moment_choice = moments1,
+                        how ='joint',
+                        n_exp_paras = 1)
+        return scalar
+
+    ## invoke estimation 
+    Est = ParaEst(Objsear_joint,
+            para_guess = np.array([0.2,0.8,0.2]),
+            method='Nelder-Mead'
+           )
+    print('True process parameters: ',str(np.array([ρ0,σ0])))
+    print('Estimates: ',str(Est[1:]))
+    print('True expectation parameter',str(exp_para_fake))  
+    print('Estimates: ',str(Est[0]))
+
+
 # -
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[2, 14, 18, 88]
+# + code_folding=[1]
 @jitclass(model_sv_data)
 class StickyExpectationSV:
     def __init__(self,
@@ -887,20 +1013,7 @@ class StickyExpectationSV:
         return SMMMoments
 
 
-# + code_folding=[]
-if __name__ == "__main__":
-
-
-    ## initialize the ar instance 
-    sear0 = StickyExpectationAR(exp_para = np.array([0.2]),
-                                process_para = np.array([ρ0,σ0]),
-                                real_time = real_time0,
-                                history = history0,
-                                horizon = 1)
-
-    sear0.GetRealization(realized0)
-
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
 
@@ -913,103 +1026,6 @@ if __name__ == "__main__":
     ## get the realization 
 
     sesv0.GetRealization(xx_realized)
-# -
-
-# #### Estimating SE with RE 
-
-# + code_folding=[]
-if __name__ == "__main__":
-
-    ## only expectation estimation 
-
-    moments0 = ['FE',
-                'FEVar',
-                'FEATV',
-                'Disg']
-
-    def Objsear_re(paras):
-        scalar = ObjGen(sear0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_re,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalar
-
-
-    ## invoke estimation 
-    #ParaEst(Objsear_re,
-    #        para_guess = (0.2),
-    #        method='Nelder-Mead',
-    #        bounds = ((0,1),)
-    #       )
-# -
-
-# #### Estimating SE with SE 
-
-# + code_folding=[]
-if __name__ == "__main__":
-    ## get a fake data moment dictionary under a different parameter 
-
-    sear1 = StickyExpectationAR(exp_para = np.array([0.4]),
-                                process_para = np.array([ρ0,σ0]),
-                                real_time = real_time0,
-                                history = history0,
-                                horizon = 1)
-    sear1.GetRealization(realized0)
-    data_mom_dict_se = sear1.SMM()
-
-    moments0 = ['FE',
-                'FEVar',
-                'FEATV',
-                'Disg']
-
-    def Objsear_se(paras):
-        scalar = ObjGen(sear0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_se,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalar
-
-
-    ## invoke estimation 
-    #ParaEst(Objsear_se,
-    #        para_guess = (0.2),
-    #        method='Nelder-Mead',
-    #        bounds = ((0,1),)
-    #       )
-# -
-
-# #### Joint Estimation 
-
-# + code_folding=[2, 10]
-if __name__ == "__main__":
-
-    ## for joint estimation 
-
-
-    moments1 = ['InfAV',
-                'InfVar',
-                'InfATV',
-                'FE',
-                'FEVar',
-                'FEATV',
-                'Disg']
-
-    def Objsear_joint(paras):
-        scalar = ObjGen(sear0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_se,
-                        moment_choice = moments1,
-                        how ='joint',
-                        n_exp_paras = 1)
-        return scalar
-
-    ## invoke estimation 
-    #ParaEst(Objsear_joint,
-    #        para_guess = np.array([0.2,0.8,0.2]),
-    #        method='Nelder-Mead'
-    #       )
 
 
 # -
@@ -1039,7 +1055,7 @@ if __name__ == "__main__":
                   np.array([0.8,0.2]))
 
 
-# + code_folding=[2, 14, 18, 117, 151]
+# + code_folding=[1, 2, 14, 18, 117, 151]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1145,7 +1161,7 @@ class NoisyInformationAR:
         forecasts = ρ**horizon*nowcasts 
         Vars = Vars_to_burn[:,n_burn:]
         
-        ## compuate population moments
+        ## compute population moments
         forecasts_mean = np_mean(forecasts,axis=0)
         forecasts_var = np_var(forecasts,axis=0)
         FEs_mean = forecasts_mean - realized
@@ -1205,6 +1221,144 @@ class NoisyInformationAR:
                       'VarATV':VarATV_sim}
         return SMMMoments
 
+# + code_folding=[0]
+if __name__ == "__main__":
+
+
+    ## initialize the ar instance 
+    niar0 = NoisyInformationAR(exp_para = np.array([0.1,0.2]),
+                                process_para = np.array([ρ0,σ0]),
+                                real_time = real_time0,
+                                history = history0,
+                                horizon = 1)
+
+    niar0.GetRealization(realized0)
+# -
+
+# #### Estimating NI using RE data 
+#
+# - The example below shows that NIAR correctly identifies sigma_pr and sigma_pb to be zero if rational expectation moments are used. 
+
+# + code_folding=[0, 3, 13]
+if __name__ == "__main__":
+
+
+    moments0 = ['FE',
+                'FEATV',
+                'FEVar',
+                'Disg',
+                'DisgATV',
+                'DisgVar',
+                'Var',
+                'VarVar',
+                'VarATV']
+
+    def Objniar_re(paras):
+        scalor = ObjGen(niar0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_re,
+                        moment_choice = moments0,
+                        how = 'expectation')
+        return scalor
+
+    ## invoke estimation 
+    Est = ParaEst(Objniar_re,
+            para_guess = np.array([0.2,0.1]),
+            method='trust-constr',
+           bounds=((0,None),(0,None),))
+    
+    print('True parameters: ',str(np.array([0.0,0.0]))) ## rational expectations 
+    print('Estimates: ',str(Est))
+# -
+
+# #### Estimate NI with NI
+#
+# - The example below shows that NIAR SMM correctly identifies the noisiness of both private and public signals using fake moments with known parameters. 
+
+# + code_folding=[0, 22]
+if __name__ == "__main__":
+
+
+    ## get a fake data moment dictionary under a different parameter 
+    exp_paras_fake = np.array([0.5,0.9])
+    niar1 = NoisyInformationAR(exp_para = exp_paras_fake,
+                                process_para = np.array([ρ0,σ0]),
+                                real_time = real_time0,
+                                history = history0,
+                                horizon = 1)
+
+    niar1.GetRealization(realized0)
+
+    data_mom_dict_ni = niar1.SMM()
+
+    moments0 = ['FE',
+                'FEVar',
+                'FEATV',
+                'Disg',
+                'DisgVar',
+                'Var']
+
+    def Objniar_ni(paras):
+        scalor = ObjGen(niar0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_ni,
+                        moment_choice = moments0,
+                        how = 'expectation')
+        return scalor
+
+    ## invoke estimation 
+
+    Est = ParaEst(Objniar_ni,
+            para_guess = np.array([0.2,0.3]),
+            method='trust-constr',  # see to work for both L-BFGS-B and Nelder-Mead
+            bounds = ((0,None),(0,None),)
+           )
+    print('True parameters: ',str(exp_paras_fake)) ## rational expectations 
+    print('Estimates: ',str(Est))
+    
+# -
+
+# #### Joint Estimation
+
+# + code_folding=[0, 5]
+if __name__ == "__main__":
+
+
+    ## for joint estimation 
+
+    moments1 = ['InfAV',
+                'InfVar',
+                'InfATV',
+                'FE',
+                'FEVar',
+                'FEATV',
+                'Disg',
+               'DisgVar',
+               'DisgATV',
+               'Var',
+               'VarVar',
+               'VarATV']
+
+    def Objniar_joint(paras):
+        scalar = ObjGen(niar0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_ni,
+                        moment_choice = moments1,
+                        how ='joint',
+                        n_exp_paras = 2)
+        return scalar
+
+    ## invoke estimation 
+    Est = ParaEst(Objniar_joint,
+            para_guess = np.array([0.2,0.3,0.8,0.2]),
+            method='trust-constr'
+           )
+    
+    print('True process parameters: ',str(np.array([ρ0,σ0])))
+    print('Estimates: ',str(Est[2:]))
+    print('True expectation parameter',str(exp_paras_fake))  
+    print('Estimates: ',str(Est[0:2]))
+
 
 # -
 
@@ -1256,7 +1410,7 @@ class NoisyInformationSV:
         sigma_v = np.array([[sigma_pb**2,0.0],[0.0,sigma_pr**2]]) ## variance matrix of signal noises         
         ## simulate signals 
         nb_s = 2                                    ## the number of signals 
-        H = np.array([[1.0],[1.0]])                 ## an multiplicative matrix summing all signals
+        H = np.array([[1.0],[1.0]])                 ## a multiplicative matrix summing all signals
         
         # randomly simulated signals 
         np.random.seed(12434)
@@ -1384,20 +1538,7 @@ class NoisyInformationSV:
                       'VarATV':VarATV_sim}
         return SMMMoments
 
-# + code_folding=[1]
-if __name__ == "__main__":
-
-
-    ## initialize the ar instance 
-    niar0 = NoisyInformationAR(exp_para = np.array([0.1,0.2]),
-                                process_para = np.array([ρ0,σ0]),
-                                real_time = real_time0,
-                                history = history0,
-                                horizon = 1)
-
-    niar0.GetRealization(realized0)
-
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## initial a sv instance
@@ -1409,122 +1550,6 @@ if __name__ == "__main__":
     ## get the realization 
 
     nisv0.GetRealization(xx_realized)
-# -
-
-# #### Estimating NI using RE data 
-
-# + code_folding=[0, 11]
-if __name__ == "__main__":
-
-
-    moments0 = ['FE',
-                'FEATV',
-                'FEVar',
-                'Disg',
-                'DisgATV',
-                'DisgVar',
-                'Var',
-                'VarVar',
-                'VarATV']
-
-    def Objniar_re(paras):
-        scalor = ObjGen(niar0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_re,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalor
-
-    ## invoke estimation 
-    #ParaEst(Objniar_re,
-    #        para_guess = np.array([0.2,0.1]),
-    #        method='L-BFGS-B',
-    #       bounds=((0,None),(0,None),))
-# -
-
-# #### Estimate NI with NI
-
-# + code_folding=[2, 12, 19]
-if __name__ == "__main__":
-
-
-    ## get a fake data moment dictionary under a different parameter 
-
-    niar1 = NoisyInformationAR(exp_para = np.array([0.5,0.9]),
-                                process_para = np.array([ρ0,σ0]),
-                                real_time = real_time0,
-                                history = history0,
-                                horizon = 1)
-
-    niar1.GetRealization(realized0)
-
-    data_mom_dict_ni = niar1.SMM()
-
-    moments0 = ['FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-                'DisgVar',
-                'Var']
-
-    def Objniar_ni(paras):
-        scalor = ObjGen(niar0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_ni,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalor
-
-    ## invoke estimation 
-
-    #ParaEst(Objniar_ni,
-    #        para_guess = np.array([0.2,0.3]),
-    #        method='L-BFGS-B',  # see to work for both L-BFGS-B and Nelder-Mead
-    #        bounds = ((0,None),(0,None),)
-    #       )
-
-
-    ## works correctly 
-# -
-
-# #### Joint Estimation
-#
-
-# + code_folding=[2]
-if __name__ == "__main__":
-
-
-    ## for joint estimation 
-
-    moments1 = ['InfAV',
-                'InfVar',
-                'InfATV',
-                'FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-               'DisgVar',
-               'DisgATV',
-               'Var',
-               'VarVar',
-               'VarATV']
-
-    def Objniar_joint(paras):
-        scalar = ObjGen(niar0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_ni,
-                        moment_choice = moments1,
-                        how ='joint',
-                        n_exp_paras = 2)
-        return scalar
-
-    ## invoke estimation 
-    #ParaEst(Objniar_joint,
-    #        para_guess = np.array([0.2,0.3,0.8,0.2]),
-    #        method='Nelder-Mead'
-    #       )
-
-    ## works correctly w
 
 
 # -
@@ -1650,6 +1675,134 @@ class DiagnosticExpectationAR:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+
+    ## initialize the ar instance 
+    dear0 = DiagnosticExpectationAR(exp_para = np.array([0.5,0.2]),
+                                    process_para = np.array([ρ0,σ0]),
+                                    real_time = real_time0,
+                                    history = history0,
+                                    horizon = 1)
+
+    dear0.GetRealization(realized0)
+# -
+
+# #### Estimating DE using RE data
+#
+# - The example below shows that DEAR SMM approximately identifies the parameters of overreaction to be zero and zero-dispersion using rational expectation forecast moments.  
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+
+    ## only expectation estimation 
+
+    moments0 = ['FE',
+                'FEVar',
+                'FEATV',
+                'Disg',
+                'DisgVar',
+                'Var']
+
+    def Objdear_re(paras):
+        scalar = ObjGen(dear0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_re,
+                        moment_choice = moments0,
+                        how = 'expectation')
+        return scalar
+
+
+    ## invoke estimation 
+    Est = ParaEst(Objdear_re,
+           para_guess = np.array([0.2,0.3]),
+            method='trust-constr')
+    
+    print('True parameters: ',str(np.array([0.0,0.0]))) ## rational expectations 
+    print('Estimates: ',str(Est))
+# -
+
+# #### Estimating DE using DE data 
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+
+    ## get a fake data moment dictionary under a different parameter 
+    exp_paras_fake = np.array([0.3,0.1])
+    dear1 = DiagnosticExpectationAR(exp_para = exp_paras_fake,
+                                    process_para = np.array([ρ0,σ0]),
+                                    real_time = real_time0,
+                                    history = history0,
+                                    horizon = 1)
+
+    dear1.GetRealization(realized0)
+
+    data_mom_dict_de = dear1.SMM()
+
+
+    ## only expectation estimation 
+
+    moments0 = ['FE',
+                'FEVar',
+                'FEATV',
+                'Disg',
+                'DisgVar',
+                'Var']
+
+    def Objdear_de(paras):
+        scalar = ObjGen(dear0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_de,
+                        moment_choice = moments0,
+                        how = 'expectation')
+        return scalar
+
+
+    ## invoke estimation 
+    Est = ParaEst(Objdear_de,
+                  para_guess = np.array([0.2,0.3]),
+                  method='trust-constr')
+    
+    print('True parameters: ',str(exp_paras_fake)) 
+    print('Estimates: ',str(Est))
+# -
+
+# #### Joint Estimation 
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+    ## for joint estimation 
+    moments1 = ['InfAV',
+                'InfVar',
+                'InfATV',
+                'FE',
+                'FEVar',
+                'FEATV',
+                'Disg']
+
+    def Objdear_joint(paras):
+        scalar = ObjGen(dear0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_de,
+                        moment_choice = moments1,
+                        how ='joint',
+                        n_exp_paras = 2)
+        return scalar
+
+    ## invoke estimation 
+    Est = ParaEst(Objdear_joint,
+            para_guess = np.array([0.2,0.3,0.8,0.2]),
+            method='trust-constr')
+    
+    print('True process parameters: ',str(np.array([ρ0,σ0])))
+    print('Estimates: ',str(Est[2:]))
+    print('True expectation parameter',str(exp_paras_fake))  
+    print('Estimates: ',str(Est[0:2]))
 
 
 # -
@@ -1789,20 +1942,7 @@ class DiagnosticExpectationSV:
                       'VarATV':VarATV_sim}
         return SMMMoments
 
-# + code_folding=[]
-if __name__ == "__main__":
-
-
-    ## initialize the ar instance 
-    dear0 = DiagnosticExpectationAR(exp_para = np.array([0.5,0.2]),
-                                    process_para = np.array([ρ0,σ0]),
-                                    real_time = real_time0,
-                                    history = history0,
-                                    horizon = 1)
-
-    dear0.GetRealization(realized0)
-
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## initial a sv instance
@@ -1814,658 +1954,13 @@ if __name__ == "__main__":
     ## get the realization 
 
     desv0.GetRealization(xx_realized)
-# -
-
-# #### Estimating DE using RE data
-
-# + code_folding=[2, 9]
-if __name__ == "__main__":
-
-
-    ## only expectation estimation 
-
-    moments0 = ['FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-                'DisgVar',
-                'Var']
-
-    def Objdear_re(paras):
-        scalar = ObjGen(dear0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_re,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalar
-
-
-    ## invoke estimation 
-    #ParaEst(Objdear_re,
-    #        para_guess = np.array([0.2,0.3]),
-    #        method='Nelder-Mead')
-# -
-
-# #### Estimating DE using DE data 
-
-# + code_folding=[]
-if __name__ == "__main__":
-
-
-    ## get a fake data moment dictionary under a different parameter 
-
-    dear1 = DiagnosticExpectationAR(exp_para = np.array([0.3,0.1]),
-                                    process_para = np.array([ρ0,σ0]),
-                                    real_time = real_time0,
-                                    history = history0,
-                                    horizon = 1)
-
-    dear1.GetRealization(realized0)
-
-    data_mom_dict_de = dear1.SMM()
-
-
-    ## only expectation estimation 
-
-    moments0 = ['FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-                'DisgVar',
-                'Var']
-
-    def Objdear_de(paras):
-        scalar = ObjGen(dear0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_de,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalar
-
-
-    ## invoke estimation 
-    #ParaEst(Objdear_de,
-    #        para_guess = np.array([0.2,0.3]),
-    #        method='Nelder-Mead')
-# -
-
-# #### Joint Estimation 
-
-# + code_folding=[2]
-if __name__ == "__main__":
-
-    ## for joint estimation 
-
-    moments1 = ['InfAV',
-                'InfVar',
-                'InfATV',
-                'FE',
-                'FEVar',
-                'FEATV',
-                'Disg']
-
-    def Objdear_joint(paras):
-        scalar = ObjGen(dear0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_de,
-                        moment_choice = moments1,
-                        how ='joint',
-                        n_exp_paras = 2)
-        return scalar
-
-    ## invoke estimation 
-    #ParaEst(Objdear_joint,
-    #        para_guess = np.array([0.2,0.3,0.8,0.2]),
-    #        method='Nelder-Mead')
-
-
-# -
-
-# ###  Sticky Expectation and Noisy Information Hybrid(SENI) + AR1
-
-# + code_folding=[1, 14, 18]
-@jitclass(model_data)
-class SENIHybridAR:
-    def __init__(self,
-                 exp_para,
-                 process_para,
-                 real_time,
-                 history,
-                 horizon = 1):
-        self.exp_para = exp_para
-        self.process_para = process_para
-        self.horizon = horizon
-        self.real_time = real_time
-        self.history = history
-
-    def GetRealization(self,
-                       realized_series):
-        self.realized = realized_series
-        
-    def SimForecasts(self,
-                     n_sim = 500):
-        ## inputs 
-        real_time = self.real_time
-        history  = self.history
-        realized = self.realized
-        n = len(real_time)
-        horizon = self.horizon 
-        n_history =len(history)
-        n_burn = len(history) - n
-        horizon = self.horizon      
-
-        ## parameters 
-        ρ,σ = self.process_para
-        lbd, sigma_pb,sigma_pr = self.exp_para
-                
-        #### The first NI part of the model 
-        var_init = 5    ## some initial level of uncertainty, will be washed out after long simulation
-        sigma_v = np.array([[sigma_pb**2,0.0],[0.0,sigma_pr**2]]) ## variance matrix of signal noises 
-        
-        ## simulate signals 
-        nb_s = 2                                    ## the number of signals 
-        H = np.array([[1.0],[1.0]])                 ## an multiplicative matrix summing all signals
-        
-        # randomly simulated signals 
-        np.random.seed(12434)
-        signal_pb = self.history+sigma_pb*np.random.randn(n_history)   ## one series of public signals 
-        signals_pb = signal_pb.repeat(n_sim).reshape((-1,n_sim)).T     ## shared by all agents
-        np.random.seed(13435)
-        signals_pr = self.history + sigma_pr*np.random.randn(n_sim*n_history).reshape((n_sim,n_history))
-                                                                 ### private signals are agent-specific 
-            
-        ## SE part of the model, which governs if updating for each agent at each point of time 
-        ## simulation of updating profile
-        ## simulation
-        np.random.seed(12345)
-        update_or_not_val = np.random.uniform(0,
-                                              1,
-                                              size = (n_sim,n_history))
-        update_or_not_bool = update_or_not_val>=1-lbd
-        update_or_not = update_or_not_bool.astype(np.int64)
-        most_recent_when = np.empty((n_sim,n_history),dtype = np.int64)    
-        ########################################################################
-        nowsignals_pb_to_burn = np.empty((n_sim,n_history),dtype = np.float64)
-        nowsignals_pr_to_burn = np.empty((n_sim,n_history),dtype=np.float64)
-        ######################################################################
-    
-        # look back for the most recent last update for each point of time  
-        for i in range(n_sim):
-            for j in range(n_history):
-                most_recent = j 
-                for x in range(j):
-                    if update_or_not[i,j-x]==1 and most_recent<=x:
-                        most_recent = most_recent
-                    elif update_or_not[i,j-x]==1 and most_recent>x:
-                        most_recent = x
-                most_recent_when[i,j] = most_recent
-                ################################################################################
-                nowsignals_pr_to_burn[i,j] = signal_pb[j - most_recent_when[i,j]]
-                nowsignals_pr_to_burn[i,j] = signals_pr[i,j - most_recent_when[i,j]]
-                ## both above are the matrices of signals available to each agent depending on if updating
-                #####################################################################################
-                
-        
-        ## The second NI part of the model 
-        ## Once sticky signals are prepared, agents filter as NI
-        
-        ## prepare matrices 
-        nowcasts_to_burn = np.zeros((n_sim,n_history))  ### nowcasts matrix of which the initial simulation is to be burned 
-        nowcasts_to_burn[:,0] = history[0]
-        nowvars_to_burn = np.zeros((n_sim,n_history))   ### nowcasts uncertainty matrix
-        nowvars_to_burn[:,0] = var_init
-        Vars_to_burn = np.zeros((n_sim,n_history))      ### forecasting uncertainty matrix 
-        
-        ## fill the matrices for individual moments  
-        for i in range(n_sim):
-            signals_this_i = np.concatenate((nowsignals_pb_to_burn[i,:],nowsignals_pr_to_burn[i,:]),axis=0).reshape((2,-1))
-            ## the histories signals specific to i: the first row is public signals and the second is private signals 
-            Pkalman = np.zeros((n_history,nb_s))
-            ## Kalman gains of this agent for respective signals 
-            Pkalman[0,:] = 0  ## some initial values 
-            
-            for t in range(n_history-1):
-                step1_vars_to_burn = ρ**2*nowvars_to_burn[i,t] + σ**2
-                ## prior uncertainty 
-                
-                inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v) 
-                ## the inverse of the noisiness matrix  
-                
-                inv_sc = np.dot(np.dot(H.T,inv),H)
-                ## the total noisiness as a scalar 
-                
-                var_reduc = step1_vars_to_burn*inv_sc*step1_vars_to_burn
-                ## reduction in uncertainty from the update
-                
-                nowvars_this_2d = np.array([[step1_vars_to_burn]]) - var_reduc
-                ## update equation of nowcasting uncertainty 
-                
-                nowvars_to_burn[i,t+1] = nowvars_this_2d[0,0] 
-                ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
-                ### this is necessary for Numba typing 
-                
-                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v))
-                ## update Kalman gains recursively using the signal extraction ratios 
-                
-                Pkalman_all = np.dot(Pkalman[t+1,:],H)[0] 
-                ## the weight to the prior forecast 
-                nowcasts_to_burn[i,t+1] = (1-Pkalman_all)*ρ*nowcasts_to_burn[i,t]+ np.dot(Pkalman[t+1,:],signals_this_i[:,t+1])
-                ## kalman filtering updating for nowcasting: weighted average of prior and signals 
-                
-            for t in range(n_history):
-                Vars_to_burn[i,t] = ρ**(2*horizon)*nowvars_to_burn[i,t] + hstepvar(horizon,ρ,σ)
-        
-        
-        ## burn initial histories  
-        nowcasts = nowcasts_to_burn[:,n_burn:]
-        forecasts = ρ**horizon*nowcasts 
-        Vars = Vars_to_burn[:,n_burn:]
-        
-        ## compute population moments
-        forecasts_mean = np_mean(forecasts,axis=0)
-        forecasts_var = np_var(forecasts,axis=0)
-        
-        FEs_mean = forecasts_mean - realized
-            
-        Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
-        
-        forecast_moments_sim = {"FE":FEs_mean,
-                                "Disg":forecasts_var,
-                                "Var":Vars_mean}
-        return forecast_moments_sim
-        
-    def SMM(self):
-        
-        ρ,σ = self.process_para
-        
-        #################################
-        # inflation moments 
-        #################################
-
-        InfAV  = 0.0
-        InfVar = σ**2/(1-ρ**2)
-        InfATV = ρ*InfVar
-        
-        #################################
-        # expectation moments 
-        #################################
-        ## simulate forecasts
-        moms_sim = self.SimForecasts()
-        
-        FEs_sim = moms_sim['FE']
-        Disgs_sim = moms_sim['Disg']
-        Vars_sim = moms_sim['Var']
-        
-        ## SMM moments     
-        FE_sim = np.mean(FEs_sim)
-        FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
-        Disg_sim = np.mean(Disgs_sim)
-        DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
-        
-        Var_sim = np.mean(Vars_sim)
-        VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
-    
-        SMMMoments = {"InfAV":InfAV,
-                      "InfVar":InfVar,
-                      "InfATV":InfATV,
-                      "FE":FE_sim,
-                      "FEVar":FEVar_sim,
-                      "FEATV":FEATV_sim,
-                      "Disg":Disg_sim,
-                      "DisgVar":DisgVar_sim,
-                      "DisgATV":DisgATV_sim,
-                      "Var":Var_sim,
-                      'VarVar':VarVar_sim,
-                      'VarATV':VarATV_sim}
-        return SMMMoments
-
-
-# -
-
-# ###  Sticky Expectation and Noisy Information Hybrid(SENI) + SV
-#
-#
-
-# + code_folding=[1, 2, 14, 18, 164, 198]
-@jitclass(model_sv_data)
-class SENIHybridSV:
-    def __init__(self,
-                 exp_para,
-                 process_para,
-                 real_time,
-                 history,
-                 horizon = 1):
-        self.exp_para = exp_para
-        self.process_para = process_para
-        self.horizon = horizon
-        self.real_time = real_time
-        self.history = history
-
-    def GetRealization(self,
-                       realized_series):
-        self.realized = realized_series
-        
-    def SimForecasts(self,
-                     n_sim = 500):
-        ## inputs 
-        real_time = self.real_time
-        history  = self.history
-        realized = self.realized
-        n = len(real_time[0,:])
-        horizon = self.horizon
-        n_history = len(history[0,:]) # of course equal to len(history)
-        n_burn = n_history - n
-        
-        ## get the information set 
-        infoset = history 
-        y_now, p_now, sigmas_p_now, sigmas_t_now= infoset[0,:],infoset[1,:],infoset[2,:],infoset[3,:]
-        sigmas_now = np.concatenate((sigmas_p_now,sigmas_t_now),axis=0).reshape((2,-1))
-        
-        
-        ## process parameters
-        γ = self.process_para
-        ## exp parameters 
-        lbd,sigma_pb,sigma_pr = self.exp_para
-        var_init = 1
-        
-        ## other parameters 
-        sigma_v = np.array([[sigma_pb**2,0.0],[0.0,sigma_pr**2]]) ## variance matrix of signal noises         
-        ## simulate signals 
-        nb_s = 2                                    ## the number of signals 
-        H = np.array([[1.0],[1.0]])                 ## an multiplicative matrix summing all signals
-        
-        
-        ## The first NI part of the model 
-        # randomly simulated signals 
-        np.random.seed(12434)
-        ##########################################################
-        signal_pb = p_now+sigma_pb*np.random.randn(n_history)   ## one series of public signals 
-        signals_pb = signal_pb.repeat(n_sim).reshape((-1,n_sim)).T     ## shared by all agents
-        np.random.seed(13435)
-        signals_pr = p_now + sigma_pr*np.random.randn(n_sim*n_history).reshape((n_sim,n_history))
-        ##################################################################################### 
-            
-        ## SE part of the model, which governs if updating for each agent at each point of time 
-        ## simulation of updating profile
-        ## simulation
-        np.random.seed(12345)
-        update_or_not_val = np.random.uniform(0,
-                                              1,
-                                              size = (n_sim,n_history))
-        update_or_not_bool = update_or_not_val>=1-lbd
-        update_or_not = update_or_not_bool.astype(np.int64)
-        most_recent_when = np.empty((n_sim,n_history),dtype = np.int64)    
-        ########################################################################
-        nowsignals_pb_to_burn = np.empty((n_sim,n_history),dtype = np.float64)
-        nowsignals_pr_to_burn = np.empty((n_sim,n_history),dtype=np.float64)
-        ######################################################################
-    
-        # look back for the most recent last update for each point of time  
-        for i in range(n_sim):
-            for j in range(n_history):
-                most_recent = j 
-                for x in range(j):
-                    if update_or_not[i,j-x]==1 and most_recent<=x:
-                        most_recent = most_recent
-                    elif update_or_not[i,j-x]==1 and most_recent>x:
-                        most_recent = x
-                most_recent_when[i,j] = most_recent
-                ################################################################################
-                nowsignals_pr_to_burn[i,j] = signal_pb[j - most_recent_when[i,j]]
-                nowsignals_pr_to_burn[i,j] = signals_pr[i,j - most_recent_when[i,j]]
-                ## both above are the matrices of signals available to each agent depending on if updating
-                #####################################################################################
-                
-        
-        ## The second NI part of the model 
-        ## Once sticky signals are prepared, agents filter as NI
-        
-        ## prepare matrices 
-        nowcasts_to_burn = np.zeros((n_sim,n_history))  ### nowcasts matrix of which the initial simulation is to be burned 
-        nowcasts_to_burn[:,0] = p_now[0]
-        nowvars_to_burn = np.zeros((n_sim,n_history))   ### nowcasts uncertainty matrix
-        nowvars_to_burn[:,0] = var_init
-        Vars_to_burn = np.zeros((n_sim,n_history))      ### forecasting uncertainty matrix 
-        
-        
-        ## fill the matrices for individual moments        
-        for i in range(n_sim):
-            signals_this_i = np.concatenate((nowsignals_pr_to_burn[i,:],nowsignals_pr_to_burn[i,:]),axis=0).reshape((2,-1))
-            ## the histories signals specific to i: the first row is public signals and the second is private signals 
-            Pkalman = np.zeros((n_history,nb_s))
-            ## Kalman gains of this agent for respective signals 
-            Pkalman[0,:] = 0  ## some initial values 
-            
-            for t in range(n_history-1):
-                step1var = hstepvarSV(1,
-                                      sigmas_now[:,t],
-                                      γ[0])
-                step1_vars_to_burn = nowvars_to_burn[i,t] + step1var
-                ## prior uncertainty
-                
-                inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v) 
-                ## the inverse of the noisiness matrix
-                
-                inv_sc = np.dot(np.dot(H.T,inv),H)
-                ## the total noisiness as a scalar 
-                
-                var_reduc = step1_vars_to_burn*inv_sc*step1_vars_to_burn
-                ## reduction in uncertainty from the update
-                
-                nowvars_this_2d = np.array([[step1_vars_to_burn]]) - var_reduc
-                ## update equation of nowcasting uncertainty 
-                
-                nowvars_to_burn[i,t+1] = nowvars_this_2d[0,0] 
-                ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
-                ### this is necessary for Numba typing 
-                
-                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v))
-                ## update Kalman gains recursively using the signal extraction ratios 
-                
-                Pkalman_all = np.dot(Pkalman[t+1,:],H)[0] 
-                ## the weight to the prior forecast 
-    
-                nowcasts_to_burn[i,t+1] = (1-Pkalman_all)*nowcasts_to_burn[i,t]+ np.dot(Pkalman[t+1,:],signals_this_i[:,t+1])
-                ## kalman filtering updating for nowcasting: weighted average of prior and signals 
-                
-            for t in range(n_history):
-                stephvar = hstepvarSV(horizon,
-                                      sigmas_now[:,t],
-                                      γ[0])
-                Vars_to_burn[i,t] = nowvars_to_burn[i,t] + stephvar
-                
-        nowcasts = nowcasts_to_burn[:,n_burn:]
-        forecasts = nowcasts 
-        Vars = Vars_to_burn[:,n_burn:]
-
-        
-        ## compute population moments
-        forecasts_mean = np_mean(forecasts,axis=0)
-        forecasts_var = np_var(forecasts,axis=0)
-        
-        FEs_mean = forecasts_mean - realized            
-        Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
-        
-        forecast_moments_sim = {"FE":FEs_mean,
-                                "Disg":forecasts_var,
-                                "Var":Vars_mean}
-        return forecast_moments_sim
-              
-    def SMM(self):
-        
-        γ = self.process_para
-        
-        #################################
-        # inflation moments 
-        #################################
-
-        InfAV  = np.nan
-        InfVar = np.nan
-        InfATV = np.nan
-        
-        #################################
-        # expectation moments 
-        #################################
-        ## simulate forecasts
-        moms_sim = self.SimForecasts()
-        
-        FEs_sim = moms_sim['FE']
-        Disgs_sim = moms_sim['Disg']
-        Vars_sim = moms_sim['Var']
-        
-        ## SMM moments     
-        FE_sim = np.mean(FEs_sim)
-        FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
-        Disg_sim = np.mean(Disgs_sim)
-        DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
-        
-        Var_sim = np.mean(Vars_sim)
-        VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
-    
-        SMMMoments = {"InfAV":InfAV,
-                      "InfVar":InfVar,
-                      "InfATV":InfATV,
-                      "FE":FE_sim,
-                      "FEVar":FEVar_sim,
-                      "FEATV":FEATV_sim,
-                      "Disg":Disg_sim,
-                      "DisgVar":DisgVar_sim,
-                      "DisgATV":DisgATV_sim,
-                      "Var":Var_sim,
-                      'VarVar':VarVar_sim,
-                      'VarATV':VarATV_sim}
-        return SMMMoments
-
-# + code_folding=[]
-if __name__ == "__main__":
-    ## initialize the ar instance
-    seniar0 = SENIHybridAR(exp_para = np.array([0.3,0.3,0.2]),
-                           process_para = np.array([ρ0,σ0]),
-                           real_time = real_time0,
-                           history = history0,
-                           horizon = 1)
-
-    seniar0.GetRealization(realized0)
-
-# + code_folding=[]
-if __name__ == "__main__":
-
-    ## initial a sv instance
-    senisv0 = SENIHybridSV(exp_para = np.array([0.5,0.23,0.32]),
-                                   process_para = np.array([0.1]),
-                                   real_time = xx_real_time,
-                                   history = xx_real_time) ## history does not matter here, 
-
-
-    senisv0.GetRealization(xx_realized)
-# -
-
-# #### Estimate Hybrid using RE data 
-
-# + code_folding=[]
-if __name__ == "__main__":
-
-    ## only expectation estimation 
-
-    moments0 = ['FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-                'DisgVar',
-                'DisgVar',
-                'Var']
-
-    def Objseniar_re(paras):
-        scalor = ObjGen(seniar0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_re,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalor
-
-    ## invoke estimation 
-    #ParaEst(Objseniar_re,
-    #        para_guess = np.array([0.5,0.5,0.5]),
-    #        method='Nelder-Mead')
-# -
-
-# #### Estimate Hybrid using Hybrid 
-#
-#
-
-# + code_folding=[2, 13]
-if __name__ == "__main__":
-
-    ## get a fake data moment dictionary under a different parameter 
-
-    seniar1 = SENIHybridAR(exp_para = np.array([0.2,0.4,0.5]),
-                         process_para = np.array([ρ0,σ0]),
-                         real_time = real_time0,
-                         history = history0,
-                         horizon = 1)
-
-    seniar1.GetRealization(realized0)
-
-    data_mom_dict_seni= seniar1.SMM()
-
-    def Objseniar_seni(paras):
-        scalor = ObjGen(seniar0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_seni,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalor
-
-    ## invoke estimation 
-    #ParaEst(Objseniar_seni,
-    #        para_guess = np.array([0.5,0.5,0.5]),
-    #        method='Nelder-Mead')
-# -
-
-# #### Joint Estimation 
-
-# + code_folding=[2]
-if __name__ == "__main__":
-
-    ## for joint estimation 
-
-    moments1 = ['InfAV',
-                'InfVar',
-                'InfATV',
-                'FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-               'DisgVar',
-               'DisgATV',
-               'Var']
-
-    def Objseniar_joint(paras):
-        scalar = ObjGen(seniar0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_seni,
-                        moment_choice = moments1,
-                        how ='joint',
-                        n_exp_paras = 3)
-        return scalar
-
-    ## invoek estimation 
-    #ParaEst(Objseniar_joint,
-    #        para_guess = np.array([0.4,0.2,0.3,0.8,0.2]),
-    #        method='Nelder-Mead')
 
 
 # -
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
 
-# + code_folding=[1]
+# + code_folding=[1, 18]
 @jitclass(model_data)
 class DENIHybridAR:
     def __init__(self,
@@ -2630,6 +2125,85 @@ class DENIHybridAR:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+    ## initialize the ar instance 
+    deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.4,0.3]),
+                           process_para = np.array([ρ0,σ0]),
+                                real_time = real_time0,
+                                history = history0,
+                                horizon = 1)
+
+    deniar0.GetRealization(realized0)
+# -
+
+# #### Estimating DENI using RE
+#
+# The example below shows that the hybrid model, DENIAR SMM seems to have difficulty with identifying the rational-expectation benchmark, in which the overreaction parameter and noisiness of both private and public signals all should be zero. This is possibly due to the counteraction between the overreaction parameter and the rigidity due to the noisiness of public signals.
+
+# + code_folding=[2]
+if __name__ == "__main__":
+
+    moments0 = ['FE',
+                'FEVar',
+                'FEATV',
+                'Disg',
+                'DisgVar',
+                'DisgVar',
+                'Var']
+
+    def Objdeniar_re(paras):
+        scalar = ObjGen(deniar0,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_re,
+                        moment_choice = moments0,
+                        how = 'expectation')
+        return scalar
+
+    ## invoke estimation 
+    Est = ParaEst(Objdeniar_re,
+            para_guess = np.array([0.5,0.5,0.5]),
+            method='trust-constr')
+    
+    print('True parameters: ',str(np.array([0.0,0.0,0.0]))) ## rational expectations 
+    print('Estimates: ',str(Est))
+# -
+
+# #### Estimating DENI using DENI
+#
+# - The example below shows that DENIAR SMM correctly identifies the model parameters. 
+
+# + code_folding=[0, 4, 12]
+if __name__ == "__main__":
+    
+    ## get a fake data moment dictionary under a different parameter 
+    exp_paras_fake = np.array([0.1,0.4,0.3])
+    deniar1 = DENIHybridAR(exp_para = exp_paras_fake,
+                           process_para = np.array([ρ0,σ0]),
+                           real_time = real_time0,
+                           history = history0,
+                           horizon = 1)
+    deniar1.GetRealization(realized0)
+    data_mom_dict_dear = deniar1.SMM()
+
+    def Objdeniar_deni(paras):
+        scalar = ObjGen(deniar1,
+                        paras = paras,
+                        data_mom_dict = data_mom_dict_dear,
+                        moment_choice = moments0,
+                        how = 'expectation')
+        return scalar
+
+    ## invoke estimation 
+    Est = ParaEst(Objdeniar_deni,
+            para_guess = np.array([0.5,0.5,0.5]),
+            method='trust-constr',
+            bounds = ((0,1),(0,3),(0,3),))
+    
+    print('True parameters: ',str(exp_paras_fake)) 
+    print('Estimates: ',str(Est))
 
 
 # -
@@ -2811,70 +2385,6 @@ class DENIHybridSV:
         return SMMMoments
 
 # + code_folding=[0]
-if __name__ == "__main__":
-
-    ## intialize the ar instance 
-    deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.4,0.3]),
-                           process_para = np.array([ρ0,σ0]),
-                                real_time = real_time0,
-                                history = history0,
-                                horizon = 1)
-
-    deniar0.GetRealization(realized0)
-# -
-
-# #### Estimating DENI using RE
-
-# + code_folding=[0, 2, 11]
-if __name__ == "__main__":
-
-    if __name__ == "__main__":
-
-        moments0 = ['FE',
-                    'FEVar',
-                    'FEATV',
-                    'Disg',
-                    'DisgVar',
-                    'DisgVar',
-                    'Var']
-
-        def Objdeniar_re(paras):
-            scalar = ObjGen(deniar0,
-                            paras = paras,
-                            data_mom_dict = data_mom_dict_re,
-                            moment_choice = moments0,
-                            how = 'expectation')
-            return scalar
-
-        ## invoke estimation 
-        #ParaEst(Objdeniar_re,
-        #        para_guess = np.array([0.5,0.5,0.5]),
-        #        method='trust-constr',
-        #       bounds = ((0,1),(0,3),(0,3),))
-# -
-
-# #### Estimating DENI using DENI
-
-# + code_folding=[0]
-if __name__ == "__main__":
-
-    data_mom_dict_deni = deniar0.SMM()
-
-    def Objdeniar_deni(paras):
-        scalor = ObjGen(deniar0,
-                        paras = paras,
-                        data_mom_dict = data_mom_dict_deni,
-                        moment_choice = moments0,
-                        how = 'expectation')
-        return scalor
-
-    ## invoke estimation 
-    #ParaEst(Objdeniar_deni,
-    #        para_guess = np.array([0.5,0.5,0.5]),
-    #        method='trust-constr',
-    #        bounds = ((0,1),(0,3),(0,3),))
-
-# + code_folding=[]
 if __name__ == "__main__":
     ## initial a sv instance
     denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.3,0.2]),
