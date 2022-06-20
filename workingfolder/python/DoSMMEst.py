@@ -26,15 +26,20 @@
 #   3.  The general function is to be used to compute the specific objective function that takes parameter as the only input for the minimizer to work
 #   4.  Then a general function that does an optimization algorithm takes the specific objective function and estimates the parameters
 
+# +
 import numpy as np
 import matplotlib.pyplot as plt
 from numba import types
 from numba.typed import Dict
 import pandas as pd
 from statsmodels.tsa.api import AutoReg as AR
-lw = 4
 pd.options.display.float_format = '{:,.2f}'.format
 plt.style.use('ggplot')
+
+## figure config
+
+lw = 4  #line width
+# -
 
 # ## Model
 
@@ -224,9 +229,9 @@ real_time_inf = real_time_inf.dropna()
 InfM = pd.read_stata('../OtherData/InfM.dta')
 InfM = InfM[-InfM.date.isnull()]
 dateM = pd.to_datetime(InfM['date'],format='%Y%m%d')
-dateM_str = dateM .dt.year.astype(int).astype(str) + \
-             "M" + dateM .dt.month.astype(int).astype(str)
-InfM.index = pd.DatetimeIndex(dateM_str,freq='infer')
+
+InfM.index = pd.DatetimeIndex(dateM,
+                              freq='infer')
 
 ###############
 ## quarterly ##
@@ -299,7 +304,7 @@ SCE_est = pd.concat([SCECPI,
 ## process parameters estimation AR1 
 # period filter 
 start_t='1995-01-01'
-end_t = '2022-06-30'   
+end_t = '2022-6-30'   
 
 ######################
 ### quarterly data ##
@@ -343,6 +348,8 @@ realized_CPI = np.array(SCE_est['Inf1yf_CPIAU'])
 # -
 
 # #### AR1 parameters 
+
+CPIM
 
 # + code_folding=[]
 ######################
@@ -457,8 +464,8 @@ data_moms_dct_SPF['VarATV'] = VarATV_data
 control_ind_fe = True
 
 if control_ind_fe:
-    exp_data_SCE = SCE_est[['SCE_Mean','SCE_FE_rd','SCE_Disg_rd','SCE_Var_rd']]
-    exp_data_SCE = exp_data_SCE.rename(columns={"SCE_Mean": "Forecast", "SCE_FE_rd": "FE",
+    exp_data_SCE = SCE_est[['SCE_Mean','SCE_FE','SCE_Disg_rd','SCE_Var_rd']]
+    exp_data_SCE = exp_data_SCE.rename(columns={"SCE_Mean": "Forecast", "SCE_FE": "FE",
                                             "SCE_Disg_rd":"Disg","SCE_Var_rd":"Var"})
 else:
     exp_data_SCE = SCE_est[['SCE_Mean','SCE_FE','SCE_Disg','SCE_Var']]
@@ -511,8 +518,27 @@ data_moms_dct_SCE['VarATV'] = VarATV_data
 ############# need to compute the unconditional moments here 
 # -
 
+print('SPF\n')
 print(dict(data_moms_dct_SPF))
+print('\n')
+print('SCE\n')
 print(dict(data_moms_dct_SCE))
+
+# +
+## data_moments 
+
+data_mom_SPF = pd.DataFrame([dict(data_moms_dct_SPF)])
+data_mom_SPF.index = ['SPF']
+data_mom_SCE = pd.DataFrame([dict(data_moms_dct_SCE)])
+data_mom_SCE.index = ['SCE']
+
+data_mom_df = pd.concat([data_mom_SPF,data_mom_SCE])
+
+data_mom_df = data_mom_df.round(3)
+
+data_mom_df.T.to_excel('tables/data_moments.xlsx')
+data_mom_df
+# -
 
 # ### Data moments
 
@@ -540,7 +566,7 @@ process_paraM_est_ar = np.array([rhoM_est,
 # + [markdown] code_folding=[]
 # #### SV  parameters and data  
 
-# + code_folding=[]
+# + code_folding=[0]
 ################
 ## quarterly ##
 ################
@@ -634,7 +660,7 @@ plt.ylabel('std')
 plt.legend(loc=1)
 plt.savefig('../graphs/inflation/UCSVM.png')
 
-# + code_folding=[]
+# + code_folding=[0]
 #########################################################
 ## specific to SV model  
 ######################################################
@@ -1084,7 +1110,7 @@ for agent_id,agent in enumerate(agents_list):
                                        index = True)
 
 
-# + code_folding=[]
+# + code_folding=[0]
 ## create multiple index to store coefficients estimates 
 
 iterables = [agents_list, process_list, ex_model_list,moments_list_general]
@@ -1119,25 +1145,6 @@ paras_combine_table = pd.merge(paras_table,
                                how='outer',
                                left_index=True,
                                right_index=True)
-
-# + code_folding=[]
-## Flag those under-identified cases 
-
-ui_list = [('SPF','AR','NI','FE'),
-          ('SCE','AR','NI','FE'),
-          ('SPF','AR','DENI','FE'),
-          ('SCE','AR','DENI','FE'),
-          ('SPF','SV','NI','FE'),
-          ('SCE','SV','NI','FE'),
-          ('SPF','SV','DENI','FE'),
-          ('SCE','SV','DENI','FE')
-          ]
-
-
-for case in ui_list:
-    for name in paras_combine_table.columns:
-        paras_combine_table.loc[case,name]=tuple(np.array([]))
-        #paras_combine_table.loc[case][name] = tuple(np.array([]))
 # -
 
 print(process_paraQ_est_ar)
@@ -1152,7 +1159,28 @@ paras_combine_table_2step = paras_combine_table[['2-step Estimate 2nd step','Joi
 
 paras_combine_table_2step
 
-# + code_folding=[4]
+# +
+## Flag those under-identified cases 
+
+ui_list = [('SPF','AR','NI','FE'),
+          ('SCE','AR','NI','FE'),
+          ('SPF','AR','DENI','FE'),
+          ('SCE','AR','DENI','FE'),
+          ('SPF','SV','NI','FE'),
+          ('SCE','SV','NI','FE'),
+          ('SPF','SV','DENI','FE'),
+          ('SCE','SV','DENI','FE')
+          ]
+
+
+for case in ui_list:
+    print(case)
+    for name in paras_combine_table.columns:
+        print(name)
+        paras_combine_table.loc[case,name]= tuple(np.array([]))
+        #paras_combine_table.loc[case][name] = tuple(np.array([]))
+
+# + code_folding=[]
 ## generate model moments
 
 smm_list = []
@@ -1241,6 +1269,12 @@ mom_compare_sce = smm_data_sce.append(smm_model.loc['SCE'])
 mom_joint_compare_spf = smm_data_spf.append(smm_joint_model.loc['SPF','AR'])
 mom_joint_compare_sce = smm_data_sce.append(smm_joint_model.loc['SCE','AR'])
 # -
+
+## export 
+mom_compare_spf.to_excel('./tables/spf_moments.xlsx')
+mom_compare_sce.to_excel('./tables/sce_moments.xlsx')
+mom_joint_compare_spf.to_excel('./tables/spf_joint_est_moments.xlsx')
+mom_joint_compare_sce.to_excel('./tables/sce_joint_est_moments.xlsx')
 
 mom_compare_spf
 
