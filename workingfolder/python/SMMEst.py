@@ -238,7 +238,8 @@ def ParaEst(ObjSpec,
             para_guess,
             method = 'Nelder-Mead',
             bounds = None,
-            options = {'disp': True}):
+            options = {'disp': True,
+                      'maxiter': 1500}):
     """
     an estimating function that minimizes OjbSpec function that gives parameter estimates
     """
@@ -309,7 +310,7 @@ model_data = [
 ]
 
 
-# + code_folding=[1, 2, 14, 18, 34, 39, 73]
+# + code_folding=[1, 2, 37, 42, 79]
 @jitclass(model_data)
 class RationalExpectationAR:
     def __init__(self,
@@ -320,6 +321,9 @@ class RationalExpectationAR:
                  horizon = 1):
         self.exp_para = exp_para
         self.process_para = process_para
+        if process_para[0] >1:
+            print("Warning:persistent parameter cannot be more than 1")
+            self.process_para[0] = 1.0
         self.horizon = horizon
         self.real_time = real_time
         self.history = history
@@ -358,7 +362,10 @@ class RationalExpectationAR:
         #################################
 
         InfAV  = 0.0
-        InfVar = σ**2/(1-ρ**2)
+        if ρ <1.0:
+            InfVar = σ**2/(1-ρ**2)
+        else:
+            Infvar = np.inf
         InfATV = ρ*InfVar
         
         #################################
@@ -404,7 +411,7 @@ class RationalExpectationAR:
 #
 # - Creating some simulated inflation data following AR1 and UCSV process separately 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
        
     ## first, simulate some AR1 inflation with known parameters 
@@ -415,7 +422,7 @@ if __name__ == "__main__":
     real_time0 = history0[11:-2] 
     realized0 = history0[12:-1]
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
     ### create a RESV instance 
 
@@ -618,7 +625,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + AR1
 
-# + code_folding=[1, 2, 18, 81]
+# + code_folding=[21]
 @jitclass(model_data)
 class StickyExpectationAR:
     def __init__(self,
@@ -629,6 +636,9 @@ class StickyExpectationAR:
                  horizon = 1):
         self.exp_para = exp_para
         self.process_para = process_para
+        if process_para[0] >1:
+            print("Warning:persistent parameter cannot be more than 1")
+            self.process_para[0] = 1.0
         self.horizon = horizon
         self.real_time = real_time
         self.history = history
@@ -709,7 +719,10 @@ class StickyExpectationAR:
         #################################
 
         InfAV  = 0.0
-        InfVar = σ**2/(1-ρ**2)
+        if ρ <1.0:
+            InfVar = σ**2/(1-ρ**2)
+        else:
+            Infvar = np.inf
         InfATV = ρ*InfVar
         
         #################################
@@ -749,7 +762,7 @@ class StickyExpectationAR:
         return SMMMoments
 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
 
@@ -1013,7 +1026,7 @@ class StickyExpectationSV:
         return SMMMoments
 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
 
@@ -1055,7 +1068,7 @@ if __name__ == "__main__":
                   np.array([0.8,0.2]))
 
 
-# + code_folding=[1, 2, 14, 18, 117, 151]
+# + code_folding=[1]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1066,6 +1079,9 @@ class NoisyInformationAR:
                  horizon = 1):
         self.exp_para = exp_para
         self.process_para = process_para
+        if process_para[0] >1:
+            print("Warning:persistent parameter cannot be more than 1")
+            self.process_para[0] = 1.0
         self.horizon = horizon
         self.real_time = real_time
         self.history = history
@@ -1182,7 +1198,10 @@ class NoisyInformationAR:
         #################################
 
         InfAV  = 0.0
-        InfVar = σ**2/(1-ρ**2)
+        if ρ <1.0:
+            InfVar = σ**2/(1-ρ**2)
+        else:
+            Infvar = np.inf
         InfATV = ρ*InfVar
         
         #################################
@@ -1556,7 +1575,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + AR1
 
-# + code_folding=[1, 2, 14, 71]
+# + code_folding=[21]
 @jitclass(model_data)
 class DiagnosticExpectationAR:
     def __init__(self,
@@ -1567,6 +1586,9 @@ class DiagnosticExpectationAR:
                  horizon = 1):
         self.exp_para = exp_para
         self.process_para = process_para
+        if process_para[0] >1:
+            print("Warning:persistent parameter cannot be more than 1")
+            self.process_para[0] = 1.0
         self.horizon = horizon
         self.real_time = real_time
         self.history = history
@@ -1637,7 +1659,10 @@ class DiagnosticExpectationAR:
         #################################
 
         InfAV  = 0.0
-        InfVar = σ**2/(1-ρ**2)
+        if ρ <1.0:
+            InfVar = σ**2/(1-ρ**2)
+        else:
+            Infvar = np.inf
         InfATV = ρ*InfVar
         
         #################################
@@ -1960,7 +1985,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
 
-# + code_folding=[1, 18]
+# + code_folding=[18]
 @jitclass(model_data)
 class DENIHybridAR:
     def __init__(self,
@@ -1971,6 +1996,9 @@ class DENIHybridAR:
                  horizon = 1):
         self.exp_para = exp_para
         self.process_para = process_para
+        if process_para[0] >1:
+            print("Warning:persistent parameter cannot be more than 1")
+            self.process_para[0] = 1.0
         self.horizon = horizon
         self.real_time = real_time
         self.history = history
@@ -2087,7 +2115,10 @@ class DENIHybridAR:
         #################################
 
         InfAV  = 0.0
-        InfVar = σ**2/(1-ρ**2)
+        if ρ <1.0:
+            InfVar = σ**2/(1-ρ**2)
+        else:
+            Infvar = np.inf
         InfATV = ρ*InfVar
         
         #################################

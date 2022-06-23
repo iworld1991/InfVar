@@ -49,7 +49,8 @@ from SMMEst import NoisyInformationAR, NoisyInformationSV
 from SMMEst import DiagnosticExpectationAR, DiagnosticExpectationSV
 from SMMEst import DENIHybridAR, DENIHybridSV
 
-# + pycharm={"name": "#%%\n"}
+
+# + pycharm={"name": "#%%\n"} code_folding=[0]
 ## create some fake parameters and data to initialize model class
 ### not used for estimation
 
@@ -215,7 +216,7 @@ real_time_index = real_time_index.drop(columns=['DATE'])
 ## turn index into yearly inflation
 #real_time_index = pd.concat([real_time_cpic,real_time_cpi], join='inner', axis=1)
 real_time_index.columns=['RTCPI','RTCPICore']
-real_time_inf = real_time_index.pct_change(periods=12)*100
+real_time_inf = real_time_index.pct_change(periods=12)*100  ## year-over-year inflation, standard 
 real_time_inf = real_time_inf.dropna()
 # -
 
@@ -244,7 +245,6 @@ dateQ_str = dateQ.dt.year.astype(int).astype(str) + \
              "Q" + dateQ.dt.quarter.astype(int).astype(str)
 
 InfQ.index = pd.DatetimeIndex(dateQ_str,freq='infer')
-
 
 ###########################
 #keep only needed variables 
@@ -349,33 +349,31 @@ realized_CPI = np.array(SCE_est['Inf1yf_CPIAU'])
 
 # #### AR1 parameters 
 
-CPIM
-
 # + code_folding=[]
 ######################
 ### quarterly data ##
 #####################
 
-
 CPICQ_demean = CPICQ
 
-ARmodel = AR(CPICQ_demean,lags=1,trend='n')
+ARmodel = AR(CPICQ_demean,lags=[4],trend='n') ## 4 quarters of lag!!!!
 ar_rs = ARmodel.fit()
 rhoQ_est = ar_rs.params[0]
-sigmaQ_est = np.sqrt(sum(ar_rs.resid**2)/(len(CPICQ)-1))
+if rhoQ_est>1.0:
+    rhoQ_est = 1.0
+sigmaQ_est = np.sqrt(ar_rs.sigma2) #np.sqrt(sum(ar_rs.resid**2)/(len(CPIM)-1))
 
 ###################
 ### monthly data ##
 ###################
 
-#Y = np.array(CPIM[12:])
-#X = np.array(CPIM[:-12])
-
 CPIM_demean = CPIM
-ARmodel2 = AR(CPIM_demean,lags=1,trend='n')
+ARmodel2 = AR(CPIM_demean,lags=[12],trend='n') ## 12 months of lags!
 ar_rs2 = ARmodel2.fit()
 rhoM_est = ar_rs2.params[0]
-sigmaM_est = np.sqrt(sum(ar_rs2.resid**2)/(len(CPIM)-1))
+if rhoM_est>1.0:
+    rhoM_est = 1.0
+sigmaM_est = np.sqrt(ar_rs2.sigma2)  # or np.sqrt(sum(ar_rs2.resid**2)/(len(CPIM)-1))
 
 # + code_folding=[]
 print('quarterly AR(1) estimates for CPI core:')
@@ -388,12 +386,12 @@ print(sigmaM_est)
 
 # #### Data moments 
 
-# + code_folding=[]
+# + code_folding=[0]
 #####################################
 ## preparing data moments
 #####################################
 
-## Be careful with frequency here when computing auto-correlation. 
+## Be careful with the frequency here when computing auto-correlation!!!!!
 ### SPF: quarters 
 ### SCE: month
 
@@ -404,7 +402,7 @@ print(sigmaM_est)
 ### inflation moments 
 
 realized_CPIC = realized_CPIC[~np.isnan(realized_CPIC)]
-InfAV_data = np.mean(realized_CPIC)
+InfAV_data = np.mean(realized_CPIC-np.mean(realized_CPIC))
 InfVar_data = np.var(realized_CPIC)
 InfATV_data = np.cov(np.stack( (realized_CPIC[4:],realized_CPIC[:-4]),axis = 0 ))[0,1]
 ## annual autocovariance
@@ -476,7 +474,7 @@ else:
 
 realized_CPI = realized_CPI[~np.isnan(realized_CPI)]
 
-InfAV_data = np.mean(realized_CPI)
+InfAV_data = np.mean(realized_CPI-np.mean(realized_CPI))
 InfVar_data = np.var(realized_CPI)
 InfATV_data = np.cov(np.stack( (realized_CPI[12:],realized_CPI[:-12]),axis = 0 ))[0,1]
 
@@ -524,17 +522,59 @@ print('\n')
 print('SCE\n')
 print(dict(data_moms_dct_SCE))
 
-# +
+# + code_folding=[0, 19]
+## model moments 
+fire_ar_mom_dct = {'InfAV':0.0,
+           'InfVar':r'$\sigma^2/(1-\rho^2)$',
+           'InfATV':r'$\rho\sigma^2/(1-\rho^2)$',
+           'FE':0.0,
+           'FEVar':r'$\sigma^2$',
+           'FEATV':0.0,
+           'Disg':0.0,
+           'DisgVar':0.0,
+           'DisgATV':0.0,
+           'Var':r'$\sigma^2$',
+            'VarVar':0.0,
+            'VarATV':0.0
+           }
+
+fire_ar_mom = pd.DataFrame([dict(fire_ar_mom_dct)])
+fire_ar_mom.index = ['FIRE+AR']
+
+
+fire_sv_mom_dct = {'InfAV':'N/A',
+           'InfVar':'N/A',
+           'InfATV':'N/A',
+           'FE':0.0,
+           'FEVar':r'$\bar\sigma^2_{\eta}+\bar\sigma^2_{\epsilon}$',
+           'FEATV':0.0,
+           'Disg':0.0,
+           'DisgVar':0.0,
+           'DisgATV':0.0,
+           'Var':r'$\bar\sigma^2_{\eta}+\bar\sigma^2_{\epsilon}$',
+            'VarVar':'>0',
+            'VarATV':'>0'
+           }
+
+fire_sv_mom = pd.DataFrame([dict(fire_sv_mom_dct)])
+fire_sv_mom.index = ['FIRE+SV']
+
+# + code_folding=[0]
 ## data_moments 
+
 
 data_mom_SPF = pd.DataFrame([dict(data_moms_dct_SPF)])
 data_mom_SPF.index = ['SPF']
 data_mom_SCE = pd.DataFrame([dict(data_moms_dct_SCE)])
 data_mom_SCE.index = ['SCE']
 
-data_mom_df = pd.concat([data_mom_SPF,data_mom_SCE])
+data_mom_df = pd.concat([data_mom_SPF,
+                         data_mom_SCE,
+                         fire_ar_mom,
+                        fire_sv_mom])
 
-data_mom_df = data_mom_df.round(3)
+data_mom_df = data_mom_df.applymap(lambda x: round(x, 3) 
+                                   if isinstance(x, (int, float)) else x)
 
 data_mom_df.T.to_excel('tables/data_moments.xlsx')
 data_mom_df
@@ -739,7 +779,7 @@ process_paraM_est_sv = np.array([0.2])
 
 # ### Estimation 
 
-# + code_folding=[11, 23, 33, 60, 63, 68, 71, 76, 88, 99, 108, 116, 126, 136, 147, 151, 156, 161, 167, 186, 287]
+# + code_folding=[4, 11, 23, 33, 42, 51, 60, 71, 76, 82, 88, 99, 108, 116, 126, 136, 147, 151, 156, 161, 167, 229, 260, 261, 287]
 agents_list = ['SPF','SCE']
 
 process_list = ['AR','SV']
@@ -828,7 +868,7 @@ guesses_list = [np.array([0.3]),  ## se lbd
                np.array([0.1,0.2,0.3])
                ]  ## deni theta, sigma_pb, sigma_pr
 
-guesses_joint_list = [np.array([0.3,0.97,0.1]),            ## se lbd 
+guesses_joint_list = [np.array([0.2,0.98,0.1]),            ## se lbd 
                        np.array([0.1,0.2,0.95,0.1]),      ## ni sigma_pb, sigma_pr
                        np.array([0.3,0.4,0.95,0.1]),      ## de theta theta_sigma
                        np.array([0.1,0.2,0.3,0.95,0.1]),  ## theta, sigma_pb, sigma_pr  
@@ -1110,7 +1150,7 @@ for agent_id,agent in enumerate(agents_list):
                                        index = True)
 
 
-# + code_folding=[0]
+# + code_folding=[]
 ## create multiple index to store coefficients estimates 
 
 iterables = [agents_list, process_list, ex_model_list,moments_list_general]
@@ -1159,7 +1199,7 @@ paras_combine_table_2step = paras_combine_table[['2-step Estimate 2nd step','Joi
 
 paras_combine_table_2step
 
-# +
+# + code_folding=[2]
 ## Flag those under-identified cases 
 
 ui_list = [('SPF','AR','NI','FE'),
@@ -1180,6 +1220,40 @@ for case in ui_list:
         paras_combine_table.loc[case,name]= tuple(np.array([]))
         #paras_combine_table.loc[case][name] = tuple(np.array([]))
 
+# + code_folding=[3]
+t_sim = 500
+t_burn = 30
+
+def simulate_history(pg_para,
+                     t_sim,
+                     t_burn):
+    if len(pg_para)==2:
+        ρ,σ = pg_para
+        history_this = SimAR1(ρ,
+                              σ,
+                              t_sim)
+        real_time_this = history_this[t_burn:-2] 
+        realized_this = history_this[t_burn+1:-1]
+        
+    elif len(pg_para)==1:
+        γ_fake = pg_para[0]
+        
+        
+        history_this,p_history_this,vol_p_history_this,vol_t_history_this = SimUCSV(γ_fake,
+                                                                                    nobs = t_sim,
+                                                                                    p0 = p0_fake) 
+        history_this =  np.array([history_this,
+                                p_history_this,
+                                vol_p_history_this,
+                                vol_t_history_this]
+                               )
+
+        real_time_this = history_this[:,t_burn:-2]
+        realized_this = history_this[0,t_burn+1:-1] ## notice, just Y itself is 
+        
+    return realized_this,history_this,real_time_this
+
+
 # + code_folding=[]
 ## generate model moments
 
@@ -1187,7 +1261,7 @@ smm_list = []
 smm_joint_list = []
 for agent_id,agent in enumerate(agents_list):
     print(agent)
-    realized_this = realized_list[agent_id]
+    
     data_mom_dict_this = data_mom_dict_list[agent_id]
     for pg_id,process in enumerate(process_list):
         print(process)
@@ -1195,9 +1269,7 @@ for agent_id,agent in enumerate(agents_list):
         ## history and real-time inflation that is fed in the model depends on agent type and process
         agent_process_id = agent_id*2+pg_id       
         process_paras_this = process_paras_list[agent_process_id]
-        real_time_this = real_time_list[agent_process_id]
-        history_this = history_list[agent_process_id] 
-        
+               
         for exp_id,ex_model in enumerate(ex_model_list):
             n_exp_model = len(ex_model_list)
             print(ex_model)
@@ -1208,21 +1280,26 @@ for agent_id,agent in enumerate(agents_list):
             ## feed inputs to the instance 
             instance = model_instance
             print(instance)
-            instance.GetRealization(realized_this)
-            instance.real_time = real_time_this
-            instance.history = history_this
-            instance.process_para = process_paras_this 
             
-            ## specific objetive function to minimize (only for expectation)
+            ## compute moments with these parameters 
             for moments in moments_list_general:
                 ## 2-step moments 
                 para_est_this = np.array(list(paras_combine_table.loc[agent,process,ex_model,moments]['2-step Estimate 2nd step'])).flatten()
                 print(para_est_this)
+                print(process_paras_this)
+                realized_this,history_this,real_time_this = simulate_history(process_paras_this,
+                                                                                 t_sim,
+                                                                                 t_burn)
+                instance.GetRealization(realized_this)
+                instance.real_time = real_time_this
+                instance.history = history_this
                 try:
                     instance.process_para = process_paras_this
                     instance.exp_para = para_est_this
                     smm_this = instance.SMM()
+                    print(smm_this)
                 except:
+                    print('failed')
                     smm_this = {}
                 smm_list.append(smm_this)
 
@@ -1233,8 +1310,17 @@ for agent_id,agent in enumerate(agents_list):
                 try:
                     instance.exp_para = para_est_this_[0:n_exp_paras_this]     
                     instance.process_para = para_est_this_[n_exp_paras_this:]
+                    ## simulate history 
+                    realized_this,history_this,real_time_this = simulate_history(instance.process_para,
+                                                                                 t_sim,
+                                                                                 t_burn)
+                    instance.GetRealization(realized_this)
+                    instance.real_time = real_time_this
+                    instance.history = history_this
+                    
                     try:
                         smm_this = instance.SMM()
+                        print(smm_this)
                         smm_joint_list.append(smm_this)
                     except:
                         smm_this = {}
@@ -1243,7 +1329,7 @@ for agent_id,agent in enumerate(agents_list):
                     smm_this = {}
                     smm_joint_list.append(smm_this)
 
-# + code_folding=[1]
+# + code_folding=[]
 ## model moments 
 smm_model = pd.DataFrame(smm_list,
                          columns = list(smm_list[0].keys()),
@@ -1283,5 +1369,7 @@ mom_joint_compare_spf
 mom_compare_sce
 
 mom_joint_compare_sce
+
+
 
 
