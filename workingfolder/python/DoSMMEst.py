@@ -386,7 +386,7 @@ print(sigmaM_est)
 
 # #### Data moments 
 
-# + code_folding=[0]
+# + code_folding=[]
 #####################################
 ## preparing data moments
 #####################################
@@ -522,8 +522,9 @@ print('\n')
 print('SCE\n')
 print(dict(data_moms_dct_SCE))
 
-# + code_folding=[0, 19]
-## model moments 
+# #### model moments 
+
+# + code_folding=[0, 18]
 fire_ar_mom_dct = {'InfAV':0.0,
            'InfVar':r'$\sigma^2/(1-\rho^2)$',
            'InfATV':r'$\rho\sigma^2/(1-\rho^2)$',
@@ -559,7 +560,26 @@ fire_sv_mom_dct = {'InfAV':'N/A',
 fire_sv_mom = pd.DataFrame([dict(fire_sv_mom_dct)])
 fire_sv_mom.index = ['FIRE+SV']
 
-# + code_folding=[0]
+
+
+sear_mom_dct = {'InfAV':0.0,
+           'InfVar':r'$\sigma^2/(1-\rho^2)$',
+           'InfATV':r'$\rho\sigma^2/(1-\rho^2)$',
+           'FE':0.0,
+           'FEVar':r'$\lambda^2\sigma^2/(1-(1-\lambda)^2\rho^2)$',
+           'FEATV':r'$(1-\lambda)\rho\text{FEVar}$',
+           'Disg':0.0,
+           'DisgVar':0.0,
+           'DisgATV':0.0,
+           'Var':r'$\sigma^2$',
+            'VarVar':0.0,
+            'VarATV':0.0
+           }
+
+sear_mom = pd.DataFrame([sear_mom_dct])
+sear_mom.index = ['SE+AR']
+
+# + code_folding=[]
 ## data_moments 
 
 
@@ -571,13 +591,14 @@ data_mom_SCE.index = ['SCE']
 data_mom_df = pd.concat([data_mom_SPF,
                          data_mom_SCE,
                          fire_ar_mom,
-                        fire_sv_mom])
+                        fire_sv_mom,
+                        sear_mom])
 
 data_mom_df = data_mom_df.applymap(lambda x: round(x, 3) 
                                    if isinstance(x, (int, float)) else x)
 
 data_mom_df.T.to_excel('tables/data_moments.xlsx')
-data_mom_df
+data_mom_df.T
 # -
 
 # ### Data moments
