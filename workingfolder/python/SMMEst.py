@@ -310,7 +310,7 @@ model_data = [
 ]
 
 
-# + code_folding=[1, 2, 37, 42, 79]
+# + code_folding=[2, 17, 21, 42, 79]
 @jitclass(model_data)
 class RationalExpectationAR:
     def __init__(self,
@@ -356,7 +356,7 @@ class RationalExpectationAR:
     def SMM(self):
         
         ρ,σ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
@@ -366,7 +366,7 @@ class RationalExpectationAR:
             InfVar = σ**2/(1-ρ**2)
         else:
             Infvar = np.inf
-        InfATV = ρ*InfVar
+        InfATV = ρ**horizon*InfVar
         
         #################################
         # expectation moments 
@@ -381,14 +381,14 @@ class RationalExpectationAR:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -451,7 +451,7 @@ if __name__ == "__main__":
 # - For instance, the example below shows that how ATV of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
 #
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
 
@@ -509,7 +509,7 @@ model_sv_data = [
 ]
 
 
-# + code_folding=[2, 14, 18, 50]
+# + code_folding=[1, 14, 18, 50]
 @jitclass(model_sv_data)
 class RationalExpectationSV:
     def __init__(self,
@@ -563,12 +563,12 @@ class RationalExpectationSV:
     def SMM(self):
         
         γ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
 
-        InfAV  = np.nan
+        InfAV  = 0.0
         InfVar = np.nan
         InfATV = np.nan
         
@@ -585,14 +585,14 @@ class RationalExpectationSV:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -625,7 +625,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + AR1
 
-# + code_folding=[21]
+# + code_folding=[2, 21]
 @jitclass(model_data)
 class StickyExpectationAR:
     def __init__(self,
@@ -713,7 +713,7 @@ class StickyExpectationAR:
     def SMM(self):
         
         ρ,σ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
@@ -723,7 +723,7 @@ class StickyExpectationAR:
             InfVar = σ**2/(1-ρ**2)
         else:
             Infvar = np.inf
-        InfATV = ρ*InfVar
+        InfATV = ρ**horizon*InfVar
         
         #################################
         # expectation moments 
@@ -738,14 +738,14 @@ class StickyExpectationAR:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -762,7 +762,7 @@ class StickyExpectationAR:
         return SMMMoments
 
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
 
@@ -888,7 +888,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[1]
+# + code_folding=[2, 18, 122]
 @jitclass(model_sv_data)
 class StickyExpectationSV:
     def __init__(self,
@@ -980,12 +980,12 @@ class StickyExpectationSV:
     def SMM(self):
         
         γ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
 
-        InfAV  = np.nan
+        InfAV  = 0.0
         InfVar = np.nan
         InfATV = np.nan
         
@@ -1002,14 +1002,14 @@ class StickyExpectationSV:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -1068,7 +1068,7 @@ if __name__ == "__main__":
                   np.array([0.8,0.2]))
 
 
-# + code_folding=[1]
+# + code_folding=[2, 21]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1192,7 +1192,7 @@ class NoisyInformationAR:
     def SMM(self):
         
         ρ,σ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
@@ -1202,7 +1202,7 @@ class NoisyInformationAR:
             InfVar = σ**2/(1-ρ**2)
         else:
             Infvar = np.inf
-        InfATV = ρ*InfVar
+        InfATV = ρ**horizon*InfVar
         
         #################################
         # expectation moments 
@@ -1217,14 +1217,14 @@ class NoisyInformationAR:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -1385,7 +1385,7 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[1, 2, 14, 18, 62, 123, 157]
+# + code_folding=[1, 2, 14, 18, 62, 157]
 @jitclass(model_sv_data)
 class NoisyInformationSV:
     def __init__(self,
@@ -1512,7 +1512,7 @@ class NoisyInformationSV:
     def SMM(self):
         
         γ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
@@ -1534,14 +1534,14 @@ class NoisyInformationSV:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -1653,7 +1653,7 @@ class DiagnosticExpectationAR:
     def SMM(self):
         
         ρ,σ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
@@ -1663,7 +1663,7 @@ class DiagnosticExpectationAR:
             InfVar = σ**2/(1-ρ**2)
         else:
             Infvar = np.inf
-        InfATV = ρ*InfVar
+        InfATV = ρ**horizon*InfVar
         
         #################################
         # expectation moments 
@@ -1678,14 +1678,14 @@ class DiagnosticExpectationAR:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -1834,7 +1834,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + SV
 
-# + code_folding=[1, 2, 18, 55, 57]
+# + code_folding=[2, 18, 55, 57, 84, 118]
 @jitclass(model_sv_data)
 class DiagnosticExpectationSV:
     def __init__(self,
@@ -1922,7 +1922,7 @@ class DiagnosticExpectationSV:
     def SMM(self):
         
         γ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
@@ -1944,14 +1944,14 @@ class DiagnosticExpectationSV:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -1985,7 +1985,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
 
-# + code_folding=[18]
+# + code_folding=[21, 120]
 @jitclass(model_data)
 class DENIHybridAR:
     def __init__(self,
@@ -2109,7 +2109,7 @@ class DENIHybridAR:
     def SMM(self):
         
         ρ,σ = self.process_para
-        
+        horizon = self.horizon
         #################################
         # inflation moments 
         #################################
@@ -2119,7 +2119,7 @@ class DENIHybridAR:
             InfVar = σ**2/(1-ρ**2)
         else:
             Infvar = np.inf
-        InfATV = ρ*InfVar
+        InfATV = ρ**horizon*InfVar
         
         #################################
         # expectation moments 
@@ -2134,14 +2134,14 @@ class DENIHybridAR:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
@@ -2243,7 +2243,7 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[1, 2, 14, 18, 62]
+# + code_folding=[2, 14, 18, 62, 123, 157]
 @jitclass(model_sv_data)
 class DENIHybridSV:
     def __init__(self,
@@ -2370,12 +2370,12 @@ class DENIHybridSV:
     def SMM(self):
         
         γ = self.process_para
-        
+        horizon = self.horizon 
         #################################
         # inflation moments 
         #################################
 
-        InfAV  = np.nan
+        InfAV  = 0.0
         InfVar = np.nan
         InfATV = np.nan
         
@@ -2392,14 +2392,14 @@ class DENIHybridSV:
         ## SMM moments     
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
-        FEATV_sim = np.cov(np.stack( (FEs_sim[1:],FEs_sim[:-1]),axis = 0 ))[0,1]
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
         Disg_sim = np.mean(Disgs_sim)
         DisgVar_sim = np.var(Disgs_sim)
-        DisgATV_sim = np.cov(np.stack( (Disgs_sim[1:],Disgs_sim[:-1]),axis = 0))[0,1]
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
         
         Var_sim = np.mean(Vars_sim)
         VarVar_sim = np.var(Vars_sim)
-        VarATV_sim = np.cov(np.stack( (Vars_sim[1:],Vars_sim[:-1]),axis = 0))[0,1]
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
     
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
