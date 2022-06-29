@@ -292,10 +292,14 @@ print(SPFCPI.mean())
 
 SPF_est= pd.concat([SPFCPI,
                     real_time_inf,
-                    InfQ], join='inner', axis=1)
+                    InfQ], 
+                   join='inner', 
+                   axis=1)
 SCE_est = pd.concat([SCECPI,
                      real_time_inf,
-                     InfM], join='inner', axis=1)
+                     InfM], 
+                    join='inner', 
+                    axis=1)
 # -
 
 # #### History data 
@@ -382,11 +386,62 @@ print(sigmaQ_est)
 print('monthly AR(1) estimates for CPI headline:')
 print(rhoM_est)
 print(sigmaM_est)
+
+
 # -
 
 # #### Data moments 
 
-# + code_folding=[]
+# + code_folding=[0]
+def calc_variance_at_low_freq(series,
+                             horizon):
+    """
+    input
+    ===== 
+    series: data at higher frequency with serial correlation
+    horizon: nb of periods between two non-serially correlated data point
+    
+    out
+    ====
+    variance: average variance of the non-serially correlated series 
+    """
+    
+    varinace_sum = 0.0
+    for cut in range(0,horizon):
+        ids = np.arange(cut,len(series),horizon)
+        print(ids)
+        variance = series[ids].var()
+        varinace_sum +=variance
+    return varinace_sum/horizon
+
+
+# + code_folding=[0]
+def newey_west_variance(series,
+                        truncate):
+    """
+    input
+    ===== 
+    series: data at higher frequency with serial correlation
+    truncate: nb of periods between two non-serially correlated data point
+    
+    out
+    ====
+    variance: average variance of the non-serially correlated series 
+    """
+    adjust_term = 1.0
+    
+    for truc in range(1,truncate):
+        weight = 2*(truncate-truc)/truncate
+        adjust_term += weight
+    return series.var()/adjust_term
+
+
+# -
+
+newey_west_variance(realized_CPIC,
+                   4)
+
+# + code_folding=[108]
 #####################################
 ## preparing data moments
 #####################################
@@ -404,7 +459,7 @@ print(sigmaM_est)
 realized_CPIC = realized_CPIC[~np.isnan(realized_CPIC)]
 InfAV_data = np.mean(realized_CPIC-np.mean(realized_CPIC))
 InfVar_data = np.var(realized_CPIC)
-InfATV_data = np.cov(np.stack( (realized_CPIC[4:],realized_CPIC[:-4]),axis = 0 ))[0,1]
+InfATV_data = np.cov(np.stack( (realized_CPIC[1:],realized_CPIC[:-1]),axis = 0 ))[0,1]
 ## annual autocovariance
 
 ### expectation moments 
@@ -476,7 +531,7 @@ realized_CPI = realized_CPI[~np.isnan(realized_CPI)]
 
 InfAV_data = np.mean(realized_CPI-np.mean(realized_CPI))
 InfVar_data = np.var(realized_CPI)
-InfATV_data = np.cov(np.stack( (realized_CPI[12:],realized_CPI[:-12]),axis = 0 ))[0,1]
+InfATV_data = np.cov(np.stack( (realized_CPI[1:],realized_CPI[:-1]),axis = 0 ))[0,1]
 
 ## expectation moments 
 FEs_data = exp_data_SCE['FE']
@@ -524,7 +579,7 @@ print(dict(data_moms_dct_SCE))
 
 # #### model moments 
 
-# + code_folding=[0, 18]
+# + code_folding=[18, 37]
 fire_ar_mom_dct = {'InfAV':0.0,
            'InfVar':r'$\sigma^2/(1-\rho^2)$',
            'InfATV':r'$\rho\sigma^2/(1-\rho^2)$',
@@ -543,7 +598,7 @@ fire_ar_mom = pd.DataFrame([dict(fire_ar_mom_dct)])
 fire_ar_mom.index = ['FIRE+AR']
 
 
-fire_sv_mom_dct = {'InfAV':'N/A',
+fire_sv_mom_dct = {'InfAV':0.0,
            'InfVar':'N/A',
            'InfATV':'N/A',
            'FE':0.0,
@@ -591,8 +646,7 @@ data_mom_SCE.index = ['SCE']
 data_mom_df = pd.concat([data_mom_SPF,
                          data_mom_SCE,
                          fire_ar_mom,
-                        fire_sv_mom,
-                        sear_mom])
+                        fire_sv_mom])
 
 data_mom_df = data_mom_df.applymap(lambda x: round(x, 3) 
                                    if isinstance(x, (int, float)) else x)
@@ -627,7 +681,7 @@ process_paraM_est_ar = np.array([rhoM_est,
 # + [markdown] code_folding=[]
 # #### SV  parameters and data  
 
-# + code_folding=[0]
+# + code_folding=[]
 ################
 ## quarterly ##
 ################
