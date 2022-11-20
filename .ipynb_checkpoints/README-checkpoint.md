@@ -7,10 +7,13 @@
 ## [Most recent draft](/InfVar.pdf)
 ## Data 
 
-- for replication, one needs to download following data and put them into the folder workingfolder/SurveyData/SCE/
-- NYFED_SCE_13_16.dta: https://www.dropbox.com/s/rqzo1ypb08no5by/NYFED_SCE_13_16.dta?dl=0 
-- NYFED_SCE_17_19.dta: https://www.dropbox.com/s/964vt24chjk3yxh/NYFED_SCE_17_19.dta?dl=0 
-- NYFED_SCE_20.dta: https://www.dropbox.com/s/gg2j47c0wwike7b/NYFED_SCE_20.dta?dl=0 
+For replication, 
+- __either__ mannually download following data and put them into the folder workingfolder/SurveyData/SCE/
+    - NYFED_SCE_13_16.dta: https://www.dropbox.com/s/rqzo1ypb08no5by/NYFED_SCE_13_16.dta?dl=0 
+    - NYFED_SCE_17_19.dta: https://www.dropbox.com/s/964vt24chjk3yxh/NYFED_SCE_17_19.dta?dl=0 
+    - NYFED_SCE_20.dta: https://www.dropbox.com/s/gg2j47c0wwike7b/NYFED_SCE_20.dta?dl=0 
+
+- __or__ run the [Python code](/workingfolder/python/DownloadSCE.ipynb)
 
 ## Code
 
