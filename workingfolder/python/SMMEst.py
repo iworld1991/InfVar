@@ -30,11 +30,12 @@ import numpy as np
 from scipy.optimize import minimize
 from numba import njit, float64, int64
 from numba.experimental import jitclass
+import matplotlib.pyplot as plt
 
 
 # ## Model 
 
-# + code_folding=[2, 23, 47, 72, 120]
+# + code_folding=[0, 2, 23, 47, 72, 120]
 ## auxiliary functions 
 @njit
 def hstepvar(h,
@@ -168,7 +169,8 @@ def d1tod2(x):
     return x.reshape(1,-1)
 
 
-# + code_folding=[1, 37]
+# + code_folding=[0, 2, 38]
+## Objective functions for SMM
 @njit
 def ObjGen(model,
            paras,
@@ -251,8 +253,8 @@ def ParaEst(ObjSpec,
     if results['success']==True:
         parameter = results['x']
     else:
-        parameter = np.array([])
-    
+        #parameter = np.array([])
+        parameter = np.nan
     return parameter 
 
 
@@ -310,7 +312,7 @@ model_data = [
 ]
 
 
-# + code_folding=[2, 17, 21, 42, 79]
+# + code_folding=[1, 2, 17]
 @jitclass(model_data)
 class RationalExpectationAR:
     def __init__(self,
@@ -348,7 +350,8 @@ class RationalExpectationAR:
         Var = hstepvar(horizon,ρ,σ)* np.ones(n)
         FE = forecast - self.realized           ## forecast errors depend on realized shocks
         FEATV = np.zeros(n)
-        forecast_moments = {"FE":FE,
+        forecast_moments = {"Forecast":forecast,
+                            "FE":FE,
                             "Disg":Disg,
                             "Var":Var}
         return forecast_moments
@@ -372,13 +375,16 @@ class RationalExpectationAR:
         # expectation moments 
         #################################
         ## simulate forecasts
+        
         moms_sim = self.SimForecasts()
         
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
-        ## SMM moments     
+        ## SMM moments   
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -393,6 +399,7 @@ class RationalExpectationAR:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecasts":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -411,7 +418,7 @@ class RationalExpectationAR:
 #
 # - Creating some simulated inflation data following AR1 and UCSV process separately 
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
        
     ## first, simulate some AR1 inflation with known parameters 
@@ -421,8 +428,12 @@ if __name__ == "__main__":
                       200)
     real_time0 = history0[11:-2] 
     realized0 = history0[12:-1]
+    
+    ## plot
+    plt.plot(realized0)
+    plt.title('Simulated AR1')
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     ### create a RESV instance 
 
@@ -439,21 +450,24 @@ if __name__ == "__main__":
 
     xx_realized = xx_real_time[1:-1]
 
-    xx_real_time= np.array([xx_real_time,
+    xx_real_time = np.array([xx_real_time,
                             xx_p_real_time,
                             vol_p_real_time,
                             vol_t_real_time]
                           )[:,0:-2]
+    
+     ## plot
+    plt.plot(xx_realized)
+    plt.title('Simulated UCSV')
 # -
 
 # #### Estimation the parameters of the inflation process jointly using both inflation and rational expectation forecasts
 #
-# - For instance, the example below shows that how ATV of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
+# - For instance, the example below shows that how auto-covariance (ATV) of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
 #
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
-
 
 
     ## initialize an re instance 
@@ -465,14 +479,14 @@ if __name__ == "__main__":
     
     rear0.GetRealization(realized0) 
 
-
     ## fake data moments dictionary 
+    
     data_mom_dict_re = rear0.SMM()
-
+        
     ## specific objective function for estimation 
-    moments0 = [#'InfAV',
-               #'InfVar',
-               'InfATV'] ## helps identify rho
+    #moments0 = [#'InfAV',
+                #'InfVar',
+    #           'InfATV'] ## helps identify rho
     
     moments1 = ['FE', ## 
                 'Var'] ## helps identify sigma
@@ -480,20 +494,28 @@ if __name__ == "__main__":
     ## specific objective function 
     def Objrear(paras):
         scalor = ObjGen(rear0,
-                        paras= paras,
+                        paras = paras,
                         data_mom_dict = data_mom_dict_re,
                         moment_choice = moments1,
                         how = 'joint')
         return scalor
     
     ## invoke estimation
-
     est = ParaEst(Objrear,
             para_guess = (0.5,0.2))
     
     print('True parameters: ',str(np.array([ρ0,σ0])))
     print('Estimates: ',str(est))
     
+
+# + code_folding=[0]
+if __name__ == "__main__":
+    ## plot for validation 
+    simulated_re  = rear0.SimForecasts()
+    plt.title("Simulated forecasts")
+    plt.plot(simulated_re['Forecast'],label='Forecasts')
+    plt.plot(rear0.real_time,label='Real-time realization')
+    plt.legend(loc=0)
 # -
 
 # ### Rational Expectation (RE) + SV
@@ -503,13 +525,13 @@ model_sv_data = [
     ('exp_para', float64[:]),             # parameters for expectation formation, empty for re
     ('process_para', float64[:]),         # parameters for inflation process, 2 entries for AR1 
     ('horizon', int64),                   # forecast horizons 
-    ('real_time',float64[:,:]),             # real time data on inflation 
-    ('history',float64[:,:]),               # a longer history of inflation 
+    ('real_time',float64[:,:]),           # real time data on inflation
+    ('history',float64[:,:]),             # a longer history of inflation 
     ('realized',float64[:])               # realized inflation 
 ]
 
 
-# + code_folding=[1, 14, 18, 50]
+# + code_folding=[1, 2, 51]
 @jitclass(model_sv_data)
 class RationalExpectationSV:
     def __init__(self,
@@ -530,7 +552,7 @@ class RationalExpectationSV:
         
     def SimForecasts(self):
         ## parameters
-        n = len(self.real_time[0,:])
+        n = len(self.real_time[0,:]) ## real_time has multiple rows 
         γ = self.process_para
             
         ## inputs
@@ -542,10 +564,10 @@ class RationalExpectationSV:
         ## therefore, real_time fed in the begining is a tuple, not just current eta, but also current sigmas. 
         
         infoset = real_time 
-        y_real_time = infoset[0,:]  ## permanent income component 
-        nowcast = infoset[1,:]  ## permanent income component 
-        forecast = nowcast
-        σs_now = infoset[2:3,:]  ## volatility now 
+        y_real_time = infoset[0,:]  ## permanent component 
+        nowcast = infoset[1,:]  ## permanent component 
+        forecast = nowcast      ## rational forecase is just the current permanent component
+        σs_now = infoset[2:3,:]  ## volatility now for each component
         
         Var = np.zeros(n)
         for i in range(n):
@@ -555,7 +577,8 @@ class RationalExpectationSV:
         FE = forecast - self.realized ## forecast errors depend on realized shocks 
         Disg = np.zeros(n)
         
-        forecast_moments = {"FE":FE,
+        forecast_moments = {"Forecast":forecast,
+                            "FE":FE,
                             "Disg":Disg,
                             "Var":Var}
         return forecast_moments
@@ -564,6 +587,7 @@ class RationalExpectationSV:
         
         γ = self.process_para
         horizon = self.horizon
+        
         #################################
         # inflation moments 
         #################################
@@ -578,11 +602,13 @@ class RationalExpectationSV:
         ## simulate forecasts
         moms_sim = self.SimForecasts()
         
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
-        ## SMM moments     
+        ## SMM moments  
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -597,6 +623,7 @@ class RationalExpectationSV:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -615,7 +642,7 @@ if __name__ == "__main__":
     resv = RationalExpectationSV(exp_para = np.array([]),
                                  process_para = np.array([0.1]),
                                  real_time = xx_real_time,
-                                 history = xx_real_time) ## history does not matter here, 
+                                 history = xx_real_time) ## history does not matter here for RE 
 
     ## get the realization 
     resv.GetRealization(xx_realized)
@@ -625,7 +652,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + AR1
 
-# + code_folding=[2, 21]
+# + code_folding=[1, 2, 21, 85]
 @jitclass(model_data)
 class StickyExpectationAR:
     def __init__(self,
@@ -705,7 +732,8 @@ class StickyExpectationAR:
         FEs_vcv = np.cov(FEs.T)
         FEs_atv = np.array([FEs_vcv[i+1,i] for i in range(n-1)]) ## this is no longer needed
         
-        forecast_moments_sim = {"FE":FEs_mean,
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
                                 "Disg":forecasts_var,
                                 "Var":Vars_mean}
         return forecast_moments_sim
@@ -714,6 +742,7 @@ class StickyExpectationAR:
         
         ρ,σ = self.process_para
         horizon = self.horizon
+        
         #################################
         # inflation moments 
         #################################
@@ -731,11 +760,13 @@ class StickyExpectationAR:
         ## simulate forecasts
         moms_sim = self.SimForecasts()
         
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
         ## SMM moments     
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -750,6 +781,7 @@ class StickyExpectationAR:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -786,7 +818,10 @@ if __name__ == "__main__":
     ## only expectation estimation 
 
     moments0 = ['FE',
-               'FEATV'] ## or FE+Var, or FE + Disg
+               'FEATV',
+               'Disg',
+                #'Var'
+               ] ## or FE+Var, or FE + Disg
 
     def Objsear_re(paras):
         scalar = ObjGen(sear0,
@@ -799,9 +834,9 @@ if __name__ == "__main__":
 
     ## invoke estimation 
     Est = ParaEst(Objsear_re,
-            para_guess = (0.2),
+            para_guess = (0.0),
             method='Nelder-Mead',
-            bounds = ((0,1),)
+            bounds = ((0,1.0),)
            )
 
     
@@ -846,9 +881,20 @@ if __name__ == "__main__":
             bounds = ((0,1),))
     print('True parameter',str(exp_para_fake))  
     print('Estimates: ',str(Est))
+
+# + code_folding=[0]
+if __name__ == "__main__":
+    ## plot for validation 
+    simulated_sear  = sear1.SimForecasts()
+    plt.title("Simulated SE forecasts")
+    plt.plot(simulated_sear['Forecast'],label='Forecasts')
+    plt.plot(sear1.real_time,label='Real-time realization')
+    plt.legend(loc=0)
 # -
 
 # #### Joint Estimation 
+#
+# - The joint estimation below illustrates the mutual-dependence between the stickiness parameter and AR1 coefficients.
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -888,7 +934,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[2, 18, 122]
+# + code_folding=[1, 2, 18, 89]
 @jitclass(model_sv_data)
 class StickyExpectationSV:
     def __init__(self,
@@ -972,7 +1018,8 @@ class StickyExpectationSV:
         FEs_vcv = np.cov(FEs.T)
         FEs_atv = np.array([FEs_vcv[i+1,i] for i in range(n-1)]) ## this is no longer needed
         
-        forecast_moments_sim = {"FE":FEs_mean,
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
                                 "Disg":forecasts_var,
                                 "Var":Vars_mean}
         return forecast_moments_sim
@@ -994,12 +1041,13 @@ class StickyExpectationSV:
         #################################
         ## simulate forecasts
         moms_sim = self.SimForecasts()
-        
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
-        ## SMM moments     
+        ## SMM moments   
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -1014,6 +1062,7 @@ class StickyExpectationSV:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -1026,9 +1075,8 @@ class StickyExpectationSV:
         return SMMMoments
 
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
-
 
     ## initialize the sv instance 
     sesv0 = StickyExpectationSV(exp_para = np.array([0.3]),
@@ -1060,15 +1108,14 @@ def SteadyStateVar(process_para,
     return nowcast_var_ss
 
 
-# -
-
+# + code_folding=[0]
 if __name__ == "__main__":
 
     SteadyStateVar(np.array([0.9,0.1]),
                   np.array([0.8,0.2]))
 
 
-# + code_folding=[2, 21]
+# + code_folding=[1, 2, 159]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1184,7 +1231,8 @@ class NoisyInformationAR:
             
         Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
         
-        forecast_moments_sim = {"FE":FEs_mean,
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
                                 "Disg":forecasts_var,
                                 "Var":Vars_mean}
         return forecast_moments_sim
@@ -1209,12 +1257,13 @@ class NoisyInformationAR:
         #################################
         ## simulate forecasts
         moms_sim = self.SimForecasts()
-        
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
-        ## SMM moments     
+        ## SMM moments    
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -1229,6 +1278,7 @@ class NoisyInformationAR:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -1256,9 +1306,9 @@ if __name__ == "__main__":
 
 # #### Estimating NI using RE data 
 #
-# - The example below shows that NIAR correctly identifies sigma_pr and sigma_pb to be zero if rational expectation moments are used. 
+# - The example below shows that NIAR seems to __have some difficulty__ to identify sigma_pr and sigma_pb to be zero if rational expectation moments are used. 
 
-# + code_folding=[0, 3, 13]
+# + code_folding=[0, 14]
 if __name__ == "__main__":
 
 
@@ -1269,8 +1319,9 @@ if __name__ == "__main__":
                 'DisgATV',
                 'DisgVar',
                 'Var',
-                'VarVar',
-                'VarATV']
+                #'VarVar',
+                #'VarATV'
+               ]
 
     def Objniar_re(paras):
         scalor = ObjGen(niar0,
@@ -1335,6 +1386,15 @@ if __name__ == "__main__":
     print('True parameters: ',str(exp_paras_fake)) ## rational expectations 
     print('Estimates: ',str(Est))
     
+
+# + code_folding=[0]
+if __name__ == "__main__":
+    ## plot for validation 
+    simulated_niar  = niar1.SimForecasts()
+    plt.title("Simulated NI forecasts")
+    plt.plot(simulated_niar['Forecast'],label='Forecasts')
+    plt.plot(niar1.real_time,label='Real-time realization')
+    plt.legend(loc=0)
 # -
 
 # #### Joint Estimation
@@ -1385,7 +1445,7 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[1, 2, 14, 18, 62, 157]
+# + code_folding=[1, 2, 14, 18, 62, 124]
 @jitclass(model_sv_data)
 class NoisyInformationSV:
     def __init__(self,
@@ -1504,7 +1564,8 @@ class NoisyInformationSV:
         FEs_mean = forecasts_mean - self.realized
         Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
         
-        forecast_moments_sim = {"FE":FEs_mean,
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
                                 "Disg":forecasts_var,
                                 "Var":Vars_mean}
         return forecast_moments_sim
@@ -1526,12 +1587,13 @@ class NoisyInformationSV:
         #################################
         ## simulate forecasts
         moms_sim = self.SimForecasts()
-        
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
-        ## SMM moments     
+        ## SMM moments
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -1546,6 +1608,7 @@ class NoisyInformationSV:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -1575,7 +1638,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + AR1
 
-# + code_folding=[21]
+# + code_folding=[1, 21]
 @jitclass(model_data)
 class DiagnosticExpectationAR:
     def __init__(self,
@@ -1645,7 +1708,8 @@ class DiagnosticExpectationAR:
         #forecasts_atv = np.array([forecasts_vcv[i+1,i] for i in range(n-1)])
         #FEs_vcv = np.cov(FEs.T)
         
-        forecast_moments_sim = {"FE":FEs_mean,
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
                                 "Disg":forecasts_var,
                                 "Var":Vars_mean}
         return forecast_moments_sim
@@ -1670,12 +1734,13 @@ class DiagnosticExpectationAR:
         #################################
         ## simulate forecasts
         moms_sim = self.SimForecasts()
-        
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
-        ## SMM moments     
+        ## SMM moments   
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -1690,6 +1755,7 @@ class DiagnosticExpectationAR:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -1794,6 +1860,15 @@ if __name__ == "__main__":
     
     print('True parameters: ',str(exp_paras_fake)) 
     print('Estimates: ',str(Est))
+
+# + code_folding=[0]
+if __name__ == "__main__":
+    ## plot for validation 
+    simulated_dear  = dear1.SimForecasts()
+    plt.title("Simulated DE forecasts")
+    plt.plot(simulated_dear['Forecast'],label='Forecasts')
+    plt.plot(dear1.real_time,label='Real-time realization')
+    plt.legend(loc=0)
 # -
 
 # #### Joint Estimation 
@@ -1834,7 +1909,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + SV
 
-# + code_folding=[2, 18, 55, 57, 84, 118]
+# + code_folding=[1, 2, 18, 55, 57]
 @jitclass(model_sv_data)
 class DiagnosticExpectationSV:
     def __init__(self,
@@ -1913,7 +1988,8 @@ class DiagnosticExpectationSV:
         FEs_mean = forecasts_mean - realized
         Vars_mean = np_mean(Vars,axis = 0) ## need to change 
         
-        forecast_moments_sim = {"FE":FEs_mean,
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
                                 "Disg":forecasts_var,
                                 "Var":Vars_mean}
         return forecast_moments_sim
@@ -1936,12 +2012,13 @@ class DiagnosticExpectationSV:
         #################################
         ## simulate forecasts
         moms_sim = self.SimForecasts()
-        
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
         ## SMM moments     
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -1956,6 +2033,7 @@ class DiagnosticExpectationSV:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -1985,7 +2063,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
 
-# + code_folding=[21, 120]
+# + code_folding=[1, 2, 21, 121]
 @jitclass(model_data)
 class DENIHybridAR:
     def __init__(self,
@@ -2101,7 +2179,8 @@ class DENIHybridAR:
             
         Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
         
-        forecast_moments_sim = {"FE":FEs_mean,
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
                                 "Disg":forecasts_var,
                                 "Var":Vars_mean}
         return forecast_moments_sim
@@ -2126,12 +2205,13 @@ class DENIHybridAR:
         #################################
         ## simulate forecasts
         moms_sim = self.SimForecasts()
-        
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
-        ## SMM moments     
+        ## SMM moments 
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -2146,6 +2226,7 @@ class DENIHybridAR:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
@@ -2174,7 +2255,7 @@ if __name__ == "__main__":
 #
 # The example below shows that the hybrid model, DENIAR SMM seems to have difficulty with identifying the rational-expectation benchmark, in which the overreaction parameter and noisiness of both private and public signals all should be zero. This is possibly due to the counteraction between the overreaction parameter and the rigidity due to the noisiness of public signals.
 
-# + code_folding=[2]
+# + code_folding=[0, 2]
 if __name__ == "__main__":
 
     moments0 = ['FE',
@@ -2243,7 +2324,7 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[2, 14, 18, 62, 123, 157]
+# + code_folding=[1, 2, 14, 18, 62, 124]
 @jitclass(model_sv_data)
 class DENIHybridSV:
     def __init__(self,
@@ -2362,7 +2443,8 @@ class DENIHybridSV:
         FEs_mean = forecasts_mean - self.realized
         Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
         
-        forecast_moments_sim = {"FE":FEs_mean,
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
                                 "Disg":forecasts_var,
                                 "Var":Vars_mean}
         return forecast_moments_sim
@@ -2384,12 +2466,13 @@ class DENIHybridSV:
         #################################
         ## simulate forecasts
         moms_sim = self.SimForecasts()
-        
+        Forecasts_sim = moms_sim['Forecast']
         FEs_sim = moms_sim['FE']
         Disgs_sim = moms_sim['Disg']
         Vars_sim = moms_sim['Var']
         
         ## SMM moments     
+        Forecast_sim = np.mean(Forecasts_sim)
         FE_sim = np.mean(FEs_sim)
         FEVar_sim = np.var(FEs_sim)
         FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
@@ -2404,6 +2487,7 @@ class DENIHybridSV:
         SMMMoments = {"InfAV":InfAV,
                       "InfVar":InfVar,
                       "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
                       "FE":FE_sim,
                       "FEVar":FEVar_sim,
                       "FEATV":FEATV_sim,
