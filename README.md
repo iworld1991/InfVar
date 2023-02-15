@@ -19,10 +19,11 @@ For replication,
 
 - [Stata code](/workingfolder/DoFile)
 
-- [Density Estimation of SPF](/workingfolder/python/DoDensityEst.ipynb), which draws the model class from 
-   - [DensityEstimation](/workingfolder/python/DensityEst.py)
-
 - [Python](/workingfolder/python)
+  - [Density Estimation of SPF](/workingfolder/python/DoDensityEst.ipynb), which draws the model class from 
+     - [DensityEstimation](/workingfolder/python/DensityEst.py)
+
+
   - [SMM estimation](/workingfolder/python/DoSMMEst.ipynb), which imports model classes from 
      - [Model Class](/workingfolder/python/SMMEst.ipynb), which tests if each model could correctly identify model parameters using various moments. 
 
