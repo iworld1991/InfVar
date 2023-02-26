@@ -6,19 +6,49 @@
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.4'
-#       jupytext_version: 1.2.3
+#       format_version: '1.5'
+#       jupytext_version: 1.11.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
-# ## What do probabilistic questions tell us about expectation formation?
+# ## Competing theories of expectation formations 
 #
 # - Tao Wang, Johns Hopkins
-# - March, 2019
+# - Edited: Feb, 2023
 #
+
+# + code_folding=[]
+## some experiments 
+
+import matplotlib.pyplot as plt 
+import numpy as np 
+rho = 0.98
+
+def FE2_SE_ratio(lbd):
+    return lbd**2/(1-(1-lbd)**2*rho**2)
+
+def Var_SE_ratio(lbd):
+    first_part = lbd*rho**2/(1-rho**2+lbd*rho**2)/(rho**2-1)
+    second_part = 1/(rho**2-1)
+    return first_part-second_part
+
+lbds = np.linspace(0.01,
+                   0.999,
+                   10)
+
+FE_SE2_ratios = FE2_SE_ratio(lbds)
+Var_SE_ratios = Var_SE_ratio(lbds)
+
+# -
+
+plt.plot(lbds,
+         FE_SE2_ratios)
+
+plt.plot(lbds,
+         Var_SE_ratios)
 
 # ### A General Framework 
 #
@@ -71,7 +101,7 @@
 #
 # A special case below.
 
-# ### Sticky Information
+# ### Sticky expectations
 #
 # Agent does not update information instantaneously, instead at a Possion rate $\lambda$. Specificaly, at any point of time $t$, the agent learns about the up-to-date realization of $y_t$ with probability of $\lambda$; otherwise, it holds the most recent up-to-date realization of $y_{t-\tau}$, where $\tau$ is the time experienced since previous update. 
 #
@@ -167,7 +197,14 @@
 # \begin{eqnarray}
 # \begin{split}
 # \bar Var_{t}(y_{t+h}) & = \sum^{+\infty}_{\tau =0} \underbrace{\lambda (1-\lambda)^\tau}_{\text{fraction who does not update until }t-\tau} \underbrace{Var_{t|t-\tau}(y_{t+h})}_{\text{ Variance of most recent update at }t-\tau} \\
-# & = \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \sum^{h+\tau}_{s=0}\rho^{2s} \sigma^2_{\omega}
+# & = \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \sum^{h+\tau}_{s=1}\rho^{2(s-1)} \sigma^2_{\omega} \\
+# & = \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau (1 + \rho^2+...+\rho^{2(h+\tau-1)}) \sigma^2_{\omega} \\
+# & =\sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{\rho^{2(h+\tau)}-1}{\rho^2-1}\sigma^2_{\omega}\\
+# & =\sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{\rho^{2(h+\tau)}}{\rho^2-1}\sigma^2_{\omega} - \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{1}{\rho^2-1}\sigma^2_{\omega} \\
+# & =\sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau\rho^{2\tau}\frac{\rho^{2h}}{\rho^2-1}\sigma^2_{\omega} - \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{1}{\rho^2-1}\sigma^2_{\omega} \\
+# & =\sum^{+\infty}_{\tau =0} \lambda ((1-\lambda)\rho^2)^\tau\frac{\rho^{2h}}{\rho^2-1}\sigma^2_{\omega} - \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{1}{\rho^2-1}\sigma^2_{\omega} \\
+# & =\frac{\lambda}{(1-\rho^2+\lambda\rho^2)} \sum^{+\infty}_{\tau =0} (1-\rho^2+\lambda\rho^2) (1-(1-\rho^2+\lambda\rho^2))^\tau\frac{\rho^{2h}}{\rho^2-1}\sigma^2_{\omega} - \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{1}{\rho^2-1}\sigma^2_{\omega} \\
+# & =(\frac{\lambda\rho^{2h}}{(1-\rho^2+\lambda\rho^2)(\rho^2-1)} -\frac{1}{\rho^2-1})\sigma^2_{\omega} 
 # \end{split}
 # \end{eqnarray}
 #
@@ -182,7 +219,9 @@
 #
 # An information rigity model based on Poisson update rate predicts that the average variance does not change over time. This can be tested.
 #
-# ##### Cross-sectional disagreements about variance 
+#
+
+
 
 # #### Summary of predictions with information rigidity models with update rate $\lambda$
 #
@@ -197,7 +236,7 @@ import matplotlib.pyplot as plt
 import scipy as sp
 # %matplotlib inline
 
-# + {"code_folding": []}
+# + code_folding=[]
 ## parameters 
 ρ = 0.9
 λ = 0.25
@@ -216,7 +255,7 @@ y = np.zeros(T)
 for t in range(T-1):
     y[t+1]=ρ*y[t]+shock[t+1]
 
-# + {"code_folding": [0]}
+# + code_folding=[0]
 ### Rational Expectation (RE)
 
 ## individual forecast of y_{T-1}
@@ -255,7 +294,7 @@ PopDisgRE = np.zeros(T)
 
 PopVarRE = IndVarRE
 
-# + {"code_folding": [0]}
+# + code_folding=[0]
 # Sticky expectation (SE)
 
 ## individual forecast 
@@ -309,7 +348,7 @@ for t in range(1,T):
     #PopVarSE[t] = sum( [λ*(1-λ)**t*IndVarRE[s] for s in range(t)])
 
 
-# + {"code_folding": []}
+# + code_folding=[2]
 ## Noisy information(NI) 
 
 def NI(T,y,sigma_pb=1,sigma_pr=1):
@@ -378,12 +417,12 @@ def NI(T,y,sigma_pb=1,sigma_pr=1):
     
 
 
-# + {"code_folding": [0]}
+# + code_folding=[0]
 #Invoke NI 
 
 MomNI =NI(T,y,sigma_pb=sigma_y,sigma_pr=sigma_y)  # both signal's ste is equal to y's long-run ste. 
 
-# + {"code_folding": [0]}
+# + code_folding=[0]
 ## Parameters for plots
 linesize = 4
 linesize2 =2
