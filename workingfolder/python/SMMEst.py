@@ -312,7 +312,7 @@ model_data = [
 ]
 
 
-# + code_folding=[1, 2, 17]
+# + code_folding=[2, 17, 21, 43]
 @jitclass(model_data)
 class RationalExpectationAR:
     def __init__(self,
@@ -410,6 +410,26 @@ class RationalExpectationAR:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+    
+    def GMM(self):
+        ρ,σ = self.process_para
+        horizon = self.horizon
+        
+        GMMMoments = {"InfAV":0.0,
+                      "InfVar":σ**2/(1-ρ**2),
+                      "InfATV":ρ*σ**2/(1-ρ**2),
+                      "Forecasts":0.0,
+                      "FE":0.0,
+                      "FEVar":sum([ρ**(2*k)*σ**2 for k in range(horizon)]),
+                      "FEATV":0.0,
+                      "Disg":0.0,
+                      "DisgVar":0.0,
+                      "DisgATV":0.0,
+                      "Var":sum([ρ**k*σ**2 for k in range(horizon)]),
+                      'VarVar':0.0,
+                      'VarATV':0.0}
+        
+        return GMMMoments
 
 
 # -
@@ -466,7 +486,7 @@ if __name__ == "__main__":
 # - For instance, the example below shows that how auto-covariance (ATV) of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
 #
 
-# + code_folding=[0]
+# + code_folding=[0, 25]
 if __name__ == "__main__":
 
 
@@ -506,7 +526,7 @@ if __name__ == "__main__":
     
     print('True parameters: ',str(np.array([ρ0,σ0])))
     print('Estimates: ',str(est))
-    
+
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -516,6 +536,16 @@ if __name__ == "__main__":
     plt.plot(simulated_re['Forecast'],label='Forecasts')
     plt.plot(rear0.real_time,label='Real-time realization')
     plt.legend(loc=0)
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+    ## check if simulated moments and computed moments match 
+    data_mom_dict_re_computed = rear0.GMM()
+    
+    print("Simulated moments:",data_mom_dict_re)
+    print('\n')
+    print("Computed moments:",data_mom_dict_re_computed)
 # -
 
 # ### Rational Expectation (RE) + SV
@@ -531,7 +561,7 @@ model_sv_data = [
 ]
 
 
-# + code_folding=[1, 2, 51]
+# + code_folding=[1, 2, 18, 51]
 @jitclass(model_sv_data)
 class RationalExpectationSV:
     def __init__(self,
@@ -634,6 +664,10 @@ class RationalExpectationSV:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+    
+    def GMM(self):
+        print('not implemented yet!')
+        return None
 
 
 # + code_folding=[0]
@@ -652,7 +686,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + AR1
 
-# + code_folding=[1, 2, 21, 85]
+# + code_folding=[2, 17, 21, 85, 140]
 @jitclass(model_data)
 class StickyExpectationAR:
     def __init__(self,
@@ -792,6 +826,36 @@ class StickyExpectationAR:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+    
+    def GMM(self):
+        ρ,σ = self.process_para
+        horizon = self.horizon
+        lbd = self.exp_para[0]
+        
+        ## some middle steps for moments below 
+        cum_fe2_sum = np.sum(np.array([ρ**(2*k)*σ**2 for k in range(horizon)]))
+        fe_var_ratio = lbd**2/(1-(1-lbd)**2*ρ**2)
+        fevar = fe_var_ratio*cum_fe2_sum
+        featv = (1-lbd)*ρ*fevar
+        var_ratio = (lbd*ρ**(2*horizon)/(1-ρ**2+lbd*ρ**2)-1)/(ρ**2-1)
+        var = var_ratio*σ**2
+        
+        GMMMoments = {"InfAV":0.0,
+                     "InfVar":σ**2/(1-ρ**2),
+                      "InfATV":ρ*σ**2/(1-ρ**2),
+                     "Forecasts":0.0,
+                      "FE":0.0,
+                      "FEVar":fevar,  
+                      "FEATV":featv,
+                      "Disg":np.nan,
+                      "DisgVar":0.0,
+                      "DisgATV":0.0,
+                      "Var":var,
+                      'VarVar':0.0,
+                      'VarATV':0.0
+                     }
+        
+        return GMMMoments
 
 
 # + code_folding=[0]
@@ -896,7 +960,7 @@ if __name__ == "__main__":
 #
 # - The joint estimation below illustrates the mutual-dependence between the stickiness parameter and AR1 coefficients.
 
-# + code_folding=[0]
+# + code_folding=[0, 5, 13]
 if __name__ == "__main__":
 
     ## for joint estimation 
@@ -929,12 +993,22 @@ if __name__ == "__main__":
     print('True expectation parameter',str(exp_para_fake))  
     print('Estimates: ',str(Est[0]))
 
+# + code_folding=[]
+if __name__ == "__main__":
+
+    ## check if simulated moments and computed moments match 
+    data_mom_dict_se_computed = sear1.GMM()
+    
+    print("Simulated moments:",data_mom_dict_se)
+    print('\n')
+    print("Computed moments:",data_mom_dict_se_computed)
+
 
 # -
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[1, 2, 18, 89]
+# + code_folding=[1, 2, 18, 89, 139]
 @jitclass(model_sv_data)
 class StickyExpectationSV:
     def __init__(self,
@@ -1073,6 +1147,10 @@ class StickyExpectationSV:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+    
+    def GMM(self):
+        print('not implemented yet!')
+        return None
 
 
 # + code_folding=[0]
@@ -1385,7 +1463,7 @@ if __name__ == "__main__":
            )
     print('True parameters: ',str(exp_paras_fake)) ## rational expectations 
     print('Estimates: ',str(Est))
-    
+
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -1638,7 +1716,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + AR1
 
-# + code_folding=[1, 21]
+# + code_folding=[21, 75]
 @jitclass(model_data)
 class DiagnosticExpectationAR:
     def __init__(self,
@@ -1766,6 +1844,30 @@ class DiagnosticExpectationAR:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+    
+    def GMM(self):
+        ρ,σ = self.process_para
+        horizon = self.horizon
+        theta,theta_sigma = self.exp_para
+        
+        ## some middle steps for moments below 
+        
+        GMMMoments = {"InfAV":0.0,
+                     "InfVar":σ**2/(1-ρ**2),
+                      "InfATV":ρ*σ**2/(1-ρ**2),
+                     "Forecasts":0.0,
+                      "FE":0.0,
+                      "FEVar":1/(1-theta**2*ρ**2)*sum([ρ**(2*k)*σ**2 for k in range(horizon)]),  
+                      "FEATV":-theta*ρ*σ**2/(1-theta**2*ρ**2),
+                      "Disg":np.nan,
+                      "DisgVar":0.0,
+                      "DisgATV":0.0,
+                      "Var":sum([ρ**k*σ**2 for k in range(horizon)]),
+                      'VarVar':0.0,
+                      'VarATV':0.0
+                     }
+        
+        return GMMMoments
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -1873,7 +1975,7 @@ if __name__ == "__main__":
 
 # #### Joint Estimation 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
     ## for joint estimation 
@@ -1903,13 +2005,21 @@ if __name__ == "__main__":
     print('Estimates: ',str(Est[2:]))
     print('True expectation parameter',str(exp_paras_fake))  
     print('Estimates: ',str(Est[0:2]))
-
-
 # -
+
+if __name__ == "__main__":
+
+    ## check if simulated moments and computed moments match 
+    data_mom_dict_de_computed = dear1.GMM()
+    
+    print("Simulated moments:",data_mom_dict_de)
+    print('\n')
+    print("Computed moments:",data_mom_dict_de_computed)
+
 
 # ###  Diagnostic Expectation(DE) + SV
 
-# + code_folding=[1, 2, 18, 55, 57]
+# + code_folding=[1, 2, 18, 55, 57, 85]
 @jitclass(model_sv_data)
 class DiagnosticExpectationSV:
     def __init__(self,
@@ -2044,6 +2154,11 @@ class DiagnosticExpectationSV:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+    
+    
+    def GMM(self):
+        print('not implemented yet!')
+        return None
 
 # + code_folding=[0]
 if __name__ == "__main__":
