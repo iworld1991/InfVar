@@ -312,7 +312,7 @@ model_data = [
 ]
 
 
-# + code_folding=[2, 17, 21, 43]
+# + code_folding=[1, 2, 17, 21, 43, 98]
 @jitclass(model_data)
 class RationalExpectationAR:
     def __init__(self,
@@ -993,7 +993,7 @@ if __name__ == "__main__":
     print('True expectation parameter',str(exp_para_fake))  
     print('Estimates: ',str(Est[0]))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -1172,28 +1172,52 @@ if __name__ == "__main__":
 # ### Noisy Information (NI) + AR1
 #
 
-# + code_folding=[1]
+# + code_folding=[14]
 @njit
 def SteadyStateVar(process_para,
                    exp_para):
-    ## steady state variance for kalman filtering 
+    ## steady state nowcasting variance for kalman filtering 
     ρ,σ = process_para
     sigma_pb,sigma_pr = exp_para
-    a = ρ**2*(sigma_pb**2+sigma_pr**2)
-    b = (sigma_pb**2+sigma_pr**2)*σ**2+(1-ρ**2)*sigma_pb**2*sigma_pr**2
-    c = -σ**2*sigma_pb**2*sigma_pr**2
+    ## a, b, c are the parameters of the quadratic equation for the root-finding 
+    a = (sigma_pb**2+sigma_pr**2)*ρ**2*(2-ρ**2)
+    b = (2*(sigma_pb**2+sigma_pr**2)*σ**2+sigma_pb**2*sigma_pr**2)*(1-ρ**2)
+    c = -σ**2*((sigma_pb**2+sigma_pr**2)*σ**2+sigma_pb**2*sigma_pr**2)
     nowcast_var_ss = (-b+np.sqrt(b**2-4*a*c))/(2*a)
     return nowcast_var_ss
 
 
 # + code_folding=[0]
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt 
+    sigma_pb_ = np.linspace(0.01, 0.8, 50)
+    sigma_pr_ = np.linspace(0.01, 0.8, 50)
 
-    SteadyStateVar(np.array([0.9,0.1]),
-                  np.array([0.8,0.2]))
+    sigma_pbs, sigma_prs = np.meshgrid(sigma_pb_, 
+                                       sigma_pr_)
+    ss_vars = SteadyStateVar(np.array([0.98,0.1]),
+                             np.meshgrid(sigma_pb_,
+                                         sigma_pr_))
+    
+    fig = plt.figure(figsize = (12,10))
+    ax = plt.axes(projection='3d')
+    ax.set_title(r'Steady state $Var$')
+    surf = ax.plot_surface(sigma_pbs, 
+                           sigma_prs, 
+                           ss_vars, 
+                           cmap = plt.cm.cividis)
+    #ax.invert_xaxis()
+    #ax.invert_yaxis()
+    # Set axes label
+    fig.colorbar(surf)
+    ax.set_xlabel(r'$\sigma^2_{pb}$',size=20)
+    ax.set_ylabel('$\sigma^2_{pr}$',size=20)
+    ax.set_zlabel(r'$Var_{ss}$',size=20)
+    ax.view_init(elev=10,
+                 azim=-80)
 
 
-# + code_folding=[1, 2, 159]
+# + code_folding=[1, 2, 21, 65, 121, 159]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1390,12 +1414,12 @@ if __name__ == "__main__":
 if __name__ == "__main__":
 
 
-    moments0 = ['FE',
+    moments0 = [#'FE',
                 'FEATV',
                 'FEVar',
                 'Disg',
-                'DisgATV',
-                'DisgVar',
+                #'DisgATV',
+                #'DisgVar',
                 'Var',
                 #'VarVar',
                 #'VarATV'
@@ -1716,7 +1740,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + AR1
 
-# + code_folding=[21, 75]
+# + code_folding=[1, 21, 75]
 @jitclass(model_data)
 class DiagnosticExpectationAR:
     def __init__(self,
