@@ -14,41 +14,11 @@
 #     name: python3
 # ---
 
-# ## Competing theories of expectation formations 
+# ## Competing theories of expectation formation
 #
 # - Tao Wang, Johns Hopkins
 # - Edited: Feb, 2023
 #
-
-# + code_folding=[]
-## some experiments 
-
-import matplotlib.pyplot as plt 
-import numpy as np 
-rho = 0.98
-
-def FE2_SE_ratio(lbd):
-    return lbd**2/(1-(1-lbd)**2*rho**2)
-
-def Var_SE_ratio(lbd):
-    first_part = lbd*rho**2/(1-rho**2+lbd*rho**2)/(rho**2-1)
-    second_part = 1/(rho**2-1)
-    return first_part-second_part
-
-lbds = np.linspace(0.01,
-                   0.999,
-                   10)
-
-FE_SE2_ratios = FE2_SE_ratio(lbds)
-Var_SE_ratios = Var_SE_ratio(lbds)
-
-# -
-
-plt.plot(lbds,
-         FE_SE2_ratios)
-
-plt.plot(lbds,
-         Var_SE_ratios)
 
 # ### A General Framework 
 #
@@ -77,31 +47,31 @@ plt.plot(lbds,
 #
 # $$\omega_t \sim N(0,\sigma^2_{\omega})$$
 
-# ###  Full information rational expectation
+# ###  Full information rational expectation (FIRE)
 #
 # Full information implies the most recent realized $y_t$ is in the information set. $y_t \in I_t$ 
 #
 # ##### Individual moments 
 #
 # ##### Expectation
-# $$E_{i,t}(y_{t+h}|y_t) = \rho^h y_t $$
+# $$E^*_{i,t}(y_{t+h}|y_t) = \rho^h y_t $$
 #
 # ##### Variance 
-# $$Var^i_t(y_{t+h}|y_t) = \sum^{h}_{s=1}\rho^{2s} \sigma^2_{\omega}$$
+# $$Var^*_{i,t}(y_{t+h}|y_t) = \sum^{h}_{s=1}\rho^{2s} \sigma^2_{\omega}$$
 #
 # ##### Change in variance 
 #
-# $$\Delta Var_{i,t}(y_{t+h}|y_t)=-\rho^{2h}\sigma^2_{\omega}$$
+# $$\Delta Var^*_{i,t}(y_{t+h}|y_t)=-\rho^{2h}\sigma^2_{\omega}$$
 #
 # ##### Forecast error
 #
-# $${FE}_{i,t+h|t}=y_{t+h} - E_{i,t}(y_{t+h}|y_t) = \sum^h_{s=0} \rho^s \omega_{t+h-s}$$ should be unrelated to information at time $t$. 
+# $${FE}^*_{i,t+h|t}=y_{t+h} - E_{i,t}(y_{t+h}|y_t) = \sum^h_{s=0} \rho^s \omega_{t+h-s}$$ should be unrelated to information at time $t$. 
 #
 # ##### Population moments 
 #
-# A special case below.
+# The same as individual moments as there is heterogeneity. $i$ is dropped from all equations above.
 
-# ### Sticky expectations
+# ### Sticky expectations (SE)
 #
 # Agent does not update information instantaneously, instead at a Possion rate $\lambda$. Specificaly, at any point of time $t$, the agent learns about the up-to-date realization of $y_t$ with probability of $\lambda$; otherwise, it holds the most recent up-to-date realization of $y_{t-\tau}$, where $\tau$ is the time experienced since previous update. 
 #
@@ -109,26 +79,26 @@ plt.plot(lbds,
 #
 # For an individual whose most recent update occurs at $\tau$ period before, $I_{i,t} = I_{i,t-\tau} = y_{t-\tau}$. Thus
 # ##### Expectation
-# $$E_{i,t|t-\tau}(y_{t+h}|I_{i,t}) = E_{i,t}(y_{t+h}|y_{t-\tau}) = \rho^{h+\tau} y_{t-\tau}$$
+# $$E^{se}_{i,t|t-\tau}(y_{t+h}|I_{i,t}) = E^{*}_{i,t}(y_{t+h}|y_{t-\tau}) = \rho^{h+\tau} y_{t-\tau}$$
 #
 # ##### Forecast error
 #
-# $$FE_{i,t+h|t} = y_{t+h} - \rho^{h+\tau} y_{t-\tau} = \sum^{h+\tau}_{s=0} \rho^s \omega_{t+h-s}$$
+# $$FE^{se}_{i,t+h|t} = y_{t+h} - \rho^{h+\tau} y_{t-\tau} = \sum^{h+\tau}_{s=0} \rho^s \omega_{t+h-s}$$
 #
 # ##### Variance 
-# $$Var_{i,t|t-\tau}(y_{t+h}|I_{i,t}) = Var_{i,t}(y_{t+h}|y_{t-\tau}) = \sum^{h+\tau}_{s=0}\rho^{2s} \sigma^2_{\omega}$$
+# $$Var^{se}_{i,t|t-\tau}(y_{t+h}|I_{i,t}) = Var^{*}_{i,t}(y_{t+h}|y_{t-\tau}) = \sum^{h+\tau}_{s=0}\rho^{2s} \sigma^2_{\omega}$$
 #
-# $Var_{i,t|t-\tau}(y_{t+h}|_{i,t})$ increases as $\tau$ increases. The model collapses to full-information rational expectation if $\tau=0$ for individual. 
+# $Var^{se}_{i,t|t-\tau}(y_{t+h}|_{i,t})$ increases as $\tau$ increases. The model collapses to full-information rational expectation if $\tau=0$ for all individuals. 
 #
 # Agent updates infrequently. 
 #
-# - When the update happens, the variance responds substantially.  
+# - When the update happens, the variance is revised substantially.  
 #
-# $$Var_{i,t}(y_{t+h}|y_t) - Var_{i,t|\tau}(y_{t+h}|y_{t-\tau}) = \sum^{h}_{s=0}\rho^{2s} \sigma^2_{\omega} - \sum^{h+\tau}_{s=0}\rho^{2s} \sigma^2_{\omega} = \sum^{\tau}_{s=0} \rho^{2s}\sigma^2_{\omega}$$
+# $$Var^{se}_{i,t}(y_{t+h}|y_t) - Var^{se}_{i,t|\tau}(y_{t+h}|y_{t-\tau}) = \sum^{h}_{s=0}\rho^{2s} \sigma^2_{\omega} - \sum^{h+\tau}_{s=0}\rho^{2s} \sigma^2_{\omega} = \sum^{\tau}_{s=0} \rho^{2s}\sigma^2_{\omega}$$
 #
-# - When the update does not happen, the variance responds relatively little. 
+# - When the update does not happen, the variance is revised relatively little. 
 #
-# $$Var_{i,t|t-\tau-1}(y_{t+h}|y_{t-\tau-1}) - Var_{i,t|\tau}(y_{t+h}|y_{t-\tau}) = \sigma^2_{\omega}$$
+# $$Var^{se}_{i,t|t-\tau-1}(y_{t+h}|y_{t-\tau-1}) - Var^{se}_{i,t|\tau}(y_{t+h}|y_{t-\tau}) = \sigma^2_{\omega}$$
 #
 # At individual level, it is hard to recover the information rigidity parameter $\lambda$ directly. The only clue is if information rigidity exists, one testable prediction is that the change in forecast variance varies substantially depending on if updated or not. The longer period for which the agent stays unupdated(greater $\tau$), the bigger the change is of the variance. 
 #
@@ -142,9 +112,9 @@ plt.plot(lbds,
 #
 # \begin{eqnarray}
 # \begin{split}
-# \bar E_t(y_{t+h}) & = \lambda \underbrace{E_t(y_{t+h})}_{\text{rational expectation at t}} + (1-\lambda) \underbrace{\bar E_{t-1}{y_{t+h}}}_{\text{average expectation at} t-1} \\
-# & = \lambda E_t(y_{t+h}) + (1-\lambda) (\lambda E_{t-1}(y_{t+h})+ (1-\lambda) \bar E_{t-2}(y_{t+h}))... \\
-# & = \lambda \sum^{\infty}_{s=0} (1-\lambda)^s E_{t-s}(y_{t+h}) \\
+# \bar E^{se}_t(y_{t+h}) & = \lambda \underbrace{E^{*}_t(y_{t+h})}_{\text{rational expectation at t}} + (1-\lambda) \underbrace{\bar E^{se}_{t-1}(y_{t+h})}_{\text{average expectation at} t-1} \\
+# & = \lambda E^{*}_t(y_{t+h}) + (1-\lambda) (\lambda E^{se}_{t-1}(y_{t+h})+ (1-\lambda) \bar E^{se}_{t-2}(y_{t+h}))... \\
+# & = \lambda \sum^{\infty}_{s=0} (1-\lambda)^s E^{*}_{t-s}(y_{t+h}) \\
 # & = \lambda \sum^{\infty}_{s=0} (1-\lambda)^s \rho^{s+h}y_{t-s}
 # \end{split}
 # \end{eqnarray}
@@ -153,20 +123,21 @@ plt.plot(lbds,
 #
 # \begin{eqnarray}
 # \begin{split}
-# \Delta \bar E_t(y_{t+h})&  = (1-\lambda) \Delta \bar E_{t-1}(y_{t+h}) + \lambda (E_t(y_{t+h}) - E_{t-1}(y_{t+h})) \\ 
-# & = (1-\lambda) \Delta \bar E_{t-1}(y_{t+h}) + \lambda \rho^h \omega_t 
+# \Delta \bar E^{se}_t(y_{t+h})&  = (1-\lambda) \Delta \bar E^{se}_{t-1}(y_{t+h}) + \lambda (E^{*}_t(y_{t+h}) - E^{*}_{t-1}(y_{t+h})) \\ 
+# & = (1-\lambda) \Delta \bar E^{se}_{t-1}(y_{t+h}) + \lambda (\rho^{h+1}(y_{t-1}+\omega_t) -\rho^{h+1}y_{t-1}) \\
+# & = (1-\lambda) \Delta \bar E^{se}_{t-1}(y_{t+h}) + \lambda \rho^{h+1} \omega_t 
 # \end{split}
 # \end{eqnarray}
 #
 # This implies the change in average forecast is serially correlated, depending on the information rigidity, i.e. lower $\lambda$ implies higher serial correlation. Also lower $\lambda$ implies the expectation underreact to the shocks at $t$. 
 #
-# ##### Cross-sectional disagreements
+# ##### Cross-sectional disagreement
 #
 # According to information rigity model, if everyone is instantaneously udpated, there should not be disagreements. In general, the dispersion in forecasting is non-zero because of different lags in updating. One can also derive variance of forecasts across agents at time $t$ 
 #
 # \begin{eqnarray}
 # \begin{split}
-# Var_t(E_{i,t}(y_{t+h}) ) & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} (E_{t|\tau}(y_{t+h}) - \bar E_t(y_{t+h}))^2  
+# Disg_{t+h|t} = Var(E^{se}_{i,t}(y_{t+h}) ) & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} (E_{t|\tau}(y_{t+h}) - \bar E_t(y_{t+h}))^2  
 # \end{split}
 # \end{eqnarray}
 #
@@ -174,7 +145,7 @@ plt.plot(lbds,
 #
 # \begin{eqnarray}
 # \begin{split}
-# \Delta Var_{t+1}(E_{i,t+1}(y_{t+h})) = \text{change due to new updaters} + \text{shock at time } t+1 
+# \Delta Disg_{t+h|t} = \text{change due to new updaters} + \text{shock at time } t+1 
 # \end{split}
 # \end{eqnarray}
 #
@@ -190,13 +161,13 @@ plt.plot(lbds,
 #
 # Then it gradually returns to its steady state level. 
 #
-# ##### Average uncertainty(variance) 
+# ##### Average uncertainty (variance) 
 #
 # Since we have individual level variance, we can also derive average variance of the population. Taking the average of variane across individual agents at time $t$. 
 #
 # \begin{eqnarray}
 # \begin{split}
-# \bar Var_{t}(y_{t+h}) & = \sum^{+\infty}_{\tau =0} \underbrace{\lambda (1-\lambda)^\tau}_{\text{fraction who does not update until }t-\tau} \underbrace{Var_{t|t-\tau}(y_{t+h})}_{\text{ Variance of most recent update at }t-\tau} \\
+# \bar Var^{se}_{t}(y_{t+h}) & = \sum^{+\infty}_{\tau =0} \underbrace{\lambda (1-\lambda)^\tau}_{\text{fraction who does not update until }t-\tau} \underbrace{Var_{t|t-\tau}(y_{t+h})}_{\text{ Variance of most recent update at }t-\tau} \\
 # & = \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \sum^{h+\tau}_{s=1}\rho^{2(s-1)} \sigma^2_{\omega} \\
 # & = \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau (1 + \rho^2+...+\rho^{2(h+\tau-1)}) \sigma^2_{\omega} \\
 # & =\sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{\rho^{2(h+\tau)}-1}{\rho^2-1}\sigma^2_{\omega}\\
@@ -204,24 +175,45 @@ plt.plot(lbds,
 # & =\sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau\rho^{2\tau}\frac{\rho^{2h}}{\rho^2-1}\sigma^2_{\omega} - \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{1}{\rho^2-1}\sigma^2_{\omega} \\
 # & =\sum^{+\infty}_{\tau =0} \lambda ((1-\lambda)\rho^2)^\tau\frac{\rho^{2h}}{\rho^2-1}\sigma^2_{\omega} - \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{1}{\rho^2-1}\sigma^2_{\omega} \\
 # & =\frac{\lambda}{(1-\rho^2+\lambda\rho^2)} \sum^{+\infty}_{\tau =0} (1-\rho^2+\lambda\rho^2) (1-(1-\rho^2+\lambda\rho^2))^\tau\frac{\rho^{2h}}{\rho^2-1}\sigma^2_{\omega} - \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \frac{1}{\rho^2-1}\sigma^2_{\omega} \\
-# & =(\frac{\lambda\rho^{2h}}{(1-\rho^2+\lambda\rho^2)(\rho^2-1)} -\frac{1}{\rho^2-1})\sigma^2_{\omega} 
+# & =(\frac{\lambda\rho^{2h}}{(1-\rho^2+\lambda\rho^2)(\rho^2-1)} -\frac{1}{\rho^2-1})\sigma^2_{\omega}  \\
+# & = (\frac{\lambda\rho^{2h}}{1-\rho^2+\lambda\rho^2} -1)\frac{\sigma^2_{\omega} }{\rho^2-1} \\
+# & =  (\frac{\lambda\rho^{2h}-1+\rho^2-\lambda\rho^2}{1-\rho^2+\lambda\rho^2})\frac{\sigma^2_{\omega} }{\rho^2-1}
 # \end{split}
 # \end{eqnarray}
 #
-# Correspondingly, the change in average uncertainty will be 
 #
-#
-# \begin{eqnarray}
-# \begin{split}
-# \Delta \bar Var_{t}(y_{t+h}) & = \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \sum^{h+\tau}_{s=0}\rho^{2s} \sigma^2_{\omega} - \sum^{+\infty}_{\tau =0} \lambda (1-\lambda)^\tau \sum^{h+\tau}_{s=0}\rho^{2s} \sigma^2_{\omega} = 0  
-# \end{split}
-# \end{eqnarray}
-#
-# An information rigity model based on Poisson update rate predicts that the average variance does not change over time. This can be tested.
+# The average uncertainty of h-ahead forecast does not change over time. 
 #
 #
 
+# + code_folding=[0]
+## some experiments 
 
+import matplotlib.pyplot as plt 
+import numpy as np 
+rho = 0.98
+
+def FE2_SE_ratio(lbd):
+    return lbd**2/(1-(1-lbd)**2*rho**2)
+
+def Var_SE_ratio(lbd):
+    return 1/(1-(1-lbd)*rho**2)
+
+lbds = np.linspace(0.01,
+                   0.999,
+                   10)
+
+FE_SE2_ratios = FE2_SE_ratio(lbds)
+Var_SE_ratios = Var_SE_ratio(lbds)
+plt.plot(lbds,
+         FE_SE2_ratios,
+        label='FE2')
+plt.plot(lbds,
+         Var_SE_ratios,
+        label='Var')
+plt.legend(loc=1)
+plt.xlabel(r'$\lambda$')
+# -
 
 # #### Summary of predictions with information rigidity models with update rate $\lambda$
 #
@@ -348,7 +340,7 @@ for t in range(1,T):
     #PopVarSE[t] = sum( [λ*(1-λ)**t*IndVarRE[s] for s in range(t)])
 
 
-# + code_folding=[2]
+# + code_folding=[0, 2]
 ## Noisy information(NI) 
 
 def NI(T,y,sigma_pb=1,sigma_pr=1):
@@ -417,12 +409,12 @@ def NI(T,y,sigma_pb=1,sigma_pr=1):
     
 
 
-# + code_folding=[0]
+# + code_folding=[]
 #Invoke NI 
 
 MomNI =NI(T,y,sigma_pb=sigma_y,sigma_pr=sigma_y)  # both signal's ste is equal to y's long-run ste. 
 
-# + code_folding=[0]
+# + code_folding=[]
 ## Parameters for plots
 linesize = 4
 linesize2 =2
@@ -652,16 +644,16 @@ plt.savefig('figures/ir_popseni.png')
 #
 # Now any agent trying to forecast future variables will have to form her expectation of the contemporaneous state variable, $E_{i,t|t}(y_t)$. Then the best h-period ahead forecast is simply iterated h periods forward based on the AR(1) process.  
 #
-# Thus, we first work out $E_{i,t|t}(y_t)$.  
+# Thus, we first work out $E^{ni}_{i,t|t}(y_t)$.  
 #
 # \begin{eqnarray}
 # \begin{split}
-#  E_{i,t|t}(y_{t}) 
-#  & =  \underbrace{E_{i,t|t-1}(y_{t})}_{\text{prior}} + P_t \underbrace {(s_{i,t|t}-s_{i,t|t-1})}_{\text{innovations to signals}} \\
-# & = (1-P_tH) E_{i,t|t-1}(y_{t}) + P_ts_{i,t} \\
-# & = (1-P_tH) E_{i,t|t-1}(y_{t}) + P_t H y_{i,t} + P_t v_{i,t} \\
-# \text{where the Kalman gain }  & P_t = [P_{\epsilon,t},P_{\xi,t}]= \Sigma^y_{i,t|t-1} H(H'\Sigma^y_{i,t|t-1} H + \Sigma^v)^{-1} \\
-# \text {where } & \Sigma^y_{i,t|t-1} \text{ is the variance of } y_t \text{ based on prior belief}\\
+#  E^{ni}_{i,t|t}(y_{t}) 
+#  & =  \underbrace{E^{ni}_{i,t|t-1}(y_{t})}_{\text{prior}} + P_t \underbrace {(s_{i,t|t}-s_{i,t|t-1})}_{\text{innovations to signals}} \\
+# & = (1-P_tH) E^{ni}_{i,t|t-1}(y_{t}) + P_ts_{i,t} \\
+# & = (1-P_tH) E^{ni}_{i,t|t-1}(y_{t}) + P_t H y_{i,t} + P_t v_{i,t} \\
+# \text{where the Kalman gain }  & P_t = [P_{\epsilon,t},P_{\xi,t}]= Var^{ni}_{i,t|t-1} H(H'Var^{ni}_{i,t|t-1} H + \Sigma^v)^{-1} \\
+# \text {where } & Var^{ni}_{i,t|t-1} \text{ is the variance of } y_t \text{ based on prior belief}\\
 # \text {and } & \Sigma^v = [ \begin{array} & \sigma^2_{\epsilon},  0 \\ 0, \sigma^2_\xi \end{array}]
 # \end{split}
 # \end{eqnarray}
@@ -670,7 +662,7 @@ plt.savefig('figures/ir_popseni.png')
 #
 # \begin{eqnarray}
 # \begin{split}
-#  E_{i,t|t}(y_{t+h}) & = \rho^{h}E_{i,t|t}(y_{t+h}) 
+#  E^{ni}_{i,t|t}(y_{t+h}) & = \rho^{h}E^{ni}_{i,t|t}(y_{t+h}) 
 # \end{split}
 # \end{eqnarray}
 #
@@ -682,14 +674,14 @@ plt.savefig('figures/ir_popseni.png')
 #
 # There are a few important distinctions between noisy information and sticky expectation. 
 #
-# - First, the persistence of expectation exists at individual level. There is serially correlation between $E_{i|t|t}(y_t)$ and $E_{i,t|t-1}(y_{t})$, or more generally, between $E_{i,t|t}(y_{t+h})$ and $E_{i,t|t-1}(y_{t+h})$. This pattern can be only observed from population moments according to sticky expectation models. 
+# - First, the persistence of expectation exists at individual level. There is serially correlation between $E^{ni}_{i|t|t}(y_t)$ and $E^{ni}_{i,t|t-1}(y_{t})$, or more generally, between $E^{ni}_{i,t|t}(y_{t+h})$ and $E^{ni}_{i,t|t-1}(y_{t+h})$. This pattern can be only observed from population moments according to sticky expectation models. 
 #
 #
 # To see this, the change in individual forecast from $t-1$ to $t$ is 
 #
 # \begin{eqnarray}
 # \begin{split}
-# \Delta E_{i,t|t}(y_{t+h}) & = \underbrace{\rho^h (1-PH)\Delta E_{i,t-1|t-1}(y_{t})}_{\text{Lagged response}} + \underbrace{\rho^hPH \Delta y_{i,t} + \rho^h P\Delta v_{i,t}}_{\text{Shocks to signals}}\\
+# \Delta E^{ni}_{i,t|t}(y_{t+h}) & = \underbrace{\rho^h (1-PH)\Delta E_{i,t-1|t-1}(y_{t})}_{\text{Lagged response}} + \underbrace{\rho^hPH \Delta y_{i,t} + \rho^h P\Delta v_{i,t}}_{\text{Shocks to signals}}\\
 # \end{split}
 # \end{eqnarray}
 #
@@ -704,7 +696,7 @@ plt.savefig('figures/ir_popseni.png')
 #
 # \begin{eqnarray}
 # \begin{split}
-# \Sigma^y_{i,t|t} = \Sigma^y_{i,t|t-1} - \Sigma^y_{i,t|t-1} H'(H \Sigma^y_{i,t-1} H' +\Sigma^v)^{-1} H \Sigma^y_{i,t|t-1} 
+# Var^{ni}_{i,t|t} = Var^{ni}_{i,t|t-1} - Var^{ni}_{i,t|t-1} H'(H Var^{ni}_{i,t-1} H' +\Sigma^v)^{-1} H \Sigma^y_{i,t|t-1} 
 # \end{split}
 # \end{eqnarray}
 #
@@ -715,21 +707,21 @@ plt.savefig('figures/ir_popseni.png')
 # - Second, it decreases unambigously from $t-1$ to $t$. To see this 
 #
 # \begin{eqnarray}
-# \Sigma^y_{i,t|t} - \Sigma^y_{i,t|t-1} = - \Sigma^y_{i,t|t-1} H'(H \Sigma^y_{i,t-1} H' +\Sigma^v)^{-1} H \Sigma^y_{i,t|t-1} <0
+# Var^{ni}_{i,t|t} - Var^{ni}_{i,t|t-1} = - Var^{ni}_{i,t|t-1} H'(H Var^{ni}_{i,t-1} H' +\Sigma^v)^{-1} H Var^{ni}_{i,t|t-1} <0
 # \end{eqnarray}
 #
 # These two properties carry through to the h-period ahead forecast as well. As the forecast variance is the following 
 #
 # \begin{eqnarray}
-#    Var_{i,t|t} (y_{t+h}) = \rho^{2h} \underbrace{Var_{i,t}(y_{t})}_{\Sigma_{i,t|t}} + \sum^{h}_{s=0}\rho^{2s} \sigma^2_{\omega}
+#    Var^{ni}_{i,t|t} (y_{t+h}) = \rho^{2h} \underbrace{Var^{ni}_{i,t}(y_{t})}_{Var^{ni}_{i,t|t}} + \sum^{h}_{s=0}\rho^{2s} \sigma^2_{\omega}
 # \end{eqnarray}
 #
 #
 # \begin{eqnarray}
-#    \Delta Var_{i,t|t} (y_{t+h}) = \rho^{2h}\Delta \Sigma_{i,t|t} - \rho^{2h} \sigma^2_{\omega}
+#    \Delta Var^{ni}_{i,t|t} (y_{t+h}) = \rho^{2h}\Delta Var^{ni}_{i,t|t} - \rho^{2h} \sigma^2_{\omega}
 # \end{eqnarray}
 #
-# From $t$ to $t+1$, when $h\geq 1$, the decline in variance come from two sources. The first source is the pure gain from the new signals, i.e. $\Delta \Sigma^y_{i,t|t}$. It is scalled by the factor $\rho^{2h}$. The second source is present in full information rational expectation model: as time goes from $t-1$ to $t$, there is a reduction of uncertainty about $\omega_t$.
+# From $t$ to $t+1$, when $h\geq 1$, the decline in variance come from two sources. The first source is the pure gain from the new signals, i.e. $\Delta Var^{ni}_{i,t|t}$. It is scalled by the factor $\rho^{2h}$. The second source is present in full information rational expectation model: as time goes from $t-1$ to $t$, there is a reduction of uncertainty about $\omega_t$.
 #
 # #### Population moments
 #
@@ -738,9 +730,9 @@ plt.savefig('figures/ir_popseni.png')
 #
 # \begin{eqnarray}
 # \begin{split}
-# \bar E_{t|t} (y_{t+h}) & = \rho^h [(1-PH) \underbrace{\bar E_{t-1}(y_{t+h})}_{\text{Average prior}} + P \underbrace{\bar s_{t}}_{\text{Average Signals}}] \\
-# & = (1-PH) \bar E_{t-1}(y_{t+h}) + P [\epsilon_t, 0]' \\
-# & = (1-PH) \bar E_{t-1}(y_{t+h}) + P_\epsilon\epsilon_t
+# \bar E^{ni}_{t|t} (y_{t+h}) & = \rho^h [(1-PH) \underbrace{\bar E^{ni}_{t-1}(y_{t+h})}_{\text{Average prior}} + P \underbrace{\bar s_{t}}_{\text{Average Signals}}] \\
+# & = (1-PH) \bar E^{ni}_{t-1}(y_{t+h}) + P [\epsilon_t, 0]' \\
+# & = (1-PH) \bar E^{ni}_{t-1}(y_{t+h}) + P_\epsilon\epsilon_t
 # \end{split}
 # \end{eqnarray}
 #
@@ -748,21 +740,22 @@ plt.savefig('figures/ir_popseni.png')
 #
 # \begin{eqnarray}
 # \begin{split}
-# \Delta \bar E_t|t (y_{t+h}) & = \rho^h (1-PH) \Delta \bar E_{t-1}(y_{t+h}) + \rho^h P \Delta \epsilon_{t}
+# \Delta \bar E^{ni}_t|t (y_{t+h}) & = \rho^h (1-PH) \Delta \bar E^{ni}_{t-1}(y_{t+h}) + \rho^h P \Delta \epsilon_{t}
 # \end{split}
 # \end{eqnarray}
 #
 #
 # Same to the individual forecast, the change in average forecasts has serial correlation with the same auto regression parameter $\rho^h(1-PH)$.  
 #
-# ##### Cross-sectional disagreements 
+# ##### Cross-sectional disagreement
 #
-# In this model, the only disagreements across agents come from the difference in realized private signals. Therefore, in short-cut, the disagreements are 
+# In this model, the only disagreements across agents come from the difference in realized private signals. Therefore, in short-cut, the disagreement is essentialy the weighted sum of all past dispersions due to private signals, and the weight for each past period is proprotional to the updating weight (1-PH)
 #
 # \begin{eqnarray}
 # \begin{split}
-# Var_t(y_{t+h}) & = E((E_{i,t|t}(y_{t+h}) - \bar E_t(y_{t+h}))^2) \\
-# & = \rho^{2h} P^2_\xi \sigma^2_\xi  
+# Disg^{ni}_t(y_{t+h}) & = E((E_{i,t|t}(y_{t+h}) - \bar E_t(y_{t+h}))^2) \\
+# & = \rho^{2h}\sum^{\infty}_{\tau=0}[(1-PH)\rho]^{2\tau}P^2_{\xi}\sigma^2_\omega \\
+# & = \rho^{2h}\frac{1}{1-(1-PH)^2\rho^2}P^2_\xi\sigma^2_\omega
 # \end{split}
 # \end{eqnarray}
 #
@@ -773,31 +766,20 @@ plt.savefig('figures/ir_popseni.png')
 # - Second, the disagreements depends on noisiness private signals, but not on that of public signals and the variance of the true variable $y$. 
 # - Third, similar to sticky expectation model, the disagreements also increase with the rigidity parameter $P$ in this model.
 #
-# ##### Change in disagreements 
-#
-#
-# \begin{eqnarray}
-# \begin{split}
-# \Delta Var_t(y_{t+h}) & = \rho^{2h}(1-\rho^2) P^2_\xi \sigma^2_\xi >0
-# \end{split}
-# \end{eqnarray}
-#
-# The disagreements increase as time goes from $t-1$ to $t$. Also, as the time approaches $t+h$, the disagreements increase. This seems counterintuitive. But the reason is that here the disagreenments always exist simply because agents receive private signals, this disagreements is actually amplified as time goes forward. 
-#
 # ##### Average variance 
 #
 # Since the variance does not depend on signals and the precision is the same aross the agents, average variance is equal to the variance of each individual. 
 #
 # \begin{eqnarray}
 # \begin{split}
-# \bar Var_t (y_{t+h}) = \bar \Sigma^y_t
+# \bar Var^{ni}_t (y_{t+h}) = \bar Var^{ni}_{i,t+h|t}
 # \end{split}
 # \end{eqnarray}
 #
-# Also, same as the individual variance, the variance unambiguiously drop as time goes by. 
+# Also, the same as in the individual variance, the variance unambiguiously drop as time goes by. 
 #
 # \begin{eqnarray}
-# \Delta Var_t(y_{t+h}) < 0 
+# \Delta Var^{ni}_t(y_{t+h}) < 0 
 # \end{eqnarray}
 #
 # ##### Summary of predictions from noisy information 
@@ -812,16 +794,5 @@ plt.savefig('figures/ir_popseni.png')
 # ### Rational Inattention 
 #
 # The rational inattention has subtly different predictions from the sticky information. Information stickyness does not make assumptions on the source of stickiness, instead it only assumes there is an exogeous rate of updating. Rational inattention, in contrast, implies that people's allocation of attention endogeously respond to the nature of the variables of interest. For instance, a variable with higher volatility should receive more attention from a rational-inattentive agent. This prediction can be tested by exploring if the agent's forecast uncertainty differs across variables with different volatility. 
-
-# ### Strategic Complementarity 
-#
-# This class of models assume across there are coordination motives. Therefore, individual forecast tends to converge to the population mean but it does not matter the mean forecast is unbiased or not. 
-
-# ### Learning of Parameters 
-#
-
-# ### Extrapolative Expectation
-
-# ### Model Uncertainty 
 
 
