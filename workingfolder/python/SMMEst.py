@@ -312,7 +312,7 @@ model_data = [
 ]
 
 
-# + code_folding=[1, 2, 17, 21, 43, 98]
+# + code_folding=[1, 2, 17, 21, 43]
 @jitclass(model_data)
 class RationalExpectationAR:
     def __init__(self,
@@ -876,7 +876,7 @@ if __name__ == "__main__":
 #
 # - The example below shows that a SEAR class correctly identifies the update rate lambda to be 1 if expectation moments from rational expectation are used.
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
     ## only expectation estimation 
@@ -884,7 +884,7 @@ if __name__ == "__main__":
     moments0 = ['FE',
                'FEATV',
                'Disg',
-                #'Var'
+                'Var'
                ] ## or FE+Var, or FE + Disg
 
     def Objsear_re(paras):
@@ -960,7 +960,7 @@ if __name__ == "__main__":
 #
 # - The joint estimation below illustrates the mutual-dependence between the stickiness parameter and AR1 coefficients.
 
-# + code_folding=[0, 5, 13]
+# + code_folding=[13]
 if __name__ == "__main__":
 
     ## for joint estimation 
@@ -972,7 +972,9 @@ if __name__ == "__main__":
                 'FE',
                 'FEVar',
                 'FEATV',
-                'Disg']
+                'Disg',
+               #'Var'
+               ]
 
     def Objsear_joint(paras):
         scalar = ObjGen(sear0,
@@ -993,7 +995,7 @@ if __name__ == "__main__":
     print('True expectation parameter',str(exp_para_fake))  
     print('Estimates: ',str(Est[0]))
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -1172,7 +1174,7 @@ if __name__ == "__main__":
 # ### Noisy Information (NI) + AR1
 #
 
-# + code_folding=[14]
+# + code_folding=[1]
 @njit
 def SteadyStateVar(process_para,
                    exp_para):
@@ -1408,7 +1410,7 @@ if __name__ == "__main__":
 
 # #### Estimating NI using RE data 
 #
-# - The example below shows that NIAR seems to __have some difficulty__ to identify sigma_pr and sigma_pb to be zero if rational expectation moments are used. 
+# - The example below shows that NIAR seems to almost albeit imperfectly to identify sigma_pr and sigma_pb to be zero if rational expectation moments are used. 
 
 # + code_folding=[0, 14]
 if __name__ == "__main__":
@@ -1999,7 +2001,7 @@ if __name__ == "__main__":
 
 # #### Joint Estimation 
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## for joint estimation 
@@ -2029,8 +2031,8 @@ if __name__ == "__main__":
     print('Estimates: ',str(Est[2:]))
     print('True expectation parameter',str(exp_paras_fake))  
     print('Estimates: ',str(Est[0:2]))
-# -
 
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -2040,6 +2042,8 @@ if __name__ == "__main__":
     print('\n')
     print("Computed moments:",data_mom_dict_de_computed)
 
+
+# -
 
 # ###  Diagnostic Expectation(DE) + SV
 
@@ -2200,7 +2204,7 @@ if __name__ == "__main__":
 
 # -
 
-# ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
+# ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1 (not in the paper)
 
 # + code_folding=[1, 2, 21, 121]
 @jitclass(model_data)
