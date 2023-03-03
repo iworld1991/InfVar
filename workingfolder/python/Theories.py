@@ -791,8 +791,68 @@ plt.savefig('figures/ir_popseni.png')
 # - Population disagreements rise in each period as time approaches the period of realization. Disagreetments will never be zero. 
 # - Average variance declines unambiguously each period. 
 
-# ### Rational Inattention 
+# ### Diagnostic expectations (DE)
 #
-# The rational inattention has subtly different predictions from the sticky information. Information stickyness does not make assumptions on the source of stickiness, instead it only assumes there is an exogeous rate of updating. Rational inattention, in contrast, implies that people's allocation of attention endogeously respond to the nature of the variables of interest. For instance, a variable with higher volatility should receive more attention from a rational-inattentive agent. This prediction can be tested by exploring if the agent's forecast uncertainty differs across variables with different volatility. 
+# #### Individual expectations 
+#
+# \begin{eqnarray}
+# E^{de}_{i,t}(y_{t+h}) = \rho^h y_t + \theta_i(\rho^h y_t - E^{de}_{i,t-1}(y_{t+h}))
+# \end{eqnarray}
+#
+# where $\theta_i>0$ is the overreaction parameter. 
+#
+# #### Individual forecast errors 
+#
+# \begin{eqnarray}
+# \begin{split}
+#  FE^{de}_{i,t}(y_{t+h})& = E^{de}_{i,t}(y_{t+h}) - y_{t+h}\\
+# & = \rho^h y_t - y_{t+h} + \theta_i (\rho^hy_t-y_{t+h}-FE^{de}_{i,t+h|t}) \\
+# & = \hat FE^{*}_{t+h|t} +\theta_i (\rho^hy_t-y_{t+h}-FE^{de}_{i,t+h|t}) \\
+# & = (1+\theta_i) FE^{*}_{t+h|t} - \theta_i FE^{de}_{i,t+h|t-1} \\
+# & = (1+\theta_i) FE^{*}_{t+h|t} - \theta_i (\rho FE^{de}_{i,t+h-1|t-1}-\omega_{t+h}) \\
+# & = (1+\theta_i) FE^{*}_{t+h|t} - \theta_i \rho FE^{de}_{i,t+h-1|t-1} + \theta_i \omega_{t+h}  \\
+# & = (1+\theta_i) FE^{*}_{t+h|t} + \theta_i(\omega_{t+h}- \rho FE^{de}_{i,t+h-1|t-1}) \\
+# & = (1+\theta_i) FE^{*}_{t+h-1|t} + (1+\theta_i)(-\omega_{t+h})+\theta_i(\omega_{t+h}- \rho FE^{de}_{i,t+h-1|t-1}) \\
+# & = (1+\theta_i) FE^{*}_{t+h-1|t} -\omega_{t+h}-\theta_i\rho FE^{de}_{i,t+h-1|t-1} \\
+# & = FE^{*}_{t+h|t} +\theta_iFE^{*}_{t+h-1|t} -\theta_i\rho FE^{de}_{i,t+h-1|t-1}\\
+# & = FE^{*}_{t+h|t} +\theta_i(FE^{*}_{t+h-1|t}- \rho FE^{de}_{i,t+h-1|t-1}) 
+# \end{split}
+# \end{eqnarray}
+#
+# when $h=1$, the equation collapses to 
+#
+# \begin{eqnarray}
+# \begin{split}
+#  FE^{de}_{i,t}(y_{t+1})&  = (1+\theta_i) FE^{*}_{i,t+1|t} - \theta_i \rho FE^{de}_{i,t|t-1} + \theta_i \omega_{t+1}  \\
+#  & = (1+\theta_i) (-\omega_{t+1} ) - \theta_i \rho FE^{de}_{i,t|t-1} + \theta_i \omega_{t+1} \\
+#  & =  FE^{*}_{i,t+1|t} - \theta_i \rho FE^{de}_{i,t|t-1}
+# \end{split}
+# \end{eqnarray}
+#
+# The variance of DE model is the same as FIRE model, at both individual and population level.
+#
+# #### Population moments
+#
+# Average forecast errors $\hat{FE}^{de}_{t+h|t}$ takes the same form as the individual forecast errors except for substituting the individual specific $\theta_i$ with the average $\theta$. 
+#
+# The variance of population forecast error is equal to the following.
+#
+#
+# \begin{eqnarray}
+# \begin{split}
+#  FE^{de2}_{\bullet+h|\bullet}&  =\frac{(1+\theta)^2}{1+\theta^2\rho^2}{FE}^{*2}_{\bullet+h-1|\bullet} + \frac{\sigma^2_\omega}{(1+\theta^2\rho^2)}
+# \end{split}
+# \end{eqnarray}
+# The average uncertainty is also equal to FIRE benchmark at the population level. 
+#
+# Disagreement is the following, which is non zero as long as there is heterogeneity in degrees of overreaction.
+#
+# \begin{eqnarray}
+# \begin{split}
+# Disg^{de}_{t+h|t} = 
+# \end{split}
+# \end{eqnarray}
+#
+#
 
 
