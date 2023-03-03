@@ -806,8 +806,9 @@ plt.savefig('figures/ir_popseni.png')
 # \begin{eqnarray}
 # \begin{split}
 #  FE^{de}_{i,t}(y_{t+h})& = E^{de}_{i,t}(y_{t+h}) - y_{t+h}\\
-# & = \rho^h y_t - y_{t+h} + \theta_i (\rho^hy_t-y_{t+h}-FE^{de}_{i,t+h|t}) \\
-# & = \hat FE^{*}_{t+h|t} +\theta_i (\rho^hy_t-y_{t+h}-FE^{de}_{i,t+h|t}) \\
+# & =  \rho^h y_t -y_{t+h} + \theta_i(\rho^h y_t - E^{de}_{i,t-1}(y_{t+h})) \\
+# & = \rho^h y_t - y_{t+h} + \theta_i (\rho^hy_t-y_{t+h}-FE^{de}_{i,t+h|t-1}) \\
+# & = \hat FE^{*}_{t+h|t} +\theta_i (\rho^hy_t-y_{t+h}-FE^{de}_{i,t+h|t-1}) \\
 # & = (1+\theta_i) FE^{*}_{t+h|t} - \theta_i FE^{de}_{i,t+h|t-1} \\
 # & = (1+\theta_i) FE^{*}_{t+h|t} - \theta_i (\rho FE^{de}_{i,t+h-1|t-1}-\omega_{t+h}) \\
 # & = (1+\theta_i) FE^{*}_{t+h|t} - \theta_i \rho FE^{de}_{i,t+h-1|t-1} + \theta_i \omega_{t+h}  \\
