@@ -169,7 +169,7 @@ def d1tod2(x):
     return x.reshape(1,-1)
 
 
-# + code_folding=[0, 2, 38]
+# + code_folding=[2, 38]
 ## Objective functions for SMM
 @njit
 def ObjGen(model,
@@ -301,7 +301,7 @@ def np_min(array, axis):
 
 # ### Rational Expectation (RE) + AR1
 
-# + code_folding=[0]
+# + code_folding=[]
 model_data = [
     ('exp_para', float64[:]),             # parameters for expectation formation, empty for re
     ('process_para', float64[:]),         # parameters for inflation process, 2 entries for AR1 
@@ -438,14 +438,14 @@ class RationalExpectationAR:
 #
 # - Creating some simulated inflation data following AR1 and UCSV process separately 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
        
     ## first, simulate some AR1 inflation with known parameters 
     ρ0,σ0 = 0.95,0.1
     history0 = SimAR1(ρ0,
                       σ0,
-                      200)
+                      500)
     real_time0 = history0[11:-2] 
     realized0 = history0[12:-1]
     
@@ -486,7 +486,7 @@ if __name__ == "__main__":
 # - For instance, the example below shows that how auto-covariance (ATV) of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
 #
 
-# + code_folding=[0, 25]
+# + code_folding=[]
 if __name__ == "__main__":
 
 
@@ -528,16 +528,16 @@ if __name__ == "__main__":
     print('Estimates: ',str(est))
 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_re  = rear0.SimForecasts()
-    plt.title("Simulated forecasts")
+    plt.title("Simulated FIRE forecasts")
     plt.plot(simulated_re['Forecast'],label='Forecasts')
     plt.plot(rear0.real_time,label='Real-time realization')
     plt.legend(loc=0)
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -1316,7 +1316,7 @@ if __name__ == "__main__":
                  azim=20)
 
 
-# + code_folding=[2, 123, 177]
+# + code_folding=[1, 2, 21, 123, 177]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1503,8 +1503,9 @@ class NoisyInformationAR:
         var_ss_now =  SteadyStateVar(self.process_para,
                                     self.exp_para) ## steady state nowcasting uncertainty 
         cum_fe2_sum = np.sum(np.array([ρ**(2*k)*σ**2 for k in range(horizon)])) ##fire forecast errors 
-        H = np.array([[1.0],[1.0]])
-        P_ss = xxx
+        P_ss = Pkalman(self.process_para,
+                      self.exp_para,
+                      var_ss_now)
         fevar_num = ρ**(2*horizon)*P_ss[0]**2*sigma_pb**2+cum_fe2_sum
         fevar_dem = (P_ss[0]+P_ss[1])**2
         fevar = fevar_num/fevar_dem
@@ -1548,7 +1549,7 @@ if __name__ == "__main__":
 
 
     moments0 = [#'FE',
-                'FEATV',
+                #'FEATV',
                 'FEVar',
                 'Disg',
                 #'DisgATV',
@@ -1568,7 +1569,7 @@ if __name__ == "__main__":
 
     ## invoke estimation 
     Est = ParaEst(Objniar_re,
-            para_guess = np.array([0.2,0.1]),
+            para_guess = np.array([0.3,0.1]),
             method='trust-constr',
            bounds=((0,None),(0,None),))
     
@@ -1672,6 +1673,16 @@ if __name__ == "__main__":
     print('Estimates: ',str(Est[2:]))
     print('True expectation parameter',str(exp_paras_fake))  
     print('Estimates: ',str(Est[0:2]))
+
+# + code_folding=[0]
+if __name__ == "__main__":
+
+    ## check if simulated moments and computed moments match 
+    data_mom_dict_ni_computed = niar0.GMM()
+    
+    print("Simulated moments:",data_mom_dict_ni)
+    print('\n')
+    print("Computed moments:",data_mom_dict_ni_computed)
 
 
 # -
@@ -2050,11 +2061,11 @@ if __name__ == "__main__":
 
     ## only expectation estimation 
 
-    moments0 = ['FE',
+    moments0 = [#'FE',
                 'FEVar',
-                'FEATV',
+                #'FEATV',
                 'Disg',
-                'DisgVar',
+                #'DisgVar',
                 'Var']
 
     def Objdear_re(paras):
@@ -2529,15 +2540,15 @@ if __name__ == "__main__":
 #
 # The example below shows that the hybrid model, DENIAR SMM seems to have difficulty with identifying the rational-expectation benchmark, in which the overreaction parameter and noisiness of both private and public signals all should be zero. This is possibly due to the counteraction between the overreaction parameter and the rigidity due to the noisiness of public signals.
 
-# + code_folding=[0, 2]
+# + code_folding=[0]
 if __name__ == "__main__":
 
-    moments0 = ['FE',
+    moments0 = [#'FE',
                 'FEVar',
-                'FEATV',
+                #'FEATV',
                 'Disg',
-                'DisgVar',
-                'DisgVar',
+                #'DisgVar',
+                #'DisgVar',
                 'Var']
 
     def Objdeniar_re(paras):
