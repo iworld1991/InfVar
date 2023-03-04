@@ -686,7 +686,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + AR1
 
-# + code_folding=[2, 17, 21, 85, 140]
+# + code_folding=[1, 2, 17, 21, 85, 140]
 @jitclass(model_data)
 class StickyExpectationAR:
     def __init__(self,
@@ -876,7 +876,7 @@ if __name__ == "__main__":
 #
 # - The example below shows that a SEAR class correctly identifies the update rate lambda to be 1 if expectation moments from rational expectation are used.
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## only expectation estimation 
@@ -960,7 +960,7 @@ if __name__ == "__main__":
 #
 # - The joint estimation below illustrates the mutual-dependence between the stickiness parameter and AR1 coefficients.
 
-# + code_folding=[13]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## for joint estimation 
@@ -995,7 +995,7 @@ if __name__ == "__main__":
     print('True expectation parameter',str(exp_para_fake))  
     print('Estimates: ',str(Est[0]))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -1189,37 +1189,134 @@ def SteadyStateVar(process_para,
     return nowcast_var_ss
 
 
-# + code_folding=[0]
+# + code_folding=[1]
+@njit
+def Pkalman(process_para,
+            exp_para,
+           nowvar):
+    ## paras 
+    ρ,σ = process_para
+    sigma_pb,sigma_pr = exp_para
+
+    ## other paras
+    sigma_v = np.array([[sigma_pb**2,0.0],
+                        [0.0,sigma_pr**2]]) ## variance matrix of signal noises 
+        
+    ## simulate signals 
+    H = np.array([[1.0],[1.0]])                 ## an multiplicative matrix summing all signals
+    
+    ## one-step-ahead uncertainty 
+    step1_vars = ρ**2*nowvar+ σ**2
+    
+    ## prior uncertainty             
+    inv = np.linalg.inv(H*step1_vars*H.T+sigma_v) 
+    
+    ## steady state Kalman
+    Pkalman = step1_vars*np.dot(H.T,inv)
+    return Pkalman.reshape(-1)
+
+
+# + code_folding=[0, 22]
 if __name__ == "__main__":
+    
+    ## plot steady state vars and Kalman gains
+    
     import matplotlib.pyplot as plt 
     sigma_pb_ = np.linspace(0.01, 0.8, 50)
     sigma_pr_ = np.linspace(0.01, 0.8, 50)
-
-    sigma_pbs, sigma_prs = np.meshgrid(sigma_pb_, 
-                                       sigma_pr_)
-    ss_vars = SteadyStateVar(np.array([0.98,0.1]),
-                             np.meshgrid(sigma_pb_,
-                                         sigma_pr_))
     
-    fig = plt.figure(figsize = (12,10))
-    ax = plt.axes(projection='3d')
-    ax.set_title(r'Steady state $Var$')
+    rho,sigma = 0.98,0.1
+    sigma_pbs,sigma_prs = np.meshgrid(sigma_pb_,sigma_pr_)
+    
+    ss_vars = SteadyStateVar(np.array([rho,
+                                       sigma]
+                                     ),
+                             [sigma_pbs,
+                              sigma_prs]
+                            )
+    ## get Kalman gains as well   
+    
+    row,col  = ss_vars.shape
+    pkalmans = []
+    
+    for i in range(row):
+        for j in range(col):
+            pkalman_this = Pkalman(np.array([rho,
+                                       sigma]),
+                                    np.array([sigma_pbs[i,j],
+                                              sigma_prs[i,j]]),
+                                    ss_vars[i,j]
+                                   )
+            pkalmans.append(pkalman_this)
+    
+    pkalmans_pb = np.array([pkalman[0] for pkalman in pkalmans]).reshape((row,col))
+    pkalmans_pr = np.array([pkalman[1] for pkalman in pkalmans]).reshape((row,col))
+    
+    
+    ## plot 
+    #####################
+    ## figure 1
+    #####################
+    
+    fig = plt.figure(figsize = (20,10))
+    #fig.colorbar(surf)
+    
+    ax = fig.add_subplot(1, 3, 1, projection='3d')
+    ax.set_title('Steady state Var')
     surf = ax.plot_surface(sigma_pbs, 
                            sigma_prs, 
                            ss_vars, 
                            cmap = plt.cm.cividis)
-    #ax.invert_xaxis()
-    #ax.invert_yaxis()
+
     # Set axes label
-    fig.colorbar(surf)
     ax.set_xlabel(r'$\sigma^2_{pb}$',size=20)
     ax.set_ylabel('$\sigma^2_{pr}$',size=20)
     ax.set_zlabel(r'$Var_{ss}$',size=20)
     ax.view_init(elev=10,
                  azim=-80)
+    #####################
+    ## figure 2
+    #####################
+    ax2 = fig.add_subplot(1, 3, 2, projection='3d')
+    
+    ax2.set_title(r'Steady state $P_{pb}$')
+    surf = ax2.plot_surface(sigma_pbs, 
+                           sigma_prs, 
+                           pkalmans_pb, 
+                           cmap = plt.cm.cividis)
+
+    # Set axes label
+   
+    ax2.set_xlabel(r'$\sigma^2_{pb}$',size=20)
+    ax2.set_ylabel('$\sigma^2_{pr}$',size=20)
+    ax2.set_zlabel(r'$P_{pb}$',size=20)
+    ax2.view_init(elev=10,
+                 azim=-30)
+    
+    #####################
+    ## figure 3
+    #####################
+    ax3 = fig.add_subplot(1, 
+                          3, 
+                          3, 
+                          projection='3d')
+    
+    ax3.set_title(r'Steady state $P_{pr}$')
+    surf = ax3.plot_surface(sigma_pbs, 
+                           sigma_prs, 
+                           pkalmans_pr, 
+                           cmap = plt.cm.cividis)
+
+    # Set axes label
+   
+    ax3.set_xlabel(r'$\sigma^2_{pb}$',size=20)
+    ax3.set_ylabel('$\sigma^2_{pr}$',size=20)
+    ax3.set_zlabel(r'$P_{pr}$',size=20)
+    ax3.view_init(elev=20,
+                 azim=20)
 
 
-# + code_folding=[1, 2, 21, 65, 121, 159]
+# + code_folding=[2, 123, 177]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1261,7 +1358,8 @@ class NoisyInformationAR:
         var_init = SteadyStateVar(self.process_para,
                                   self.exp_para)    ## some initial level of uncertainty, will be washed out after long simulation
         ##################
-        sigma_v = np.array([[sigma_pb**2,0.0],[0.0,sigma_pr**2]]) ## variance matrix of signal noises 
+        sigma_v = np.array([[sigma_pb**2,0.0],
+                            [0.0,sigma_pr**2]]) ## variance matrix of signal noises 
         horizon = self.horizon      
         
         ## simulate signals 
@@ -1333,7 +1431,8 @@ class NoisyInformationAR:
         forecasts_var = np_var(forecasts,axis=0)
         FEs_mean = forecasts_mean - realized
             
-        Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
+        Vars_mean = np_mean(Vars,
+                            axis=0) ## need to change for time-variant volatility
         
         forecast_moments_sim = {"Forecast":forecasts_mean,
                                 "FE":FEs_mean,
@@ -1393,6 +1492,38 @@ class NoisyInformationAR:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+    
+    
+    def GMM(self):
+        ρ,σ = self.process_para
+        horizon = self.horizon
+        sigma_pb,sigma_pr = self.exp_para
+        
+        ## some middle steps for moments below 
+        var_ss_now =  SteadyStateVar(self.process_para,
+                                    self.exp_para) ## steady state nowcasting uncertainty 
+        cum_fe2_sum = np.sum(np.array([ρ**(2*k)*σ**2 for k in range(horizon)])) ##fire forecast errors 
+        H = np.array([[1.0],[1.0]])
+        P_ss = xxx
+        fevar_num = ρ**(2*horizon)*P_ss[0]**2*sigma_pb**2+cum_fe2_sum
+        fevar_dem = (P_ss[0]+P_ss[1])**2
+        fevar = fevar_num/fevar_dem
+        GMMMoments = {"InfAV":0.0,
+                     "InfVar":σ**2/(1-ρ**2),
+                      "InfATV":ρ*σ**2/(1-ρ**2),
+                      "Forecasts":0.0,
+                      "FE":0.0,
+                      "FEVar":fevar,  
+                      "FEATV":(1-P_ss[0]-P_ss[1])*ρ*fevar,
+                      "Disg":np.nan,
+                      "DisgVar":np.nan,
+                      "DisgATV":np.nan,
+                      "Var":ρ**(2*horizon)*var_ss_now+cum_fe2_sum,
+                      'VarVar':np.nan,
+                      'VarATV':np.nan
+                     }
+        
+        return GMMMoments
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -1742,7 +1873,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + AR1
 
-# + code_folding=[1, 21, 75]
+# + code_folding=[1, 21, 75, 128]
 @jitclass(model_data)
 class DiagnosticExpectationAR:
     def __init__(self,
@@ -1886,11 +2017,11 @@ class DiagnosticExpectationAR:
                       "FEVar":1/(1-theta**2*ρ**2)*sum([ρ**(2*k)*σ**2 for k in range(horizon)]),  
                       "FEATV":-theta*ρ*σ**2/(1-theta**2*ρ**2),
                       "Disg":np.nan,
-                      "DisgVar":0.0,
-                      "DisgATV":0.0,
+                      "DisgVar":np.nan,
+                      "DisgATV":np.nan,
                       "Var":sum([ρ**k*σ**2 for k in range(horizon)]),
-                      'VarVar':0.0,
-                      'VarATV':0.0
+                      'VarVar':np.nan,
+                      'VarATV':np.nan
                      }
         
         return GMMMoments
