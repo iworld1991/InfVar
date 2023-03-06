@@ -133,12 +133,36 @@
 #
 # ##### Cross-sectional disagreement
 #
-# According to information rigity model, if everyone is instantaneously udpated, there should not be disagreements. In general, the dispersion in forecasting is non-zero because of different lags in updating. One can also derive variance of forecasts across agents at time $t$ 
+# According to information rigity model, if everyone is instantaneously udpated, there should not be disagreements. In general, the dispersion in forecasting is non-zero because of different lags in updating. 
+#
+#
+# The impulse response of disagreement at time $t$ to a shock that realized at $\tau$ periods before is equal to. 
+#
+# \begin{eqnarray}
+# \rho^{2(h+\tau)} \underbrace{(1-(1-\lambda)^{\tau+1}))}_{\text{People who have updated about }\omega_{t-\tau} }\overbrace{(1-\lambda)^{\tau+1}}^{\text{those who have not}} \omega^2_{t-\tau}
+# \end{eqnarray}
+#
+#
+# Then the disagreement at time $t$ is the essentially the comulated sum of all the marginal impacts of past shocks between $t-\infty$ till $t$. 
 #
 # \begin{eqnarray}
 # \begin{split}
-# Disg_{t+h|t} = Var(E^{se}_{i,t}(y_{t+h}) ) & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} (E_{t|\tau}(y_{t+h}) - \bar E_t(y_{t+h}))^2  
-# \end{split}
+# Disg_{t+h|t} = Var(E^{se}_{i,t}(y_{t+h}) ) & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} (E_{t|\tau}(y_{t+h}) - \bar E_t(y_{t+h}))^2  \\
+# & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} \underbrace{\rho^{2(h+\tau)}(1-(1-\lambda)^{\tau+1})(1-\lambda)^{\tau+1} \omega^2_{t-\tau}}_{\text{Disg induced by the shock } \omega^{t-\tau}} \\
+# & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} \rho^{2(h+\tau)} ((1-\lambda)^{\tau+1}-(1-\lambda)^{2\tau+2}) \omega^2_{t-\tau} \\
+# & = \lambda (1-\lambda)\rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)\rho)^{2\tau} \omega^2_{t-\tau}-\lambda (1-\lambda)^2 \rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)^3 \rho^2)^\tau \omega^2_{t-\tau} \\
+# & =\lambda (1-\lambda)\rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)\rho)^{2\tau} \omega^2_{t-\tau}-\lambda (1-\lambda)^2 \rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)^3 \rho^2)^\tau \omega^2_{t-\tau} 
+# \end{split} 
+# \end{eqnarray}
+#
+# The unconditional disagreement is, therefore, equal to the following. 
+#
+# \begin{eqnarray}
+# \begin{split}
+# Disg_{\bullet+h|\bullet} &= \lambda (1-\lambda)\rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)\rho)^{2\tau} \sigma^2_{\omega}-\lambda (1-\lambda)^2 \rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)^3 \rho^2)^\tau \sigma^2_{\omega}  \\
+# & = \lambda (1-\lambda)\rho^{2h}\frac{1}{1-((1-\lambda)\rho)^2} \sigma^2_{\omega}-\lambda (1-\lambda)^2 \rho^{2h}\frac{1}{1-((1-\lambda)^6 \rho^4)} \sigma^2_{\omega}  \\
+# & = (\frac{1}{1-((1-\lambda)\rho)^2} -\frac{1-\lambda}{1-((1-\lambda)^6 \rho^4)}) \lambda (1-\lambda) \rho^{2h}\sigma^2_{\omega}  \\
+# \end{split} 
 # \end{eqnarray}
 #
 # From time $t$ to $t+1$, the change in dispersion comes from two sources. One is newly realized shock at time $t+1$. The other component is from people who did not update at time $t$ and update at time $t+1$.  
@@ -151,12 +175,6 @@
 #
 #
 # Notice the change is positive, meaning the dispersion rises in response to a shock. Importantly, the increase is the same regardless of the realization of the shock. 
-#
-# More generally, we can derive the impulse response of dispersion at time $t+j$ to a shock that realized at $t$. 
-#
-# \begin{eqnarray}
-# \rho^{2(h+j)} (1-\lambda^{j+1})\lambda^{j+1} \omega^2_t
-# \end{eqnarray}
 #
 #
 # Then it gradually returns to its steady state level. 
