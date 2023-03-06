@@ -20,6 +20,13 @@
 # - Edited: Feb, 2023
 #
 
+# +
+import matplotlib.pyplot as plt 
+import numpy as np 
+
+plt.style.use('ggplot')
+# -
+
 # ### A General Framework 
 #
 #
@@ -150,10 +157,12 @@
 # Disg_{t+h|t} = Var(E^{se}_{i,t}(y_{t+h}) ) & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} (E_{t|\tau}(y_{t+h}) - \bar E_t(y_{t+h}))^2  \\
 # & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} \underbrace{\rho^{2(h+\tau)}(1-(1-\lambda)^{\tau+1})(1-\lambda)^{\tau+1} \omega^2_{t-\tau}}_{\text{Disg induced by the shock } \omega^{t-\tau}} \\
 # & = \lambda \sum^{\infty}_{\tau=0} (1-\lambda)^{\tau} \rho^{2(h+\tau)} ((1-\lambda)^{\tau+1}-(1-\lambda)^{2\tau+2}) \omega^2_{t-\tau} \\
-# & = \lambda (1-\lambda)\rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)\rho)^{2\tau} \omega^2_{t-\tau}-\lambda (1-\lambda)^2 \rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)^3 \rho^2)^\tau \omega^2_{t-\tau} \\
-# & =\lambda (1-\lambda)\rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)\rho)^{2\tau} \omega^2_{t-\tau}-\lambda (1-\lambda)^2 \rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)^3 \rho^2)^\tau \omega^2_{t-\tau} 
+# & = \lambda (1-\lambda)\rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)\rho)^{2\tau} \omega^2_{t-\tau}-\lambda (1-\lambda)^2 \rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)^3 \rho^2)^\tau \omega^2_{t-\tau} 
 # \end{split} 
 # \end{eqnarray}
+#
+#
+# From time $t$ to $t+1$, the change in dispersion comes from two sources. One is newly realized shock at time $t+1$. The other component is from people who did not update at time $t$ and update at time $t+1$.  
 #
 # The unconditional disagreement is, therefore, equal to the following. 
 #
@@ -161,17 +170,10 @@
 # \begin{split}
 # Disg_{\bullet+h|\bullet} &= \lambda (1-\lambda)\rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)\rho)^{2\tau} \sigma^2_{\omega}-\lambda (1-\lambda)^2 \rho^{2h}\sum^{\infty}_{\tau=0} ((1-\lambda)^3 \rho^2)^\tau \sigma^2_{\omega}  \\
 # & = \lambda (1-\lambda)\rho^{2h}\frac{1}{1-((1-\lambda)\rho)^2} \sigma^2_{\omega}-\lambda (1-\lambda)^2 \rho^{2h}\frac{1}{1-((1-\lambda)^6 \rho^4)} \sigma^2_{\omega}  \\
-# & = (\frac{1}{1-((1-\lambda)\rho)^2} -\frac{1-\lambda}{1-((1-\lambda)^6 \rho^4)}) \lambda (1-\lambda) \rho^{2h}\sigma^2_{\omega}  \\
+# & = (\frac{1}{1-(1-\lambda)^2\rho^2} -\frac{1-\lambda}{1-(1-\lambda)^6 \rho^4}) \lambda (1-\lambda) \rho^{2h}\sigma^2_{\omega}  \\
 # \end{split} 
 # \end{eqnarray}
 #
-# From time $t$ to $t+1$, the change in dispersion comes from two sources. One is newly realized shock at time $t+1$. The other component is from people who did not update at time $t$ and update at time $t+1$.  
-#
-# \begin{eqnarray}
-# \begin{split}
-# \Delta Disg_{t+h|t} = \text{change due to new updaters} + \text{shock at time } t+1 
-# \end{split}
-# \end{eqnarray}
 #
 #
 # Notice the change is positive, meaning the dispersion rises in response to a shock. Importantly, the increase is the same regardless of the realization of the shock. 
@@ -204,11 +206,8 @@
 #
 #
 
-# + code_folding=[]
+# + code_folding=[11, 16]
 ## some experiments 
-
-import matplotlib.pyplot as plt 
-import numpy as np 
 
 rho = 0.98
 sigma = 1.0
@@ -219,20 +218,33 @@ def FE2_SE(lbd):
 def Var_SE(lbd):
     return 1/(1-(1-lbd)*rho**2)*sigma**2
 
-lbds = np.linspace(0.01,
+def Disg_SE(lbd):
+    first_part = 1/(1-(1-lbd)**2*rho**2)
+    second_part = 1/(1-(1-lbd)**6*rho**4)
+    return (first_part-second_part)*lbd*(1-lbd)*rho**2**sigma**2
+    
+lbds = np.linspace(0.0,
                    0.999,
-                   10)
+                   20)
 
 FE_SE2_ratios = FE2_SE(lbds)/sigma**2
 Var_SE_ratios = Var_SE(lbds)/sigma**2
+Disg_SE_ratios = Disg_SE(lbds)/sigma**2
+
+
 plt.title('SE')
 
 plt.plot(lbds,
          FE_SE2_ratios,
         label=r'$FE^2_{\bullet+1|\bullet}/\sigma^2_\omega$')
+
 plt.plot(lbds,
          Var_SE_ratios,
-        label=r'$Var_{\bullet+1|\bullet}\sigma^2_\omega$')
+        label=r'$Var_{\bullet+1|\bullet}/\sigma^2_\omega$')
+plt.plot(lbds,
+         Disg_SE_ratios,
+        label=r'$Disg_{\bullet+1|\bullet}/\sigma^2_\omega$')
+
 plt.legend(loc=1)
 plt.xlabel(r'$\lambda$')
 # -
@@ -442,7 +454,6 @@ linesize = 4
 linesize2 =2
 
 # +
-plt.style.use('ggplot')
 fig=plt.figure(figsize=(12,12))
 plt.suptitle('Illustration of Noisy Information \n'+r'$\sigma_\xi=\sigma_\epsilon=\sigma_y$',fontsize=20)
 #plt.subtitle(r'$\sigma_\xi=\sigma_\epsilon=\sigma_y$',fontsize=20)
@@ -813,7 +824,7 @@ plt.savefig('figures/ir_popseni.png')
 # - Population disagreements rise in each period as time approaches the period of realization. Disagreetments will never be zero. 
 # - Average variance declines unambiguously each period. 
 
-# + code_folding=[2, 18, 28]
+# + code_folding=[2, 17, 26, 28]
 from SMMEst import SteadyStateVar,Pkalman
 
 def FE2_NI(sigma_pb,
@@ -831,7 +842,6 @@ def FE2_NI(sigma_pb,
     P_pb, P_pr = P_ss
     return (rho**2*P_pb**2*sigma_pb**2+sigma**2)/(P_pb+P_pr)**2
 
-
 def Var_NI(sigma_pb,
                  sigma_pr):
     now_var_ss = SteadyStateVar(np.array([rho,
@@ -840,7 +850,6 @@ def Var_NI(sigma_pb,
                                           sigma_pr])
                                )
     return rho**2*now_var_ss + sigma**2
-
 
 def Disg_NI(sigma_pb,
                  sigma_pr):
@@ -857,10 +866,11 @@ def Disg_NI(sigma_pb,
     P_pb, P_pr = P_ss
     
     return (rho**2*P_pr**2)/(1-(1-P_pb-P_pr)**2*rho**2)*sigma_pr**2
-                                
-                                
+                                       
 ## need to plot 3d 
 #plt.title('NI')
+
+
 # -
 
 # ### Diagnostic expectations (DE)
@@ -928,7 +938,7 @@ def Disg_NI(sigma_pb,
 #
 #
 
-# + code_folding=[4]
+# + code_folding=[]
 ## DE
 
 theta_hats = np.linspace(0.0,0.5,30)

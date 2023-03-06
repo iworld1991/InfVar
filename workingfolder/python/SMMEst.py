@@ -258,7 +258,7 @@ def ParaEst(ObjSpec,
     return parameter 
 
 
-# + code_folding=[3]
+# + code_folding=[3, 17, 21, 25, 29, 34]
 ### Some jitted functions that are needed (https://github.com/numba/numba/issues/1269)
 
 @njit
@@ -438,10 +438,10 @@ class RationalExpectationAR:
 #
 # - Creating some simulated inflation data following AR1 and UCSV process separately 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
        
-    T_sim = 300
+    T_sim = 400
     ## first, simulate some AR1 inflation with known parameters 
     ρ0,σ0 = 0.98,0.02
     history0 = SimAR1(ρ0,
@@ -487,7 +487,7 @@ if __name__ == "__main__":
 # - For instance, the example below shows that how auto-covariance (ATV) of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
 #
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
 
@@ -526,7 +526,7 @@ if __name__ == "__main__":
     print('Estimates: ',str(est))
 
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_re  = rear0.SimForecasts()
@@ -535,7 +535,7 @@ if __name__ == "__main__":
     plt.plot(rear0.real_time,label='Real-time realization')
     plt.legend(loc=0)
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -684,7 +684,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + AR1
 
-# + code_folding=[1, 2, 17, 21, 85, 140]
+# + code_folding=[2, 17, 21, 85, 140]
 @jitclass(model_data)
 class StickyExpectationAR:
     def __init__(self,
@@ -838,6 +838,11 @@ class StickyExpectationAR:
         var_ratio = (lbd*ρ**(2*horizon)/(1-ρ**2+lbd*ρ**2)-1)/(ρ**2-1)
         var = var_ratio*σ**2
         
+        disg_first_part = 1/(1-(1-lbd)**2*ρ**2)
+        disg_second_part = 1/(1-(1-lbd)**6*ρ**4)
+        disg = (disg_first_part-disg_second_part)*lbd*(1-lbd)*ρ**(2*horizon)**σ**2
+        
+        ##
         GMMMoments = {"InfAV":0.0,
                      "InfVar":σ**2/(1-ρ**2),
                       "InfATV":ρ*σ**2/(1-ρ**2),
@@ -845,7 +850,7 @@ class StickyExpectationAR:
                       "FE":0.0,
                       "FEVar":fevar,  
                       "FEATV":featv,
-                      "Disg":np.nan,
+                      "Disg":disg,
                       "DisgVar":0.0,
                       "DisgATV":0.0,
                       "Var":var,
@@ -911,7 +916,7 @@ if __name__ == "__main__":
 #
 # - SEAR SMM correctly identifies rigidity parameter in SE 
 
-# + code_folding=[18]
+# + code_folding=[0, 18]
 if __name__ == "__main__":
     ## get a fake data moment dictionary under a different parameter 
     
@@ -944,10 +949,10 @@ if __name__ == "__main__":
            para_guess = (0.1),
             method='Nelder-Mead',
             bounds = ((0,1),))
-    print('True parameter',str(exp_para_fake))  
+    print('True parameter',str(se_exp_para_fake))  
     print('Estimates: ',str(Est))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_sear  = sear1.SimForecasts()
@@ -963,7 +968,7 @@ if __name__ == "__main__":
 #
 # - The joint estimation below illustrates the mutual-dependence between the stickiness parameter and AR1 coefficients.
 
-# + code_folding=[0, 4, 14]
+# + code_folding=[0, 14]
 if __name__ == "__main__":
 
     ## for joint estimation 
@@ -971,10 +976,10 @@ if __name__ == "__main__":
     moments1 = ['InfAV',
                 'InfVar',
                 'InfATV',
-                'FE',
+                #'FE',
                 'FEVar',
                 'FEATV',
-                #'Disg',
+                'Disg',
                'Var'
                ]
 
@@ -989,15 +994,15 @@ if __name__ == "__main__":
 
     ## invoke estimation 
     Est = ParaEst(Objsear_joint,
-            para_guess = np.array([0.2,0.95,0.05]),
+            para_guess = np.array([0.1,0.95,0.05]),
             method='Nelder-Mead'
            )
     print('True process parameters: ',str(np.array([ρ0,σ0])))
     print('Estimates: ',str(Est[1:]))
-    print('True expectation parameter',str(exp_para_fake))  
+    print('True expectation parameter',str(se_exp_para_fake))  
     print('Estimates: ',str(Est[0]))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -2609,8 +2614,8 @@ if __name__ == "__main__":
     
     print('True parameters: ',str(exp_paras_fake)) 
     print('Estimates: ',str(Est))
-# -
 
+# + code_folding=[0]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_deniar  = deniar1.SimForecasts()
@@ -2619,6 +2624,8 @@ if __name__ == "__main__":
     plt.plot(deniar1.real_time,label='Real-time realization')
     plt.legend(loc=0)
 
+
+# -
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + SV
 #
