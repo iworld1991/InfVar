@@ -193,27 +193,28 @@ import matplotlib.pyplot as plt
 import numpy as np 
 
 rho = 0.98
+sigma = 1.0
 
-def FE2_SE_ratio(lbd):
-    return lbd**2/(1-(1-lbd)**2*rho**2)
+def FE2_SE(lbd):
+    return lbd**2/(1-(1-lbd)**2*rho**2)*sigma**2
 
-def Var_SE_ratio(lbd):
-    return 1/(1-(1-lbd)*rho**2)
+def Var_SE(lbd):
+    return 1/(1-(1-lbd)*rho**2)*sigma**2
 
 lbds = np.linspace(0.01,
                    0.999,
                    10)
 
-FE_SE2_ratios = FE2_SE_ratio(lbds)
-Var_SE_ratios = Var_SE_ratio(lbds)
+FE_SE2_ratios = FE2_SE(lbds)/sigma**2
+Var_SE_ratios = Var_SE(lbds)/sigma**2
 plt.title('SE')
 
 plt.plot(lbds,
          FE_SE2_ratios,
-        label=r'$FE^2_{\bullet+1|\bullet}$')
+        label=r'$FE^2_{\bullet+1|\bullet}/\sigma^2_\omega$')
 plt.plot(lbds,
          Var_SE_ratios,
-        label=r'$Var_{\bullet+1|\bullet}$')
+        label=r'$Var_{\bullet+1|\bullet}\sigma^2_\omega$')
 plt.legend(loc=1)
 plt.xlabel(r'$\lambda$')
 # -
@@ -794,27 +795,54 @@ plt.savefig('figures/ir_popseni.png')
 # - Population disagreements rise in each period as time approaches the period of realization. Disagreetments will never be zero. 
 # - Average variance declines unambiguously each period. 
 
-# +
-##
-theta_hats = np.linspace(0.0,0.5,30)
+# + code_folding=[2, 18, 28]
+from SMMEst import SteadyStateVar,Pkalman
 
-def FE2_DE_ratio(theta_hat):
-    return 1/(1+theta_hat**2*rho**2)
+def FE2_NI(sigma_pb,
+                sigma_pr):
+    now_var_ss = SteadyStateVar(np.array([rho,
+                                          sigma]),
+                                np.array([sigma_pb,
+                                          sigma_pr])
+                               )
+    P_ss = Pkalman(np.array([rho,
+                             sigma]),
+                  np.array([sigma_pb,
+                            sigma_pr]),
+                  now_var_ss)
+    P_pb, P_pr = P_ss
+    return (rho**2*P_pb**2*sigma_pb**2+sigma**2)/(P_pb+P_pr)**2
 
 
-FE_DE2_ratios = FE2_DE_ratio(theta_hats)
-Var_DE_ratios = np.ones(len(theta_hats))
+def Var_NI(sigma_pb,
+                 sigma_pr):
+    now_var_ss = SteadyStateVar(np.array([rho,
+                                          sigma]),
+                                np.array([sigma_pb,
+                                          sigma_pr])
+                               )
+    return rho**2*now_var_ss + sigma**2
 
-## plot 
-plt.title('DE')
-plt.plot(theta_hats,
-         FE_DE2_ratios,
-        label='FE2')
-plt.plot(theta_hats,
-         Var_DE_ratios,
-        label='Var')
-plt.legend(loc=1)
-plt.xlabel(r'$\theta$')
+
+def Disg_NI(sigma_pb,
+                 sigma_pr):
+    now_var_ss = SteadyStateVar(np.array([rho,
+                                          sigma]),
+                                np.array([sigma_pb,
+                                          sigma_pr])
+                               )
+    P_ss = Pkalman(np.array([rho,
+                             sigma]),
+                  np.array([sigma_pb,
+                            sigma_pr]),
+                  now_var_ss)
+    P_pb, P_pr = P_ss
+    
+    return (rho**2*P_pr**2)/(1-(1-P_pb-P_pr)**2*rho**2)*sigma_pr**2
+                                
+                                
+## need to plot 3d 
+#plt.title('NI')
 # -
 
 # ### Diagnostic expectations (DE)
@@ -882,16 +910,16 @@ plt.xlabel(r'$\theta$')
 #
 #
 
-# + code_folding=[]
-##
-rho = 0.98
+# + code_folding=[4]
+## DE
+
 theta_hats = np.linspace(0.0,0.5,30)
 
-def FE2_DE_ratio(theta_hat):
-    return 1/(1+theta_hat**2*rho**2)
+def FE2_DE(theta_hat):
+    return 1/(1+theta_hat**2*rho**2)/sigma**2
 
 
-FE_DE2_ratios = FE2_DE_ratio(theta_hats)
+FE_DE2_ratios = FE2_DE(theta_hats)/sigma**2
 Var_DE_ratios = np.ones(len(theta_hats))
 
 ## plot 
