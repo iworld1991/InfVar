@@ -186,11 +186,12 @@
 #
 #
 
-# + code_folding=[0]
+# + code_folding=[]
 ## some experiments 
 
 import matplotlib.pyplot as plt 
 import numpy as np 
+
 rho = 0.98
 
 def FE2_SE_ratio(lbd):
@@ -205,12 +206,14 @@ lbds = np.linspace(0.01,
 
 FE_SE2_ratios = FE2_SE_ratio(lbds)
 Var_SE_ratios = Var_SE_ratio(lbds)
+plt.title('SE')
+
 plt.plot(lbds,
          FE_SE2_ratios,
-        label='FE2')
+        label=r'$FE^2_{\bullet+1|\bullet}$')
 plt.plot(lbds,
          Var_SE_ratios,
-        label='Var')
+        label=r'$Var_{\bullet+1|\bullet}$')
 plt.legend(loc=1)
 plt.xlabel(r'$\lambda$')
 # -
@@ -791,6 +794,29 @@ plt.savefig('figures/ir_popseni.png')
 # - Population disagreements rise in each period as time approaches the period of realization. Disagreetments will never be zero. 
 # - Average variance declines unambiguously each period. 
 
+# +
+##
+theta_hats = np.linspace(0.0,0.5,30)
+
+def FE2_DE_ratio(theta_hat):
+    return 1/(1+theta_hat**2*rho**2)
+
+
+FE_DE2_ratios = FE2_DE_ratio(theta_hats)
+Var_DE_ratios = np.ones(len(theta_hats))
+
+## plot 
+plt.title('DE')
+plt.plot(theta_hats,
+         FE_DE2_ratios,
+        label='FE2')
+plt.plot(theta_hats,
+         Var_DE_ratios,
+        label='Var')
+plt.legend(loc=1)
+plt.xlabel(r'$\theta$')
+# -
+
 # ### Diagnostic expectations (DE)
 #
 # #### Individual expectations 
@@ -850,10 +876,31 @@ plt.savefig('figures/ir_popseni.png')
 #
 # \begin{eqnarray}
 # \begin{split}
-# Disg^{de}_{t+h|t} = 
+# Disg^{de}_{t+h|t} = ?
 # \end{split}
 # \end{eqnarray}
 #
 #
 
+# + code_folding=[]
+##
+rho = 0.98
+theta_hats = np.linspace(0.0,0.5,30)
 
+def FE2_DE_ratio(theta_hat):
+    return 1/(1+theta_hat**2*rho**2)
+
+
+FE_DE2_ratios = FE2_DE_ratio(theta_hats)
+Var_DE_ratios = np.ones(len(theta_hats))
+
+## plot 
+plt.title('DE')
+plt.plot(theta_hats,
+         FE_DE2_ratios,
+        label=r'$FE^2_{\bullet+1|\bullet}$')
+plt.plot(theta_hats,
+         Var_DE_ratios,
+        label=r'$Var_{\bullet+1|\bullet}$')
+plt.legend(loc=1)
+plt.xlabel(r'$\theta$')
