@@ -1223,7 +1223,7 @@ def Pkalman(process_para,
     return Pkalman.reshape(-1)
 
 
-# + code_folding=[0, 22]
+# + code_folding=[22]
 if __name__ == "__main__":
     
     ## plot steady state vars and Kalman gains
@@ -1276,8 +1276,8 @@ if __name__ == "__main__":
                            cmap = plt.cm.cividis)
 
     # Set axes label
-    ax.set_xlabel(r'$\sigma^2_{pb}$',size=20)
-    ax.set_ylabel('$\sigma^2_{pr}$',size=20)
+    ax.set_xlabel(r'$\sigma_{pb}$',size=20)
+    ax.set_ylabel('$\sigma_{pr}$',size=20)
     ax.set_zlabel(r'$Var_{ss}$',size=20)
     ax.view_init(elev=10,
                  azim=-80)
@@ -1294,8 +1294,8 @@ if __name__ == "__main__":
 
     # Set axes label
    
-    ax2.set_xlabel(r'$\sigma^2_{pb}$',size=20)
-    ax2.set_ylabel('$\sigma^2_{pr}$',size=20)
+    ax2.set_xlabel(r'$\sigma_{pb}$',size=20)
+    ax2.set_ylabel('$\sigma_{pr}$',size=20)
     ax2.set_zlabel(r'$P_{pb}$',size=20)
     ax2.view_init(elev=10,
                  azim=-30)
@@ -1316,8 +1316,8 @@ if __name__ == "__main__":
 
     # Set axes label
    
-    ax3.set_xlabel(r'$\sigma^2_{pb}$',size=20)
-    ax3.set_ylabel('$\sigma^2_{pr}$',size=20)
+    ax3.set_xlabel(r'$\sigma_{pb}$',size=20)
+    ax3.set_ylabel('$\sigma_{pr}$',size=20)
     ax3.set_zlabel(r'$P_{pr}$',size=20)
     ax3.view_init(elev=20,
                  azim=20)
