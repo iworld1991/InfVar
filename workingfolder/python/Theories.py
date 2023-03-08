@@ -501,7 +501,7 @@ plt.legend(loc=1,fontsize=13)
 
 plt.savefig('figures/ni_illustration.png')
 
-# +
+# + code_folding=[0]
 ## Plot rigidity for a different values of noises 
 
 noise_ls  = np.array([0.1,1,10])
@@ -824,11 +824,13 @@ plt.savefig('figures/ir_popseni.png')
 # - Population disagreements rise in each period as time approaches the period of realization. Disagreetments will never be zero. 
 # - Average variance declines unambiguously each period. 
 
-# + code_folding=[2, 17, 26, 28]
+# + code_folding=[4, 19, 28, 30, 55, 58, 70, 77, 83]
 from SMMEst import SteadyStateVar,Pkalman
 
+rho,sigma = 0.95,0.1
+
 def FE2_NI(sigma_pb,
-                sigma_pr):
+           sigma_pr):
     now_var_ss = SteadyStateVar(np.array([rho,
                                           sigma]),
                                 np.array([sigma_pb,
@@ -870,6 +872,54 @@ def Disg_NI(sigma_pb,
 ## need to plot 3d 
 #plt.title('NI')
 
+import matplotlib.pyplot as plt 
+sigma_pb_ = np.linspace(0.01, 0.8, 50)
+sigma_pr_ = np.linspace(0.01, 0.8, 50)
+
+sigma_pbs,sigma_prs = np.meshgrid(sigma_pb_,sigma_pr_)
+
+row,col  = sigma_pbs.shape
+
+FE2_NIs = np.array([FE2_NI(sigma_pbs[i,j],
+                 sigma_prs[i,j]) for i in range(row) for j in range(col)]).reshape((row,col))
+                 
+Var_NIs = Var_NI(sigma_pbs,
+                 sigma_prs)
+
+Disg_NIs = np.array([Disg_NI(sigma_pbs[i,j],
+                 sigma_prs[i,j]) for i in range(row) for j in range(col)]).reshape((row,col))
+
+fig = plt.figure(figsize = (20,10))
+#fig.colorbar(surf)    
+ax = fig.add_subplot(1, 1, 1, projection='3d')
+ax.invert_xaxis()
+ax.set_title(r'$FE^2$, Var and Disg of NI')
+
+surf = ax.plot_surface(sigma_pbs, 
+                       sigma_prs, 
+                       FE2_NIs, 
+                       label='FE',
+                       #cmap = plt.cm.red
+                      color='red')
+
+surf2 = ax.plot_surface(sigma_pbs, 
+                       sigma_prs, 
+                       Var_NIs, 
+                       #cmap = plt.cm.summer
+                       color='blue')
+
+surf3 = ax.plot_surface(sigma_pbs, 
+                       sigma_prs, 
+                       Disg_NIs, 
+                       #cmap = plt.cm.winter
+                       color='gray')
+
+# Set axes label
+ax.set_xlabel(r'$\sigma_{pb}$',size=20)
+ax.set_ylabel('$\sigma_{pr}$',size=20)
+ax.set_zlabel(r'moments',size=20)
+ax.view_init(elev=10,
+             azim=50)
 
 # -
 
@@ -926,29 +976,45 @@ def Disg_NI(sigma_pb,
 #  FE^{de2}_{\bullet+h|\bullet}&  =\frac{(1+\theta)^2}{1+\theta^2\rho^2}{FE}^{*2}_{\bullet+h-1|\bullet} + \frac{\sigma^2_\omega}{(1+\theta^2\rho^2)}
 # \end{split}
 # \end{eqnarray}
+#
 # The average uncertainty is also equal to FIRE benchmark at the population level. 
 #
 # Disagreement is the following, which is non zero as long as there is heterogeneity in degrees of overreaction.
 #
 # \begin{eqnarray}
 # \begin{split}
-# Disg^{de}_{t+h|t} = ?
+# Disg^{de}_{t+h|t} & = Var_t(\rho^h y_t + \theta_i(\rho^h y_t - E^{de}_{i,t-1}(y_{t+h})))  \\
+#  & =  Var_t(\theta_i(\rho^h y_t - E^{de}_{i,t-1}(y_{t+h})))   \\
+#   & =  \rho^{2h}y^2_t \sigma^2_\theta - \rho^2 Disg^{de}_{t+h-1|t-1}  \\
 # \end{split}
 # \end{eqnarray}
 #
+# In steady state, it is the following.
 #
+# \begin{eqnarray}
+# \begin{split}
+#  & Disg^{de}_{\bullet+h|\bullet} & = \rho^{2h} y^2_\bullet \sigma^2_\theta + \rho^2 Disg^{de}_{\bullet+h|\bullet}  \\
+# & \rightarrow Disg^{de}_{\bullet+h|\bullet} & = \frac{\rho^{2h} \sigma^2_\theta}{1-\rho^2} \frac{\sigma^2_\omega}{1-\rho^2}
+# \end{split}
+# \end{eqnarray}
 
 # + code_folding=[]
 ## DE
 
 theta_hats = np.linspace(0.0,0.5,30)
+sigma_thetas = 0.8
 
-def FE2_DE(theta_hat):
-    return 1/(1+theta_hat**2*rho**2)/sigma**2
+rho,sigma = 0.95,0.1
 
+def FE2_DE(theta_hat,sigma_theta):
+    return sigma**2/(1+theta_hat**2*rho**2)
 
-FE_DE2_ratios = FE2_DE(theta_hats)/sigma**2
+def Disg_DE(theta_hat,sigma_theta):
+    return rho**2*sigma_theta**2*sigma**2/(1-rho*2)**2
+
+FE_DE2_ratios = FE2_DE(theta_hats,sigma_thetas)/sigma**2
 Var_DE_ratios = np.ones(len(theta_hats))
+Disg_DE_ratios = Disg_DE(theta_hats,sigma_thetas)/sigma**2
 
 ## plot 
 plt.title('DE')
@@ -958,5 +1024,8 @@ plt.plot(theta_hats,
 plt.plot(theta_hats,
          Var_DE_ratios,
         label=r'$Var_{\bullet+1|\bullet}$')
+plt.plot(theta_hats,
+         Disg_DE_ratios*np.ones(len(theta_hats)),
+        label=r'$Disg_{\bullet+1|\bullet}$')
 plt.legend(loc=1)
 plt.xlabel(r'$\theta$')
