@@ -1038,7 +1038,7 @@ plt.xlabel(r'$\theta$')
 # \begin{split}
 # & s^{svpb}_t =  \zeta_t + \epsilon_t, \quad \epsilon_t \sim N(0,\sigma^2_\epsilon)\\ 
 # & s^{svpb}_t = y_t =\zeta_t + \eta_t \\
-# & s^{svpr}_{i,t} = \zeta_t + \xi_{i,t} \quad \xi_{i,t} \sim N(0,\sigma^2_\epsilon)
+# & s^{svpr}_{i,t} = \zeta_t + \xi_{i,t} \quad \xi_{i,t} \sim N(0,\sigma^2_\xi)
 # \end{split}
 # \end{eqnarray}
 #
@@ -1078,7 +1078,7 @@ plt.xlabel(r'$\theta$')
 #
 # \begin{eqnarray}
 # \begin{split}
-#  E^{ni}_{i,t|t}(y_{t+h}) & = \eta^{svni}_{i,t|t} 
+#  E^{ni}_{i,t|t}(y_{t+h}) & = \zeta^{svni}_{i,t|t} 
 # \end{split}
 # \end{eqnarray}
 #
@@ -1088,7 +1088,16 @@ plt.xlabel(r'$\theta$')
 #
 # \begin{eqnarray}
 # \begin{split}
-# Var^{svni}_{i,t|t} = Var^{svni}_{i,t|t-1} - Var^{svni}_{i,t|t-1} H'(H Var^{svni}_{i,t-1} H' +\Sigma^v)^{-1} H \Sigma^y_{i,t|t-1} 
+# Var^{svni}_{i,t|t} & = \underbrace{Var^{svni}_{i,t|t-1}}_{Var^{svni}_{i,t-1|t-1}+Var^{*sv}_{t|t-1}} - Var^{svni}_{i,t|t-1} H'(H Var^{svni}_{i,t-1} H' +\Sigma^v)^{-1} H \Sigma^y_{i,t|t-1}  
+# \end{split}
+# \end{eqnarray}
+# which also means that $Var^{svni}_{i,t|t-1} = Var^{svni}_{i,t-1|t-1}+ (\sigma^2_{\eta,t-1}+\sigma^2_{z,t-1})exp^{-0.5\gamma}$. 
+#
+# More generally, 
+#
+# \begin{eqnarray}
+# \begin{split}
+# Var^{svni}_{i,t+h|t} = Var^{svni}_{i,t|t}+Var^{*sv}_{t+h|t}
 # \end{split}
 # \end{eqnarray}
 #
@@ -1099,9 +1108,10 @@ plt.xlabel(r'$\theta$')
 #
 # \begin{eqnarray}
 # \begin{split}
-# \bar E^{svni}_{t|t} (y_{t+h}) & = [(1-P^{sv}H) \underbrace{ \zeta^{svni}_{t+h|t-1}}_{\text{Average prior}} + P^{sv} \underbrace{\bar s^{sv}_{t}}_{\text{Average Signals}}] \\
-# & = (1-P^{sv}H) \zeta^{svni}_{t+h|t-1} + P^{sv} [\epsilon_t, 0]' \\
-# & = (1-P^{sv}H) \zeta^{svni}_{t+h|t-1}  + P^{sv}_\epsilon\epsilon_t
+# \bar E^{svni}_{t} (y_{t+h}) &=  \zeta^{svni}_{t|t}\\
+# & = (1-P^{sv}H) \underbrace{ \zeta^{svni}_{t|t-1}}_{\text{Average prior},=\zeta^{svni}_{t-1|t-1}} + P^{sv} \underbrace{\bar s^{sv}_{t}}_{\text{Average Signals}} \\
+# & = (1-P^{sv}H) \zeta^{svni}_{t|t-1} + P^{sv} [\eta_t, 0]' \\
+# & = (1-P^{sv}H)\underbrace{\zeta^{svni}_{t|t-1}}_{\equiv \zeta^{svni}_{t-1|t-1}=\bar E^{svni}_{t-1} (y_{t+h})=\bar E^{svni}_{t-1} (y_{t+h-1})}  + P^{sv}_\eta\eta_t \\
 # \end{split}
 # \end{eqnarray}
 #
@@ -1112,7 +1122,7 @@ plt.xlabel(r'$\theta$')
 #
 # \begin{eqnarray}
 # \begin{split}
-# \bar Var^{svni}_t (y_{t+h}) = \bar Var^{svni}_{i,t+h|t}
+# \bar Var^{svni}_t (y_{t+h}) = \bar Var^{svni}_{i,t+h|t} 
 # \end{split}
 # \end{eqnarray}
 #
