@@ -1029,3 +1029,93 @@ plt.plot(theta_hats,
         label=r'$Disg_{\bullet+1|\bullet}$')
 plt.legend(loc=1)
 plt.xlabel(r'$\theta$')
+# -
+
+# ### NISV 
+#
+#
+# \begin{eqnarray}
+# \begin{split}
+# & s^{svpb}_t =  \zeta_t + \epsilon_t, \quad \epsilon_t \sim N(0,\sigma^2_\epsilon)\\ 
+# & s^{svpb}_t = y_t =\zeta_t + \eta_t \\
+# & s^{svpr}_{i,t} = \zeta_t + \xi_{i,t} \quad \xi_{i,t} \sim N(0,\sigma^2_\epsilon)
+# \end{split}
+# \end{eqnarray}
+#
+# therefore $\epsilon_t = \eta_t$ and $\sigma^2_\epsilon = \sigma^2_\eta$. 
+#
+# We can stack the two signals into one vector $s^{sv}_{i,t} = [s^{svpb}_t,s^{svpr}_{i,t}]'$ and $v^{sv}_{i,t}= [\epsilon_t,\xi_{i,t}]' = G^{sv} \times u_{i,t}$, where $u_{i,t}$ is 2 $\times$ 1 following joint standard normal and G^{sv} is 2 $\times$ 2 defined as follows. 
+#
+# \begin{eqnarray}
+# G^{sv} = [\begin{array} & \sigma_\eta, 0 \\ 0,\sigma_\xi \end{array}]
+# \end{eqnarray}
+#
+# \begin{eqnarray}
+# \begin{split}
+# s^{sv}_{i,t} = H \zeta_{t} + G^{sv} u_{i,t} \\
+# \text{where } & H=[1,1]' \quad \\
+# \end{split}
+# \end{eqnarray}
+#
+#
+# #### Individual moments 
+#
+# ##### Expectation 
+#
+# \begin{eqnarray}
+# \begin{split}
+#  E^{ni}_{i,t|t}(y_{t}) & = \zeta^{svni}_{i,t|t} \\
+#  & =  \underbrace{\zeta^{svni}_{i,t|t-1}}_{\text{prior}} + P^{sv}_t \underbrace {(s^{sv}_{i,t|t}-s^{sv}_{i,t|t-1})}_{\text{innovations to signals}} \\
+# & = (1-P^{sv}_tH) \zeta^{svni}_{i,t|t-1} + P^{sv}_ts^{sv}_{i,t} \\
+# & = (1-P^{sv}_tH) \zeta^{svni}_{i,t|t-1} + P^{sv}_t H \zeta_{t} + P^{sv}_t v^{sv}_{i,t} \\
+# \text{where the Kalman gain }  & P^{sv}_t = [P^{sv}_{\epsilon,t},P^{sv}_{\xi,t}]= Var^{svni}_{i,t|t-1} H(H'Var^{svni}_{i,t|t-1} H + \Sigma^v_{sv})^{-1} \\
+# \text {where } & Var^{svni}_{i,t|t-1} \text{ is the variance of } \zeta_t \text{ based on prior belief}\\
+# \text {and } & \Sigma^v_{sv} = [ \begin{array} & \sigma^2_{\eta},  0 \\ 0, \sigma^2_\xi \end{array}]
+# \end{split}
+# \end{eqnarray}
+#
+# The h-period ahead forecast is 
+#
+# \begin{eqnarray}
+# \begin{split}
+#  E^{ni}_{i,t|t}(y_{t+h}) & = \eta^{svni}_{i,t|t} 
+# \end{split}
+# \end{eqnarray}
+#
+# ##### Variance 
+#
+# The posterior variance at time $t$ is a linear function of prior variance and variance of signals. 
+#
+# \begin{eqnarray}
+# \begin{split}
+# Var^{svni}_{i,t|t} = Var^{svni}_{i,t|t-1} - Var^{svni}_{i,t|t-1} H'(H Var^{svni}_{i,t-1} H' +\Sigma^v)^{-1} H \Sigma^y_{i,t|t-1} 
+# \end{split}
+# \end{eqnarray}
+#
+# #### Population moments
+#
+# ##### Average forecast 
+#
+#
+# \begin{eqnarray}
+# \begin{split}
+# \bar E^{svni}_{t|t} (y_{t+h}) & = [(1-P^{sv}H) \underbrace{ \zeta^{svni}_{t+h|t-1}}_{\text{Average prior}} + P^{sv} \underbrace{\bar s^{sv}_{t}}_{\text{Average Signals}}] \\
+# & = (1-P^{sv}H) \zeta^{svni}_{t+h|t-1} + P^{sv} [\epsilon_t, 0]' \\
+# & = (1-P^{sv}H) \zeta^{svni}_{t+h|t-1}  + P^{sv}_\epsilon\epsilon_t
+# \end{split}
+# \end{eqnarray}
+#
+#
+# ##### Average variance 
+#
+# Since the variance does not depend on signals and the precision is the same aross the agents, average variance is equal to the variance of each individual. 
+#
+# \begin{eqnarray}
+# \begin{split}
+# \bar Var^{svni}_t (y_{t+h}) = \bar Var^{svni}_{i,t+h|t}
+# \end{split}
+# \end{eqnarray}
+#
+#
+
+
