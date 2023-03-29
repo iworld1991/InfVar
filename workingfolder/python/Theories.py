@@ -933,7 +933,73 @@ ax.view_init(elev=10,
 #
 # where $\theta_i>0$ is the overreaction parameter. 
 #
+# When h=0, it is 
+#
+# \begin{eqnarray}
+# E^{de}_{i,t}(y_{t}) = y_t + \theta_i(y_t - E^{de}_{i,t-1}(y_{t}))
+# \end{eqnarray}
+#
+#
 # #### Individual forecast errors 
+#
+# FE of current period is 
+#
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{de}_{i,t|t} & = y_t + \theta_i(y_t - E^{de}_{i,t-1}(y_{t}))- y_t \\
+# & = \theta_i(y_t - E^{de}_{i,t-1}(y_{t})) \\ 
+# & = \theta_i y_t - \theta_i \rho E^{de}_{i,t-1}(y_{t-1}) \\
+# & = \theta_i y_t - \theta_i \rho (FE^{de}_{i,t-1|t-1}+y_{t-1})  \\
+# & =- \theta_i \rho FE^{de}_{i,t-1|t-1} + \theta_i y_t-\theta_i \rho  y_{t-1}  \\
+# & =- \theta_i \rho FE^{de}_{i,t-1|t-1} + \theta_i \omega_t 
+# \end{split}
+# \end{eqnarray}
+#
+#
+# For h-period-ahead, it is 
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{de}_{i,t+h|t} & = \rho^h FE^{de}_{i,t|t} + FE^{*}_{t+h|t} \\
+# FE^{de}_{i,t+h-1|t-1} & = \rho^h FE^{de}_{i,t-1|t-1} + FE^{*}_{t+h-1|t-1}
+# \end{split}
+# \end{eqnarray}
+#
+#
+# So, 
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{de}_{i,t+h|t} & = \rho^h(- \theta_i \rho FE^{de}_{i,t-1|t-1} + \theta_i \omega_t )  + FE^{*}_{t+h|t}  \\
+# & = - \theta_i \rho \rho^hFE^{de}_{i,t-1|t-1} + \rho^h\theta_i \omega_t   + FE^{*}_{t+h|t} \\
+# & = - \theta_i \rho (FE^{de}_{i,t+h-1|t-1}-FE^{*}_{t+h-1|t-1}) + \rho^h\theta_i \omega_t   + FE^{*}_{t+h|t}
+# \end{split}
+# \end{eqnarray}
+#
+# Rearranging it, we get 
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{de}_{i,t+h|t}- FE^{*}_{t+h|t} = - \theta_i \rho (FE^{de}_{i,t+h-1|t-1}-FE^{*}_{t+h-1|t-1}) + \rho^h\theta_i \omega_t 
+# \end{split}
+# \end{eqnarray}
+#
+#
+# For h=1, then it becomes the following. 
+#
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{de}_{i,t+1|t}- FE^{*}_{t+1|t} & = - \theta_i \rho (FE^{de}_{i,t|t-1}-FE^{*}_{t|t-1}) + \rho\theta_i \omega_t \\
+# \rightarrow FE^{de}_{i,t+1|t} &=  - \theta_i \rho (FE^{de}_{i,t|t-1}+\omega_t) + \rho\theta_i \omega_t - \omega_{t+1}\\
+# & = - \theta_i \rho FE^{de}_{i,t|t-1} - \omega_{t+1}
+# \end{split}
+# \end{eqnarray}
+#
+#
+# The steps below rederive the relationship above in a different way. 
+#
 #
 # \begin{eqnarray}
 # \begin{split}
@@ -958,7 +1024,8 @@ ax.view_init(elev=10,
 # \begin{split}
 #  FE^{de}_{i,t}(y_{t+1})&  = (1+\theta_i) FE^{*}_{i,t+1|t} - \theta_i \rho FE^{de}_{i,t|t-1} + \theta_i \omega_{t+1}  \\
 #  & = (1+\theta_i) (-\omega_{t+1} ) - \theta_i \rho FE^{de}_{i,t|t-1} + \theta_i \omega_{t+1} \\
-#  & =  FE^{*}_{i,t+1|t} - \theta_i \rho FE^{de}_{i,t|t-1}
+#  & =  FE^{*}_{i,t+1|t} - \theta_i \rho FE^{de}_{i,t|t-1} \\
+#  & =  - \theta_i \rho FE^{de}_{i,t|t-1} -\omega_{t+1}
 # \end{split}
 # \end{eqnarray}
 #
