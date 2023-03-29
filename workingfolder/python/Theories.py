@@ -1014,7 +1014,9 @@ ax.view_init(elev=10,
 # & = (1+\theta_i) FE^{*}_{t+h-1|t} + (1+\theta_i)(-\omega_{t+h})+\theta_i(\omega_{t+h}- \rho FE^{de}_{i,t+h-1|t-1}) \\
 # & = (1+\theta_i) FE^{*}_{t+h-1|t} -\omega_{t+h}-\theta_i\rho FE^{de}_{i,t+h-1|t-1} \\
 # & = FE^{*}_{t+h|t} +\theta_iFE^{*}_{t+h-1|t} -\theta_i\rho FE^{de}_{i,t+h-1|t-1}\\
-# & = FE^{*}_{t+h|t} +\theta_i(FE^{*}_{t+h-1|t}- \rho FE^{de}_{i,t+h-1|t-1}) 
+# & = FE^{*}_{t+h|t} +\theta_i(FE^{*}_{t+h-1|t}- \rho FE^{de}_{i,t+h-1|t-1})  \\
+# & = FE^{*}_{t+h|t} +\theta_i(\rho FE^{*}_{t+h-1|t-1}+\rho^h\omega_{t}- \rho FE^{de}_{i,t+h-1|t-1})  \\
+# & = FE^{*}_{t+h|t} -\theta_i\rho( FE^{de}_{i,t+h-1|t-1}-FE^{*}_{t+h-1|t-1})+\theta_i\rho^{h}\omega_{t}  \\
 # \end{split}
 # \end{eqnarray}
 #
@@ -1040,9 +1042,27 @@ ax.view_init(elev=10,
 #
 # \begin{eqnarray}
 # \begin{split}
+#  FE^{de2}_{\bullet+1|\bullet}&  =\frac{\sigma^2_\omega}{(1+\hat\theta^2\rho^2)}
+# \end{split}
+# \end{eqnarray}
+#
+#
+# ###########################
+# This needs to be checked 
+# ###########################
+#
+#
+# \begin{eqnarray}
+# \begin{split}
 #  FE^{de2}_{\bullet+h|\bullet}&  =\frac{(1+\theta)^2}{1+\theta^2\rho^2}{FE}^{*2}_{\bullet+h-1|\bullet} + \frac{\sigma^2_\omega}{(1+\theta^2\rho^2)}
 # \end{split}
 # \end{eqnarray}
+#
+#
+# ###########################
+# This needs to be checked 
+# ###########################
+#
 #
 # The average uncertainty is also equal to FIRE benchmark at the population level. 
 #
@@ -1125,7 +1145,7 @@ plt.xlabel(r'$\theta$')
 #
 # \begin{eqnarray}
 # \begin{split}
-# y^{deni}_{t|t} = y^{deni}_{t|t-1}+ (1+\theta)P_\epsilon(s^{pb}_{t}-y^{deni}_{t|t-1} 
+# y^{deni}_{t|t} = y^{deni}_{t|t-1}+ (1+\theta)P_\epsilon(s^{pb}_{t}-y^{deni}_{t|t-1})
 # \end{split}
 # \end{eqnarray}
 #
@@ -1139,15 +1159,17 @@ plt.xlabel(r'$\theta$')
 # \end{eqnarray}
 #
 #
+# Current forecast error is
 #
 # \begin{eqnarray}
 # \begin{split}
 # FE^{deni}_{t|t} & = \rho y^{deni}_{t-1|t-1}+ (1+\theta)P_\epsilon(s^{pb}_{t}-\rho y^{deni}_{t-1|t-1}) - y_t \\
 # & = \rho (FE^{deni}_{t-1|t-1}+y_{t-1}) + (1+\theta)P_\epsilon(s^{pb}_{t}-\rho y^{deni}_{t-1|t-1}) - y_t \\
-# & = \rho (FE^{deni}_{t-1|t-1}+y_{t-1}) + (1+\theta)P_\epsilon(y_t + \epsilon_t-\rho (FE^{deni}_{t-1|t-1}+y_{t-1})) - \rho y_{t-1} \\
-# & =\rho FE^{deni}_{t-1|t-1} + (1+\theta)P_\epsilon(\rho y_{t-1}+\omega_t + \epsilon_t-\rho (FE^{deni}_{t-1|t-1}+y_{t-1})) \\
-# & =\rho FE^{deni}_{t-1|t-1} + (1+\theta)P_\epsilon(\omega_t + \epsilon_t-\rho FE^{deni}_{t-1|t-1})  \\
+# & = \rho (FE^{deni}_{t-1|t-1}+y_{t-1}) + (1+\theta)P_\epsilon(y_t + \epsilon_t-\rho (FE^{deni}_{t-1|t-1}+y_{t-1})) - \rho y_{t-1}-\omega_t \\
+# & =\rho FE^{deni}_{t-1|t-1} + (1+\theta)P_\epsilon(\rho y_{t-1}+\omega_t + \epsilon_t-\rho (FE^{deni}_{t-1|t-1}+y_{t-1})-\omega_t \\
+# & =\rho FE^{deni}_{t-1|t-1} + (1+\theta)P_\epsilon(\omega_t + \epsilon_t-\rho FE^{deni}_{t-1|t-1})-\omega_t  \\
 # & =\rho FE^{deni}_{t-1|t-1} -(1+\theta)\rho FE^{deni}_{t-1|t-1}+ (1+\theta)P_\epsilon(\omega_t + \epsilon_t)  \\
+# & =-\theta\rho FE^{deni}_{t-1|t-1}+ ((1+\theta)P_\epsilon-1)\omega_t + (1+\theta)P_\epsilon\epsilon_t 
 # \end{split}
 # \end{eqnarray}
 #
@@ -1155,8 +1177,8 @@ plt.xlabel(r'$\theta$')
 # Furthermore, we know 
 # \begin{eqnarray}
 # \begin{split}
-# FE^{deni}_{t+h|t} = \rho^h FE^{deni}_{t|t} + FE^{*}_{t+h|t} \\
-# FE^{deni}_{t+h-1|t-1} = \rho^h FE^{deni}_{t-1|t-1} + FE^{*}_{t+h-1|t-1} 
+# & FE^{deni}_{t+h|t} = \rho^h FE^{deni}_{t|t} + FE^{*}_{t+h|t} \\
+# & FE^{deni}_{t+h-1|t-1} = \rho^h FE^{deni}_{t-1|t-1} + FE^{*}_{t+h-1|t-1} 
 # \end{split}
 # \end{eqnarray}
 #
@@ -1165,10 +1187,10 @@ plt.xlabel(r'$\theta$')
 # \begin{eqnarray}
 # \begin{split}
 # FE^{deni}_{t+h|t} & = \rho^h FE^{deni}_{t|t} + FE^{*}_{t+h|t} \\
-# & =  \rho^h(-\theta\rho FE^{deni}_{t-1|t-1}+ (1+\theta)P_\epsilon(\omega_t + \epsilon_t))+ FE^{*}_{t+h|t} \\
-# & =  -\theta \rho (FE^{deni}_{t+h-1|t-1}-FE^{*}_{t+h-1|t-1} )+ \rho^h(1+\theta)P_\epsilon(\omega_t + \epsilon_t)+ FE^{*}_{t+h|t}  \\
-# & =  -\theta \rho FE^{deni}_{t+h-1|t-1}+\theta \rho FE^{*}_{t+h-1|t-1}+ \rho^h(1+\theta)P_\epsilon(\omega_t + \epsilon_t)+ FE^{*}_{t+h|t}   \\
-# & =  \theta \rho(FE^{*}_{t+h-1|t-1}- FE^{deni}_{t+h-1|t-1})+ \rho^h(1+\theta)P_\epsilon(\omega_t + \epsilon_t)+ FE^{*}_{t+h|t} \\
+# & =  \rho^h(-\theta\rho FE^{deni}_{t-1|t-1}+ ((1+\theta)P_\epsilon-1)\omega_t + (1+\theta)P_\epsilon\epsilon_t)+ FE^{*}_{t+h|t} \\
+# & =  -\theta \rho (FE^{deni}_{t+h-1|t-1}-FE^{*}_{t+h-1|t-1} )+ \rho^h(((1+\theta)P_\epsilon-1)\omega_t + (1+\theta)P_\epsilon\epsilon_t)+ FE^{*}_{t+h|t}  \\
+# & =  -\theta \rho FE^{deni}_{t+h-1|t-1}+\theta \rho FE^{*}_{t+h-1|t-1}+ \rho^h(((1+\theta)P_\epsilon-1)\omega_t + (1+\theta)P_\epsilon\epsilon_t)+ FE^{*}_{t+h|t}   \\
+# & =  \theta \rho(FE^{*}_{t+h-1|t-1}- FE^{deni}_{t+h-1|t-1})+ \rho^h(((1+\theta)P_\epsilon-1)\omega_t + (1+\theta)P_\epsilon\epsilon_t)+ FE^{*}_{t+h|t} \\
 # \end{split}
 # \end{eqnarray}
 #
@@ -1176,7 +1198,7 @@ plt.xlabel(r'$\theta$')
 #
 # \begin{eqnarray}
 # \begin{split}
-# FE^{deni}_{t+h|t}-FE^{*}_{t+h|t}  = -\theta \rho( FE^{deni}_{t+h-1|t-1}-FE^{*}_{t+h-1|t-1})+ \rho^h(1+\theta)P_\epsilon(\omega_t + \epsilon_t)
+# FE^{deni}_{t+h|t}-FE^{*}_{t+h|t}  = -\theta \rho( FE^{deni}_{t+h-1|t-1}-FE^{*}_{t+h-1|t-1})+ \rho^h((1+\theta)P_\epsilon-1)\omega_t + \rho^h(1+\theta)P_\epsilon\epsilon_t
 # \end{split}
 # \end{eqnarray}
 #
@@ -1185,20 +1207,24 @@ plt.xlabel(r'$\theta$')
 #
 # \begin{eqnarray}
 # \begin{split}
-# FE^{deni}_{t+1|t}-FE^{*}_{t+1|t}  = -\theta \rho( FE^{deni}_{t|t-1}-FE^{*}_{t|t-1})+ \rho(1+\theta)P_\epsilon(\omega_t + \epsilon_t) 
+# FE^{deni}_{t+1|t}-FE^{*}_{t+1|t}  = -\theta \rho( FE^{deni}_{t|t-1}-FE^{*}_{t|t-1})+ \rho((1+\theta)P_\epsilon-1)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t
 # \end{split}
 # \end{eqnarray}
 #
-# Which is equivalent to 
+# When $\theta=0$, $P_\epsilon=1$ and $\epsilon_t=0$, the equation collapses to FIRE.  
+#
+# Which is equivalent to the following. 
 #
 # \begin{eqnarray}
 # \begin{split}
-# FE^{deni}_{t+1|t}+\omega_{t+1}  & = -\theta \rho( FE^{deni}_{t|t-1}+\omega_t)+ \rho(1+\theta)P_\epsilon(\omega_t + \epsilon_t) \\
-# \rightarrow FE^{deni}_{t+1|t} & = -\theta \rho( FE^{deni}_{t|t-1}+\omega_t)+ \rho(1+\theta)P_\epsilon(\omega_t + \epsilon_t)-\omega_{t+1} \\
-# \rightarrow FE^{deni}_{t+1|t} & = -\theta \rho FE^{deni}_{t|t-1}-\theta \rho\omega_t+ \rho(1+\theta)P_\epsilon(\omega_t + \epsilon_t)-\omega_{t+1} \\
-# & = -\theta \rho FE^{deni}_{t|t-1}-\theta \rho\omega_t+ \rho(1+\theta)P_\epsilon\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
-# & = -\theta \rho FE^{deni}_{t|t-1}-(\rho(1+\theta)P_\epsilon-\theta \rho)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
-# & = -\theta \rho FE^{deni}_{t|t-1}-\rho(P_\epsilon+P_\epsilon\theta-\theta)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1}
+# FE^{deni}_{t+1|t}+\omega_{t+1}  & = -\theta \rho( FE^{deni}_{t|t-1}+\omega_t)+ \rho((1+\theta)P_\epsilon-1)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t \\
+# \rightarrow FE^{deni}_{t+1|t} & = -\theta \rho( FE^{deni}_{t|t-1}+\omega_t)+ \rho((1+\theta)P_\epsilon-1)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t \\
+# \rightarrow FE^{deni}_{t+1|t} & = -\theta \rho FE^{deni}_{t|t-1}-\theta \rho\omega_t+ \rho((1+\theta)P_\epsilon-1)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
+# & = -\theta \rho FE^{deni}_{t|t-1}-\theta \rho\omega_t+ \rho((1+\theta)P_\epsilon-1)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
+# & = -\theta \rho FE^{deni}_{t|t-1}-(\rho(1+\theta)P_\epsilon-\rho-\theta \rho)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
+# & = -\theta \rho FE^{deni}_{t|t-1}-(\rho P_\epsilon+\rho\theta P_\epsilon-\rho-\theta \rho)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
+# & = -\theta \rho FE^{deni}_{t|t-1}-\rho (P_\epsilon+\theta P_\epsilon-1-\theta)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
+# & = -\theta \rho FE^{deni}_{t|t-1}+\rho ((1+\theta)(1-P_\epsilon))\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
 # \end{split}
 # \end{eqnarray}
 #
@@ -1206,12 +1232,18 @@ plt.xlabel(r'$\theta$')
 #
 # \begin{eqnarray}
 # \begin{split}
-# FE^{deni2}_{\bullet+1|\bullet} = \frac{\sigma^2_\omega+(\rho(P_\epsilon+P_\epsilon\theta-\theta))^2\sigma^2_\omega+\sigma^2_\epsilon}{1+\theta^2\rho^2} 
+# FE^{deni2}_{\bullet+1|\bullet} = \frac{\sigma^2_\omega+\rho^2 (1+\theta)^2(1-P_\epsilon)^2\sigma^2_\omega+\rho^2(1+\theta)^2P^2_\epsilon\sigma^2_\epsilon}{1+\theta^2\rho^2} 
 # \end{split}
 # \end{eqnarray}
 #
 #
+# #### Average unceratinty 
 #
+# The variance $Var$ is the steady state of Kalman updating formula. 
+#
+# #### Disagreement 
+#
+# The disagreement comes from dispersed information, and depends on the size of private signals, and to which agents overreact. 
 
 # ## Stochastic Volatility
 
