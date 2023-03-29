@@ -1031,6 +1031,123 @@ plt.legend(loc=1)
 plt.xlabel(r'$\theta$')
 # -
 
+# ### Diagnostic Expectations + Noisy Information 
+#
+#
+# \begin{eqnarray}
+# \begin{split}
+# y^{deni}_{i,t|t} & =  y^{deni}_{i,t|t-1} + (1+\theta)PH(\rho^hs_{i,t}-y^{deni}_{i,t|t-1})\\
+# & = \rho y^{deni}_{i,t|t-1}+ (1+\theta)PH(\rho^hs_{i,t}-\rho y^{deni}_{i,t|t-1})
+# \end{split}
+# \end{eqnarray}
+#
+# where $s_{i,t}$ is s 2-sized vector stacking both signals, and $P$ is Kalman gain sized two.
+#
+#
+# For h-period ahead:
+#
+# \begin{eqnarray}
+# \begin{split}
+# y^{deni}_{i,t+h|t} & =  y^{deni}_{i,t+h|t-1} + (1+\theta)PH(\rho^hs_{i,t}-y^{deni}_{i,t+h|t-1})\\
+# & = \rho y^{deni}_{i,t+h-1|t-1}+ (1+\theta)PH(\rho^hs_{i,t}-\rho y^{deni}_{i,t+h-1|t-1})
+# \end{split}
+# \end{eqnarray}
+#
+# Population average 
+#
+#
+# \begin{eqnarray}
+# \begin{split}
+# y^{deni}_{t|t} = y^{deni}_{t|t-1}+ (1+\theta)P_\epsilon(s^{pb}_{t}-y^{deni}_{t|t-1} 
+# \end{split}
+# \end{eqnarray}
+#
+#
+# For h-period ahead. 
+#
+# \begin{eqnarray}
+# \begin{split}
+# y^{deni}_{t+h|t} = \rho y^{deni}_{t+h-1|t-1}+ (1+\theta)P_\epsilon(\rho^hs^{pb}_{i,t}-\rho y^{deni}_{t+h-1|t-1})
+# \end{split}
+# \end{eqnarray}
+#
+#
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{deni}_{t|t} & = \rho y^{deni}_{t-1|t-1}+ (1+\theta)P_\epsilon(s^{pb}_{t}-\rho y^{deni}_{t-1|t-1}) - y_t \\
+# & = \rho (FE^{deni}_{t-1|t-1}+y_{t-1}) + (1+\theta)P_\epsilon(s^{pb}_{t}-\rho y^{deni}_{t-1|t-1}) - y_t \\
+# & = \rho (FE^{deni}_{t-1|t-1}+y_{t-1}) + (1+\theta)P_\epsilon(y_t + \epsilon_t-\rho (FE^{deni}_{t-1|t-1}+y_{t-1})) - \rho y_{t-1} \\
+# & =\rho FE^{deni}_{t-1|t-1} + (1+\theta)P_\epsilon(\rho y_{t-1}+\omega_t + \epsilon_t-\rho (FE^{deni}_{t-1|t-1}+y_{t-1})) \\
+# & =\rho FE^{deni}_{t-1|t-1} + (1+\theta)P_\epsilon(\omega_t + \epsilon_t-\rho FE^{deni}_{t-1|t-1})  \\
+# & =\rho FE^{deni}_{t-1|t-1} -(1+\theta)\rho FE^{deni}_{t-1|t-1}+ (1+\theta)P_\epsilon(\omega_t + \epsilon_t)  \\
+# \end{split}
+# \end{eqnarray}
+#
+#
+# Furthermore, we know 
+# \begin{eqnarray}
+# \begin{split}
+# FE^{deni}_{t+h|t} = \rho^h FE^{deni}_{t|t} + FE^{*}_{t+h|t} \\
+# FE^{deni}_{t+h-1|t-1} = \rho^h FE^{deni}_{t-1|t-1} + FE^{*}_{t+h-1|t-1} 
+# \end{split}
+# \end{eqnarray}
+#
+# So, 
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{deni}_{t+h|t} & = \rho^h FE^{deni}_{t|t} + FE^{*}_{t+h|t} \\
+# & =  \rho^h(-\theta\rho FE^{deni}_{t-1|t-1}+ (1+\theta)P_\epsilon(\omega_t + \epsilon_t))+ FE^{*}_{t+h|t} \\
+# & =  -\theta \rho (FE^{deni}_{t+h-1|t-1}-FE^{*}_{t+h-1|t-1} )+ \rho^h(1+\theta)P_\epsilon(\omega_t + \epsilon_t)+ FE^{*}_{t+h|t}  \\
+# & =  -\theta \rho FE^{deni}_{t+h-1|t-1}+\theta \rho FE^{*}_{t+h-1|t-1}+ \rho^h(1+\theta)P_\epsilon(\omega_t + \epsilon_t)+ FE^{*}_{t+h|t}   \\
+# & =  \theta \rho(FE^{*}_{t+h-1|t-1}- FE^{deni}_{t+h-1|t-1})+ \rho^h(1+\theta)P_\epsilon(\omega_t + \epsilon_t)+ FE^{*}_{t+h|t} \\
+# \end{split}
+# \end{eqnarray}
+#
+# Rearranging it, we get 
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{deni}_{t+h|t}-FE^{*}_{t+h|t}  = -\theta \rho( FE^{deni}_{t+h-1|t-1}-FE^{*}_{t+h-1|t-1})+ \rho^h(1+\theta)P_\epsilon(\omega_t + \epsilon_t)
+# \end{split}
+# \end{eqnarray}
+#
+#
+# Set h=1, we get 
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{deni}_{t+1|t}-FE^{*}_{t+1|t}  = -\theta \rho( FE^{deni}_{t|t-1}-FE^{*}_{t|t-1})+ \rho(1+\theta)P_\epsilon(\omega_t + \epsilon_t) 
+# \end{split}
+# \end{eqnarray}
+#
+# Which is equivalent to 
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{deni}_{t+1|t}+\omega_{t+1}  & = -\theta \rho( FE^{deni}_{t|t-1}+\omega_t)+ \rho(1+\theta)P_\epsilon(\omega_t + \epsilon_t) \\
+# \rightarrow FE^{deni}_{t+1|t} & = -\theta \rho( FE^{deni}_{t|t-1}+\omega_t)+ \rho(1+\theta)P_\epsilon(\omega_t + \epsilon_t)-\omega_{t+1} \\
+# \rightarrow FE^{deni}_{t+1|t} & = -\theta \rho FE^{deni}_{t|t-1}-\theta \rho\omega_t+ \rho(1+\theta)P_\epsilon(\omega_t + \epsilon_t)-\omega_{t+1} \\
+# & = -\theta \rho FE^{deni}_{t|t-1}-\theta \rho\omega_t+ \rho(1+\theta)P_\epsilon\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
+# & = -\theta \rho FE^{deni}_{t|t-1}-(\rho(1+\theta)P_\epsilon-\theta \rho)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1} \\
+# & = -\theta \rho FE^{deni}_{t|t-1}-\rho(P_\epsilon+P_\epsilon\theta-\theta)\omega_t + \rho(1+\theta)P_\epsilon\epsilon_t-\omega_{t+1}
+# \end{split}
+# \end{eqnarray}
+#
+# This means 
+#
+# \begin{eqnarray}
+# \begin{split}
+# FE^{deni2}_{\bullet+1|\bullet} = \frac{\sigma^2_\omega+(\rho(P_\epsilon+P_\epsilon\theta-\theta))^2\sigma^2_\omega+\sigma^2_\epsilon}{1+\theta^2\rho^2} 
+# \end{split}
+# \end{eqnarray}
+#
+#
+#
+
+# ## Stochastic Volatility
+
 # ### NISV 
 #
 #
@@ -1109,12 +1226,25 @@ plt.xlabel(r'$\theta$')
 # \begin{eqnarray}
 # \begin{split}
 # \bar E^{svni}_{t} (y_{t+h}) &=  \zeta^{svni}_{t|t}\\
-# & = (1-P^{sv}H) \underbrace{ \zeta^{svni}_{t|t-1}}_{\text{Average prior},=\zeta^{svni}_{t-1|t-1}} + P^{sv} \underbrace{\bar s^{sv}_{t}}_{\text{Average Signals}} \\
-# & = (1-P^{sv}H) \zeta^{svni}_{t|t-1} + P^{sv} [\eta_t, 0]' \\
-# & = (1-P^{sv}H)\underbrace{\zeta^{svni}_{t|t-1}}_{\equiv \zeta^{svni}_{t-1|t-1}=\bar E^{svni}_{t-1} (y_{t+h})=\bar E^{svni}_{t-1} (y_{t+h-1})}  + P^{sv}_\eta\eta_t \\
+# & = (1-P^{sv}_tH) \underbrace{ \zeta^{svni}_{t|t-1}}_{\text{Average prior},=\zeta^{svni}_{t-1|t-1}} + P^{sv}_t \underbrace{\bar s^{sv}_{t}}_{\text{Average Signals}} \\
+# & = (1-P^{sv}_tH) \zeta^{svni}_{t|t-1} + P^{sv}_t [\eta_t, 0]' \\
+# & = (1-P^{sv}_tH)\underbrace{\zeta^{svni}_{t|t-1}}_{\equiv \zeta^{svni}_{t-1|t-1}=\bar E^{svni}_{t-1} (y_{t+h})=\bar E^{svni}_{t-1} (y_{t+h-1})}  + P^{sv}_{\eta,t}\eta_t 
 # \end{split}
 # \end{eqnarray}
 #
+#
+# ##### Average FE
+#
+# \begin{eqnarray}
+# \begin{split}
+# \hat{FE}^{nisv}_{t+h|t} &= \bar E^{svni}_{t} (y_{t+h}) - y_{t+h} \\
+# &= \zeta^{svni}_{t|t} - y_{t+h} \\
+# &= \underbrace{\zeta^{svni}_{t|t} - \zeta_t}_{\text{filtering error}} + \hat{FE}^{*sv}_{t+h|t}\\
+# & =(1-P^{sv}_tH)\zeta^{svni}_{t|t-1} + P^{sv}_{\eta,t}\eta_t- \zeta_t + \hat{FE}^{*sv}_{t+h|t} \\
+# & =(1-P^{sv}_tH)\zeta^{svni}_{t-1|t-1} + P^{sv}_{\eta,t}\eta_t- \zeta_{t-1}-z_t + \hat{FE}^{*sv}_{t+h|t}  \\
+# & =(1-P^{sv}_tH)\zeta^{svni}_{t-1|t-1} + P^{sv}_{\eta,t}\eta_t- \zeta_{t-1}-z_t + \hat{FE}^{*sv}_{t+h-1|t-1} - \eta_{t+h}-z_{t+h} + \eta_{t} + z_{t}  
+# \end{split}
+# \end{eqnarray}
 #
 # ##### Average variance 
 #
