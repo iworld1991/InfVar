@@ -56,7 +56,7 @@ edt = dt.datetime(2022, 6,30)
 # ### Oil shocks (Hamilton 1996)
 
 # +
-os_dataM = web.DataReader(['WTISPLC'], ## Total Nonfarm Private Payroll Employment, Thousands, Quarterly, Seasonally Adjusted
+os_dataM = web.DataReader(['WTISPLC'], 
                           'fred', 
                           sdt,
                           edt)
@@ -131,10 +131,7 @@ os_M.index = pd.DatetimeIndex(os_datesM)
 
 # -
 
-os_M.index
-
-#plt.plot(os_dataM['OPShock'])
-plt.plot(os_dataM2['OPShock'])
+plt.plot(os_dataM['OPShock'])
 
 # ### Monetary policy shocks 
 
@@ -158,27 +155,31 @@ mps_datesM = dates_from_str(mps_datesM)
 
 ## monthly index 
 mps_var.index = pd.DatetimeIndex(mps_datesM)
+mps_var = mps_var.replace('.',0.0)
 
+## convert types 
+mps_var['MP1']=pd.to_numeric(mps_var['MP1'],errors='coerce')   
+mps_var['ED4']=pd.to_numeric(mps_var['ED4'],errors='coerce')   
+mps_var['ED8']=pd.to_numeric(mps_var['ED8'],errors='coerce')  
+
+
+# +
 # multiple times of monetary policy within some quarters. Thus cumulative sum is taken as the shock of that quarter
 
-mps_shockQ  = mps_var.groupby(['quarter'], sort=False)[['MP1','ED4','ED8']].sum(axis=1)
-
+mps_shockQ  = mps_var.groupby(['quarter'], sort=False).sum()
+ 
 ## convert to numeric 
 
 mps_shockQ['MP1']=pd.to_numeric(mps_shockQ['MP1'],errors='coerce')   
 mps_shockQ['ED4']=pd.to_numeric(mps_shockQ['ED4'],errors='coerce')   
-mps_shockQ['ED8']=pd.to_numeric(mps_shockQ['ED8'],errors='coerce')   
+mps_shockQ['ED8']=pd.to_numeric(mps_shockQ['ED8'],errors='coerce')
 
+## frequence 
 
-## merge with other shocks
-str_shocks_est = pd.concat([str_shocks_est,mps_shockQ], join='inner', axis=1)
-
-str_shocks_est['year']=str_shocks_est.index.year
-str_shocks_est['quarter']=str_shocks_est.index.quarter
-str_shocks_est['month']=str_shocks_est.index.month
-
-str_shocks_est.head()
+mps_shockQ = mps_shockQ.asfreq('Q')
 # -
+
+mps_shockQ
 
 # ### Tech shocks identified using Max-share of forecast error (Francis et al.(2014)) 
 #
@@ -278,8 +279,8 @@ macro_time_series_M.head(20)
 
 # + {"code_folding": [12]}
 ## loading technology shock data
-#ts_data = pd.read_excel('../OtherData/Emp.xls',sheet_name='data')
-#ts_data2 = pd.read_excel('../OtherData/EmpSaQ.xls',sheet_name='data')
+ts_data = pd.read_excel('../OtherData/Emp.xls',sheet_name='data')
+ts_data2 = pd.read_excel('../OtherData/EmpSaQ.xls',sheet_name='data')
 #ts_data['observation_date'] = pd.to_datetime(ts_data['observation_date'],format='%Y%m%d')
 #ts_data2['observation_date'] = pd.to_datetime(ts_data['observation_date'],format='%Y%m%d')
 
@@ -289,9 +290,9 @@ datesQ1 = ts_data['observation_date'].dt.year.astype(int).astype(str) + \
          "Q" + ts_data['observation_date'].dt.quarter.astype(int).astype(str)
 datesQ1 = dates_from_str(datesQ1)
 
-#datesQ2 = ts_data2['observation_date'].dt.year.astype(int).astype(str) + \
+datesQ2 = ts_data2['observation_date'].dt.year.astype(int).astype(str) + \
          "Q" + ts_data['observation_date'].dt.quarter.astype(int).astype(str)
-#datesQ2 = dates_from_str(datesQ2)
+datesQ2 = dates_from_str(datesQ2)
 
 ## loading inflation data and converting from monthly to quarterly
 inf_dataM = pd.read_stata('../OtherData/InfM.dta')
@@ -305,7 +306,7 @@ inf_datesQ = dates_from_str(inf_datesQ)
 
 ## Other inflation measurs as backup
 
-infQ_all = inf_dataQ[['CPIAU','CPICore','PCEPI']].pct_change()
+infQ_all = inf_dataQ[['CPIAU','CPICore','PCE']].pct_change()
 
 # + {"code_folding": []}
 # set date index to productivity and labor series
@@ -891,23 +892,26 @@ print('The correlation coefficient of tech shocks \
 identified using max-share approach and the news shock is '+ \
       str(round(str_shocks_est['pty_max_shock'].corr(str_shocks_est['news_shock']),3)))
 
-# + {"code_folding": []}
+# +
+## merge with oil shock 
 
-# -
+str_shocks_est = pd.merge(str_shocks_est,             
+                          mps_shockQ,
+                         left_index=True,
+                         right_index=True,
+                         how='outer')
 
+str_shocks_est = pd.merge(str_shocks_est,             
+                          os_shockQ,
+                         left_index=True,
+                         right_index=True,
+                         how='outer')
 
-
-# + {"code_folding": []}
-
-
+str_shocks_est
 
 # +
 ### save shocks (quarterly)
 
 str_shocks_est.to_stata('../OtherData/InfShocksQ.dta')   # this is the quarterly version as tech shocks is in quarterly
 # -
-
-
-
-# + {"code_folding": []}
 
