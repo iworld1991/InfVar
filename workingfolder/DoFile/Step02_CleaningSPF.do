@@ -72,13 +72,13 @@ destring `var'6,force replace
 label var `var'6 "inflation `var' from q+3 to q+4"
 
 destring `var'A,force replace 
-label var `var'A "inflation `var' from y-1 to y"
+label var `var'A "inflation `var' from q4 y-1 to q4 in y"
 
 destring `var'B,force replace 
-label var `var'B "inflation `var' from y to y+1"
+label var `var'B "inflation `var' from q4 y to q4 y+1"
 
 destring `var'C,force replace 
-label var `var'C "inflation `var' from y+1 to y+2"
+label var `var'C "inflation `var' from q4 to y+1 to q4 y+2"
 
 }
 
