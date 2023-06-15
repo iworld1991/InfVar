@@ -62,7 +62,7 @@ label var `var'6 "prob `var' 1.5%-1.9% from y-1 to y(Q4 YoY)"
 label var `var'7 "prob `var' 1.0%-1.4% from y-1 to y(Q4 YoY)"
 label var `var'8 "prob `var' 0.5%-0.9% from y-1 to y(Q4 YoY)"
 label var `var'9 "prob `var' 0%-0.4% from y-1 to y(Q4 YoY)" 
-label var `var'10 "prob `var' <0% from y-1 to y"
+label var `var'10 "prob `var' <0% from y-1 to y(Q4 YoY)"
 
 label var `var'11 "prob `var' >=4% from y to y+1(Q4 YoY)"
 label var `var'12 "prob `var' 3.5%-3.9% from y to y+1(Q4 YoY)"
