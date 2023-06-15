@@ -63,6 +63,10 @@ tsset date
 sort year quarter month 
 
 
+** sample filter 
+
+*drop if date > monthly("2020m1","YM")
+
 ******************************
 *** Computing some measures **
 ******************************
@@ -241,9 +245,9 @@ graph export "${sum_graph_folder}/var_disgSPFPCEQ.png", as(png) replace
 ** These are the charts for paper draft 
 ****************************************
 
-twoway (tsline PRCCPIMean1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash")) ///
-       (tsline PRCCPIMean1p75, ytitle(" ",axis(1)) lwidth(thick) lp("shortdash")) ///
-	   (tsline PRCCPIMean1p50, ytitle(" ",axis(1)) lwidth(thick) lp("solid")) ///
+twoway (tsline PRCCPIMean1p25, ytitle(" ",axis(1)) lcolor(navy) lwidth(thick) lp("shortdash")) ///
+       (tsline PRCCPIMean1p75, ytitle(" ",axis(1)) lcolor(black) lwidth(thick) lp("shortdash")) ///
+	   (tsline PRCCPIMean1p50, ytitle(" ",axis(1)) lcolor(maroon) lwidth(thick) lp("solid")) ///
 	   if PRCCPIVar1p25!=. , /// 
 	   title("SPF(CPI)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of forecast") label(2 "75 pctile of forecast") ///
@@ -251,9 +255,9 @@ twoway (tsline PRCCPIMean1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash"
 graph export "${sum_graph_folder}/IQRmeanCPIQ.png", as(png) replace 
 
 
-twoway (tsline PRCPCEMean1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash")) ///
-       (tsline PRCPCEMean1p75, ytitle(" ",axis(1)) lwidth(thick) lp("shortdash")) ///
-	   (tsline PRCPCEMean1p50, ytitle(" ",axis(1)) lwidth(thick) lp("solid")) ///
+twoway (tsline PRCPCEMean1p25, ytitle(" ",axis(1)) lcolor(navy) lwidth(thick) lp("shortdash")) ///
+       (tsline PRCPCEMean1p75, ytitle(" ",axis(1)) lcolor(black) lwidth(thick) lp("shortdash")) ///
+	   (tsline PRCPCEMean1p50, ytitle(" ",axis(1)) lcolor(maroon) lwidth(thick) lp("solid")) ///
 	   if PRCPCEVar1p25!=. , /// 
 	   title("SPF(PCE)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of forecast") label(2 "75 pctile of forecast") ///
@@ -261,9 +265,9 @@ twoway (tsline PRCPCEMean1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash"
 graph export "${sum_graph_folder}/IQRmeanPCEQ.png", as(png) replace 
 
 
-twoway (tsline PRCCPIVar1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash")) ///
-       (tsline PRCCPIVar1p75, ytitle(" ",axis(1)) lwidth(thick) lp("shortdash")) ///
-	   (tsline PRCCPIVar1p50, ytitle(" ",axis(1)) lwidth(thick) lp("solid")) ///
+twoway (tsline PRCCPIVar1p25, ytitle(" ",axis(1)) lcolor(navy) lwidth(thick) lp("shortdash")) ///
+       (tsline PRCCPIVar1p75, ytitle(" ",axis(1)) lcolor(black) lwidth(thick) lp("shortdash")) ///
+	   (tsline PRCCPIVar1p50, ytitle(" ",axis(1)) lcolor(maroon) lwidth(thick) lp("solid")) ///
 	   if PRCCPIVar1p25!=. , /// 
 	   title("SPF(CPI)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of uncertainty") label(2 "75 pctile of uncertainty") ///
@@ -271,9 +275,9 @@ twoway (tsline PRCCPIVar1p25, ytitle(" ",axis(1))  lwidth(thick) lp("shortdash")
 graph export "${sum_graph_folder}/IQRvarCPIQ.png", as(png) replace 
 
 
-twoway (tsline PRCPCEVar1p25, ytitle(" ",axis(1)) lwidth(thick) lp("shortdash")) ///
-       (tsline PRCPCEVar1p75, ytitle(" ",axis(1)) lwidth(thick) lp("shortdash")) ///
-	   (tsline PRCPCEVar1p50, ytitle(" ",axis(1)) lwidth(thick) lp("solid")) ///
+twoway (tsline PRCPCEVar1p25, ytitle(" ",axis(1)) lcolor(navy) lwidth(thick) lp("shortdash")) ///
+       (tsline PRCPCEVar1p75, ytitle(" ",axis(1)) lcolor(black) lwidth(thick) lp("shortdash")) ///
+	   (tsline PRCPCEVar1p50, ytitle(" ",axis(1)) lcolor(maroon) lwidth(thick) lp("solid")) ///
 	   if PRCPCEVar1p25!=. , ///
 	   title("SPF(PCE)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of uncertainty") label(2 "75 pctile of uncertainty") ///
@@ -290,47 +294,70 @@ label var `var'_abFE "Absolute Val of Average Forecast Error"
 }
 
 
+foreach var in SPFCPI SPFPCE{
+gen `var'_FE2 = `var'_FE^2
+label var `var'_FE2 "Square of Average Forecast Error"
+}
+
+** get the moving average for plot
+
+egen PRCCPIVar1meanmv = filter(PRCCPIVar1mean),  coef(1 1 1) lags(-1/1) normalise 
+egen PRCPCEVar1meanmv = filter(PRCPCEVar1mean),  coef(1 1 1) lags(-1/1) normalise 
+
+foreach var in Inf1yf_CPICore CORECPI1y SPFCPI_FE SPFCPI_abFE SPFCPI_FE2 CORECPI_disg Inf1yf_PCECore COREPCE1y SPFPCE_FE SPFPCE_abFE SPFPCE_FE2 COREPCE_disg{
+egen `var'mv = filter(`var'), coef(1 1 1) lags(-1/1) normalise 
+}
+
+
 ** temporarily change the name for plotting 
 
 label var Inf1yf_CPIAU "Realized Headline CPI Inflation"
-label var Inf1yf_CPICore "Realized Core CPI Inflation"
-label var SPFCPI_FE "Average Forecast Error"
+label var Inf1yf_CPICoremv "Realized Core CPI Inflation"
+label var CORECPI1ymv "Expected Core CPI Inflation"
+label var COREPCE1ymv "Expected Core PCE Inflation"
+
+label var SPFCPI_FEmv "Average Forecast Error"
+label var SPFCPI_FE2mv "Squared Average Forecast Error"
+
 label var CPI_disg "Disagreement"
-label var CORECPI_disg "Disagreement"
+label var CORECPI_disgmv "Disagreement"
 
-label var PRCCPIVar1mean "Average Uncertainty(RHS)"
+label var PRCCPIVar1meanmv "Average Uncertainty (RHS)"
 label var Inf1yf_PCE "Realized PCE Inflation"
-label var Inf1yf_PCECore "Realized Core PCE Inflation"
-label var SPFPCE_FE "Average Forecast Error"
+label var Inf1yf_PCECoremv "Realized Core PCE Inflation"
+label var SPFPCE_FEmv "Average Forecast Error"
+label var SPFPCE_FE2mv "Squared Average Forecast Error"
+
 label var PCE_disg "Disagreement"
-label var COREPCE_disg "Disagreement"
+label var COREPCE_disgmv "Disagreement"
+label var PRCPCEVar1meanmv "Average Uncertainty (RHS)"
 
-label var PRCPCEVar1mean "Average Uncertainty(RHS)"
 
+foreach var in Inf1yf_CPICore CORECPI1y SPFCPI_FE2 CORECPI_disg{
 
-foreach var in Inf1yf_CPICore SPFCPI_abFE CORECPI_disg{
 pwcorr `var' PRCCPIVar1mean, star(0.05)
 local rho: display %4.2f r(rho) 
-twoway (tsline `var',ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
-       (tsline PRCCPIVar1mean, yaxis(2) ytitle("",axis(2)) lp("longdash") lwidth(thick)) ///
+twoway (tsline `var'mv,ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
+       (tsline PRCCPIVar1meanmv, yaxis(2) ytitle("",axis(2)) lcolor(maroon) lp("longdash") lwidth(thick)) ///
 	   if PRCCPIVar1mean!=., ///
 	   title("SPF(CPI)",size(large)) xtitle("Time") ytitle("") ///
 	   legend(size(large) col(1)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
-	   justification(left) position(11) size(vlarge))
+	   justification(left) position(11) size(huge))
 graph export "${sum_graph_folder}/`var'_varSPFCPIQ.png", as(png) replace
 }
 
-foreach var in Inf1yf_PCECore SPFPCE_abFE COREPCE_disg{
+foreach var in Inf1yf_PCECore COREPCE1y SPFPCE_FE2 COREPCE_disg{
+
 pwcorr `var' PRCPCEVar1mean, star(0.05)
 local rho: display %4.2f r(rho) 
-twoway (tsline `var',ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
-       (tsline PRCPCEVar1mean, yaxis(2) ytitle("",axis(2)) lp("longdash") lwidth(thick)) ///
+twoway (tsline `var'mv,ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
+       (tsline PRCPCEVar1meanmv, yaxis(2) ytitle("",axis(2)) lcolor(maroon) lp("longdash") lwidth(thick)) ///
 	   if PRCPCEVar1mean!=., ///
 	   title("SPF(PCE)",size(large)) xtitle("Time") ytitle("") ///
 	   legend(size(large) col(1)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
-	   justification(left) position(11) size(vlarge))
+	   justification(left) position(11) size(huge))
 graph export "${sum_graph_folder}/`var'_varSPFPCEQ.png", as(png) replace
 }
 

@@ -19,6 +19,7 @@ use InfExpSPFDstIndQ,clear
 
 local Moments PRCCPIMean0 PRCCPIMean1 PRCPCEMean0 PRCPCEMean1 /// 
               PRCCPIVar0 PRCCPIVar1 PRCPCEVar0 PRCPCEVar1
+** 0 stands for q4/q4 in current year and 1 stands for q4/q4 for next year
 
 *****************************
 **   Summary Stats of SPF  **
@@ -114,12 +115,17 @@ foreach mom in Mean Var{
 **  Vintages Moments      ****
 ******************************
 
+
 ** Forward looking 
 foreach mom in Mean Var{
    foreach var in PRCCPI PRCPCE{
-     gen `var'`mom'f0 =f1.`var'`mom'0
+     gen `var'`mom'f1 =f1.`var'`mom'0 
 	 local lb: variable label `var'`mom'0
-	 label var `var'`mom'f0 "`lb' in q+1"
+	 label var `var'`mom'f1 "`lb' in q+1"
+	 
+	 gen `var'`mom'f4 =f4.`var'`mom'0 
+	 local lb: variable label `var'`mom'0
+	 label var `var'`mom'f4 "`lb' in q+4"
  }
 }
 
@@ -131,6 +137,10 @@ foreach mom in Mean Var{
      gen `var'`mom'l1 =l1.`var'`mom'1
 	 local lb: variable label `var'`mom'1
 	 label var `var'`mom'l1 "`lb' in q-1"
+	 
+	 gen `var'`mom'l4 =l4.`var'`mom'1
+	 local lb: variable label `var'`mom'1
+	 label var `var'`mom'l4 "`lb' in q-4"
  }
 }
 
@@ -140,14 +150,26 @@ foreach mom in Mean Var{
 ******************************
 
 
+** There are two types of revisions we calculate here.
+*** Type 1 is yearly. 
+   ** Regardless of quarter, it is always from q4/q4 ``forecast'' in the previous year to q4/q4 nowcast in the current year. 
+* Type 2 is quarterly. It differs depending on the quarter. 
+*** q1. forecast from the q4 of the previous year to nowcast q1 in the current year. 
+*** q2. nowcast in q1 to nowcast in q2
+*** q3. nowcast in q2 to nowcast in q3
+*** q4. nowcast in q3 to nowcast in q4. 
+
+
+** Type 1 yearly revision 
+
 foreach mom in Mean Var{
    foreach var in PRCCPI PRCPCE{
       gen `var'`mom'_rv = `var'`mom'0 - `var'`mom'l1
+	  ** q4/q4 nowcast for current year at q minus q4/q4 forecast from q-1 
 	  *label var `var'`mom'_rv "Revision of `var'`mom'"
    }
 }
 
- 
 ******************************
 **   Labeling for plots   ****
 ******************************
@@ -175,7 +197,6 @@ foreach mom in Var {
 label var PRCCPIMean1 "forecast of CPI"
 label var PRCPCEMean1 "forecast of PCE"
 
-png)
 ** These are charts for paper draft.
 foreach mom in Mean{
    foreach var in PRCCPI PRCPCE{

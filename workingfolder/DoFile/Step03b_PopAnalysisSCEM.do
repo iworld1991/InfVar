@@ -64,6 +64,9 @@ rename date3 date
 tsset date
 sort year quarter month 
 
+** sample filter 
+
+*drop if date > monthly("2020m1","YM")
 
 ******************************
 *** Computing some measures **
@@ -191,7 +194,6 @@ graph export "${sum_graph_folder}/fe_fe.png", as(png) replace
 
 
 
-
 twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
        (tsline Q9_var,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if Q9_disg!=., ///
@@ -233,29 +235,44 @@ label var `var'_abFE "Absolute Val of Average Forecast Error"
 }
 
 
-label var Inf1yf_CPIAU "Realized Headline CPI Inflation"
-label var SCE_FE "Average Forecast Error"
-label var Q9_disg "Disagreement"
-label var Q9_var "Average Uncertainty(RHS)"
+foreach var in SCE{
+gen `var'_FE2 = `var'_FE^2
+label var `var'_FE2 "Square of Average Forecast Error"
+}
 
-foreach var in Inf1yf_CPIAU SCE_abFE Q9_disg{
+** generate moving averages for charts 
+
+egen Q9_varmv = filter(Q9_var),  coef(1 1 1) lags(-1/1) normalise 
+
+foreach var in Inf1yf_CPIAU Q9_mean SCE_FE SCE_FE2 Q9_disg{
+egen `var'mv = filter(`var'), coef(1 1 1) lags(-1/1) normalise 
+}
+
+label var Q9_meanmv "Expected Headline CPI Inflation"
+label var Inf1yf_CPIAUmv "Realized Headline CPI Inflation"
+label var SCE_FE "Average Forecast Error"
+label var SCE_FE2mv "Squared Average Forecast Error"
+label var Q9_disgmv "Disagreement"
+label var Q9_varmv "Average Uncertainty (RHS)"
+
+
+foreach var in Inf1yf_CPIAU Q9_mean SCE_FE2 Q9_disg{
 pwcorr `var' Q9_var, star(0.05)
 local rho: display %4.2f r(rho) 
-twoway (tsline `var',ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
-       (tsline Q9_var, yaxis(2) ytitle("",axis(2)) lp("longdash") lwidth(thick)) ///
+twoway (tsline `var'mv,ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
+       (tsline Q9_varmv, yaxis(2) ytitle("",axis(2)) lcolor(maroon) lp("longdash") lwidth(thick)) ///
 	   if Q9_var!=., ///
 	   title("SCE",size(large)) xtitle("Time") ytitle("") ///
 	   legend(size(large) col(1)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
-	   justification(left) position(11) size(large))
+	   justification(left) position(11) size(huge))
 graph export "${sum_graph_folder}/`var'_varSCEM.png", as(png) replace
 }
 
 
-
-twoway (tsline Q9_varp25, ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
-       (tsline Q9_varp75, ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
-	   (tsline Q9_varp50, ytitle(" ",axis(1)) lp("solid") lwidth(thick)) ///
+twoway (tsline Q9_varp25, ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
+       (tsline Q9_varp75, ytitle(" ",axis(1)) lcolor(black) lp("shortdash") lwidth(thick)) ///
+	   (tsline Q9_varp50, ytitle(" ",axis(1)) lcolor(maroon)  lp("solid") lwidth(thick)) ///
 	   if Q9_varp50!=. , /// 
 	   title("SCE") xtitle("Time") ///
 	   legend(label(1 "25 percentile of uncertainty") label(2 "75 percentile of uncertainty") ///
@@ -264,9 +281,9 @@ graph export "${sum_graph_folder}/IQRvarSCEM.png", as(png) replace
 
 
 
-twoway (tsline Q9_meanp25, ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
-       (tsline Q9_meanp75, ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) ///
-	   (tsline Q9_meanp50, ytitle(" ",axis(1)) lp("solid") lwidth(thick)) ///
+twoway (tsline Q9_meanp25, ytitle(" ",axis(1)) lcolor(navy)  lp("shortdash") lwidth(thick)) ///
+       (tsline Q9_meanp75, ytitle(" ",axis(1)) lcolor(black) lp("shortdash") lwidth(thick)) ///
+	   (tsline Q9_meanp50, ytitle(" ",axis(1)) lcolor(maroon) lp("solid") lwidth(thick)) ///
 	   if Q9_varp50!=. , /// 
 	   title("SCE") xtitle("Time") ///
 	   legend(label(1 "25 percentile of forecast") label(2 "75 percentile of forecast") ///
@@ -274,7 +291,7 @@ twoway (tsline Q9_meanp25, ytitle(" ",axis(1)) lp("shortdash") lwidth(thick)) //
 graph export "${sum_graph_folder}/IQRmeanSCEM.png", as(png) replace 
 */
 
-
+ddd
 ***************************
 ***  Population Moments *** 
 ***************************
