@@ -85,11 +85,11 @@ rm "RECESS.dta"
 foreach var in "PRGDP" "PRPGDP" "PRUNEMP" "PRCCPI" "PRCPCE"{
 
 forval i=1/10{
-label var `var'`i' "prob of current year `var' falling in a specific range"
+label var `var'`i' "prob of current year q4/q4 `var' falling in a specific range"
 }
 
 forval i=11/20{
-label var `var'`i' "prob of next year `var' falling in a specific range"
+label var `var'`i' "prob of next year q4/q4 `var' falling in a specific range"
 }
 }
 
