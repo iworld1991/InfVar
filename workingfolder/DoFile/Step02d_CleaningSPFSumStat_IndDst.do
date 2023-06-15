@@ -134,8 +134,11 @@ foreach mom in Mean Var{
 
 foreach mom in Mean Var{
    foreach var in PRCCPI PRCPCE{
-     gen `var'`mom'l1 =l1.`var'`mom'1
-	 local lb: variable label `var'`mom'1
+     gen `var'`mom'l1 =l1.`var'`mom'0
+	 replace `var'`mom'l1 = l1.`var'`mom'1 if quarter==1 
+	 ** q1 needs to be compared with the forecast made in q4 in previous year
+	 ** q2, q3, q4 are all compared with the nowcast made in previous quarter of the current year
+	 local lb: variable label `var'`mom'0
 	 label var `var'`mom'l1 "`lb' in q-1"
 	 
 	 gen `var'`mom'l4 =l4.`var'`mom'1
@@ -160,7 +163,20 @@ foreach mom in Mean Var{
 *** q4. nowcast in q3 to nowcast in q4. 
 
 
+
+
 ** Type 1 yearly revision 
+
+foreach mom in Mean Var{
+   foreach var in PRCCPI PRCPCE{
+      gen `var'`mom'_rv1y = `var'`mom'0 - `var'`mom'l4
+	  ** q4/q4 nowcast for current year at q minus q4/q4 forecast from q-4
+	  *label var `var'`mom'_rv "Revision of `var'`mom'"
+   }
+}
+
+
+** Type 2 quarterly revision 
 
 foreach mom in Mean Var{
    foreach var in PRCCPI PRCPCE{
@@ -170,6 +186,8 @@ foreach mom in Mean Var{
    }
 }
 
+** 
+
 ******************************
 **   Labeling for plots   ****
 ******************************
@@ -177,15 +195,15 @@ foreach mom in Mean Var{
 
 foreach mom in Mean {
    foreach var in PRCCPI PRCPCE{
-	label var `var'`mom'0 "expected inflation from previous year"
-	label var `var'`mom'1 "1-year-ahead expected inflation"
+	label var `var'`mom'0 "expected q4/q4 inflation in the current year"
+	label var `var'`mom'1 "1-year-ahead q4/q4 expected inflation"
  }
 }
 
 foreach mom in Var {
    foreach var in PRCCPI PRCPCE{
-	label var `var'`mom'0 "uncertainty about inflation from previous year"
-	label var `var'`mom'1 "uncertainty of 1-year-ahead expected inflation"
+	label var `var'`mom'0 "uncertainty about q4/q4 inflation in the current year"
+	label var `var'`mom'1 "uncertainty of 1-year-ahead q4/q4 expected inflation"
  }
 }
 
@@ -201,7 +219,7 @@ label var PRCPCEMean1 "forecast of PCE"
 foreach mom in Mean{
    foreach var in PRCCPI PRCPCE{
 	local lb: variable label `var'`mom'1 
-    twoway (kdensity `var'`mom'_rv, n(20) lcolor(red) lwidth(thick)), ///
+    twoway (histogram `var'`mom'_rv1y, bin(30) color(red) lcolor(red) lwidth(thick)), ///
 	       xline(0) ///
 	       by(year,title("Distribution of revision in `lb'") note("")) ytitle("Fraction of population") ///
 		   xtitle("Revision in mean forecast")
@@ -216,13 +234,15 @@ label var PRCPCEVar1 "uncertainty about PCE"
 foreach mom in Var{
    foreach var in PRCCPI PRCPCE{
 	local lb: variable label `var'`mom'1 
-    twoway (kdensity `var'`mom'_rv, n(50) lcolor(blue) lwidth(thick)), ///
+    twoway (histogram `var'`mom'_rv1y, bin(30) color(blue) lcolor(blue) lwidth(thick)), ///
 	       xline(0) ///
 	       by(year,title("Distribution of revision in `lb'") note("")) ytitle("Fraction of population") ///
 		   xtitle("Revision in uncertainty")
 	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_true_hist.png", as(png) replace 
  }
 }
+
+
 
 * Kernal density plot only 
 ** These are charts for paper draft.
@@ -249,12 +269,24 @@ foreach mom in Var{
  }
 }
 
+** compare nowcast and forecast direclty 
+
+foreach mom in Mean{
+   foreach var in PRCCPI PRCPCE{
+	local lb: variable label `var'`mom'1 
+    twoway (kdensity `var'`mom'0, n(20) lcolor(red) lwidth(thick)) ///
+	       (kdensity `var'`mom'l4, n(50) lpattern(dash) lcolor(black) fcolor(ltblue) lwidth(thick)), ///
+		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
+	       by(year,title("Distribution of `lb'")) ytitle("Fraction of population")
+	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_hist.png", as(png) replace 
+ }
+}
 
 foreach mom in Var{
    foreach var in PRCCPI PRCPCE{
 	local lb: variable label `var'`mom'1 
-    twoway (kdensity `var'`mom'1, n(50) ) ///
-	       (kdensity `var'`mom'f0, n(50) fcolor(ltblue)), ///
+    twoway (kdensity `var'`mom'0, n(50) lcolor(blue) lwidth(thick) ) ///
+	       (kdensity `var'`mom'l4, n(50) fcolor(ltblue) lcolor(black) fcolor(ltblue) lwidth(thick)), ///
 		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
 	       by(year,title("Distribution of `lb'")) ytitle("Fraction of population") ///
 		   xtitle("Revision in uncertainty")
@@ -263,24 +295,19 @@ foreach mom in Var{
 }
 
 
-foreach mom in Mean{
-   foreach var in PRCCPI PRCPCE{
-	local lb: variable label `var'`mom'1 
-    twoway (kdensity `var'`mom'1, n(20) ) ///
-	       (kdensity `var'`mom'f0, n(50) lpattern(dash) fcolor(ltblue)), ///
-		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
-	       by(year,title("Distribution of `lb'")) ytitle("Fraction of population")
-	graph export "${sum_graph_folder}/hist/`var'`mom'01_rv_hist.png", as(png) replace 
- }
-}
-
-
 * histograms only 
+
+label var PRCCPIMean0 "expected q4/q4 CPI inflation"
+label var PRCPCEMean0 "expected q4/q4 PCE inflation"
+
+label var PRCCPIVar0 "uncertainty about q4/q4 CPI inflation"
+label var PRCPCEVar0 "uncertainty about q4/q4 PCE inflation"
+
 foreach mom in Mean{
    foreach var in PRCCPI PRCPCE{
 	local lb: variable label `var'`mom'0
     twoway (histogram `var'`mom'0,bin(10) color(ltblue)) ///
-	       (histogram `var'`mom'1,bin(10) fcolor(none) lcolor(red)), by(year,title("Distribution of `lb'")) ///
+	       (histogram `var'`mom'l1,bin(10) fcolor(none) lcolor(red)), by(year,title("Distribution of `lb'",size(medium))) ///
 		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
 		   xtitle("Mean forecast")
 	graph export "${sum_graph_folder}/hist/`var'`mom'_hist.png", as(png) replace 
@@ -292,25 +319,14 @@ foreach mom in Var{
    foreach var in PRCCPI PRCPCE{
 	local lb: variable label `var'`mom'0
     twoway (histogram `var'`mom'0,bin(20) color(ltblue)) ///
-	       (histogram `var'`mom'1,bin(20) fcolor(none) lcolor(red)), by(year,title("Distribution of `lb'")) ///
+	       (histogram `var'`mom'l1,bin(20) fcolor(none) lcolor(red)), by(year,title("Distribution of `lb'",size(medium))) ///
 		   legend(order(1 "Nowcasting" 2 "Forecasting" )) ///
-		   xtitle("Uncertainty") 
+		   xtitle("Uncertainty")
 	graph export "${sum_graph_folder}/hist/`var'`mom'_hist.png", as(png) replace 
  }
 }
 
 
-* nowcasting and forecasting 
-
-foreach mom in Var{
-   foreach var in PRCCPI PRCPCE{
-	local lb: variable label `var'`mom'0
-    twoway (kdensity  `var'`mom'0, n(30)) ///
-	       (kdensity `var'`mom'1, n(30) fcolor(ltblue)), by(year,title("Distribution of `lb'")) ///
-		   legend(order(1 "Nowcasting" 2 "Forecasting" ))
-	graph export "${sum_graph_folder}/hist/`var'`mom'_hist.png", as(png) replace 
- }
-}
 */
 
 ** make quarterly individual data 
