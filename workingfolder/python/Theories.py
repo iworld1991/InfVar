@@ -206,16 +206,18 @@ plt.style.use('ggplot')
 #
 #
 
-# + code_folding=[11, 16]
+# + code_folding=[18]
 ## some experiments 
 
 rho = 0.98
 sigma = 1.0
 
 def FE2_SE(lbd):
+    ## h =1 
     return lbd**2/(1-(1-lbd)**2*rho**2)*sigma**2
 
 def Var_SE(lbd):
+    ## h =1 
     return 1/(1-(1-lbd)*rho**2)*sigma**2
 
 def Disg_SE(lbd):
