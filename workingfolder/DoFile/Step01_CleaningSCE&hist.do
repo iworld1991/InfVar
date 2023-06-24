@@ -366,6 +366,8 @@ foreach mom in mean var{
 save "${folder}/SCE/InfExpSCEProbIndM",replace 
 
 
+
+
 ***************************************
 **   Histograms of Moments  ***********
 ** Maybe replaced by kernel desntiy **
@@ -384,7 +386,7 @@ gen SCE_var1 = .
 * Kernal density plot only 
 
 label var Q9_mean "1-yr-ahead forecast of inflation "
-label var Q9c_mean "2-yr-ahead forecast of inflation"
+label var Q9c_mean "3-yr-ahead forecast of inflation"
 
  foreach var in SCE{
  foreach mom in mean{
@@ -401,7 +403,7 @@ label var Q9c_mean "2-yr-ahead forecast of inflation"
 
 
 label var Q9_var "1-yr-ahead uncertainty of inflation"
-label var Q9c_var "2-yr-ahead uncertainty of inflation"
+label var Q9c_var "3-yr-ahead uncertainty of inflation"
 
 foreach mom in var{
 foreach var in SCE{
@@ -415,7 +417,7 @@ foreach var in SCE{
 }
 
 
-** both 1-yr and 2-yr
+** both 1-yr and 3-yr
 
  foreach var in SCE{
  foreach mom in mean{
@@ -426,7 +428,7 @@ foreach var in SCE{
 	       (kdensity `var'_`mom'1  if `var'_`mom'1!=.,lcolor(black) lpattern(dash) lwidth(thick)), ///
 	       by(year,title("Distribution of Mean Forecast",size(med)) note("")) xtitle("Mean forecast") ///
 		   ytitle("Fraction of population") ///
-		   legend(label(1 "1-year-ahead") label(2 "2-year-ahead") col(1))
+		   legend(label(1 "1-year-ahead") label(2 "3-year-ahead") col(1))
 	graph export "${sum_graph_folder}/hist/`var'`mom'01_hist.png", as(png) replace 
 }
 }
@@ -441,10 +443,55 @@ foreach var in SCE{
 	       (kdensity `var'_`mom'1 if `var'_`mom'1!=., lcolor(orange) lpattern(dash) lwidth(thick)), ///
 	       by(year,title("Distribution of Uncertainty",size(med)) note("")) xtitle("Uncertainty") ///
 		   ytitle("Fraction of population") ///
-		   legend(label(1 "1-year-ahead") label(2 "2-year-ahead")  col(1))
+		   legend(label(1 "1-year-ahead") label(2 "3-year-ahead")  col(1))
 	graph export "${sum_graph_folder}/hist/`var'`mom'01_hist.png", as(png) replace 
 }
 }
+
+
+******************************
+**  Generate Revision  ****
+******************************
+
+preserve
+collapse (mean) SCE_mean SCE_mean1 SCE_var SCE_var1, by(date year month)
+tsset date 
+
+
+label var SCE_mean "expected inflation (SCE)"
+label var SCE_var "uncertainty inflation (SCE)"
+
+foreach mom in mean{
+foreach var in SCE{
+gen `var'_`mom'_rv = `var'_`mom' - l24.`var'_`mom'1
+count if `var'_`mom'_rv !=.
+
+
+local lb: variable label `var'_`mom' 
+twoway (histogram `var'_`mom'_rv if `var'_`mom'_rv!=., bin(30) color(red) lcolor(red) lwidth(thick)), ///
+ xline(0) ///
+ by(year,title("Distribution of revision in `lb'") note("")) ytitle("Fraction of population") ///
+ xtitle("Revision in mean forecast")
+ graph export "${sum_graph_folder}/hist/`var'`mom'_rv_true_hist.png", as(png) replace 
+}
+}
+
+
+foreach mom in var{
+foreach var in SCE{
+gen `var'_`mom'_rv = `var'_`mom' - l24.`var'_`mom'1
+count if `var'_`mom'_rv !=.
+
+
+local lb: variable label `var'_`mom' 
+twoway (histogram `var'_`mom'_rv if `var'_`mom'_rv!=., bin(30) color(blue) lcolor(blue) lwidth(thick)), ///
+ xline(0) ///
+ by(year,title("Distribution of revision in `lb'") note("")) ytitle("Fraction of population") ///
+ xtitle("Revision in uncertainty")
+ graph export "${sum_graph_folder}/hist/`var'`mom'_rv_true_hist.png", as(png) replace 
+}
+}
+restore 
 
 */
 
