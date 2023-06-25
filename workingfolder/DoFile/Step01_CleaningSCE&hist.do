@@ -459,7 +459,7 @@ tsset date
 
 
 label var SCE_mean "expected inflation (SCE)"
-label var SCE_var "uncertainty inflation (SCE)"
+label var SCE_var "inflation uncertainty (SCE)"
 
 foreach mom in mean{
 foreach var in SCE{
@@ -468,7 +468,7 @@ count if `var'_`mom'_rv !=.
 
 
 local lb: variable label `var'_`mom' 
-twoway (histogram `var'_`mom'_rv if `var'_`mom'_rv!=., bin(30) color(red) lcolor(red) lwidth(thick)), ///
+twoway (histogram `var'_`mom'_rv if `var'_`mom'_rv!=., bin(10) color(red) lcolor(red) lwidth(thick)), ///
  xline(0) ///
  by(year,title("Distribution of revision in `lb'") note("")) ytitle("Fraction of population") ///
  xtitle("Revision in mean forecast")
@@ -484,7 +484,7 @@ count if `var'_`mom'_rv !=.
 
 
 local lb: variable label `var'_`mom' 
-twoway (histogram `var'_`mom'_rv if `var'_`mom'_rv!=., bin(30) color(blue) lcolor(blue) lwidth(thick)), ///
+twoway (histogram `var'_`mom'_rv if `var'_`mom'_rv!=., bin(10) color(blue) lcolor(blue) lwidth(thick)), ///
  xline(0) ///
  by(year,title("Distribution of revision in `lb'") note("")) ytitle("Fraction of population") ///
  xtitle("Revision in uncertainty")
