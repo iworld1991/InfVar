@@ -1,8 +1,8 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
-global folder "${mainfolder}/SurveyData/"
-global sum_graph_folder "${mainfolder}/graphs/ind"
-global sum_table_folder "${mainfolder}/tables"
+global mainfolder "C:\Users\WB585211\Downloads\InfVar-master\workingfolder"
+global folder "${mainfolder}\SurveyData\"
+global sum_graph_folder "${mainfolder}\graphs\ind"
+global sum_table_folder "${mainfolder}\tables"
 
 cd ${folder}
 pwd
@@ -188,26 +188,53 @@ eststo clear
 
 foreach var in SPFCPI SPFPCE{
   foreach mom in Mean{
-     replace InfExp_`mom'_rv =  `var'_`mom'0 - l1.`var'_`mom'
-	 eststo `var'`mom'rvlv0: reg InfExp_`mom'_rv, vce(cluster date)
-     eststo `var'`mom'rvlv1: reg InfExp_`mom'_rv l1.InfExp_`mom'_rv `var'_ct50, vce(cluster date)
-	 eststo `var'`mom'rvlv2: reg  InfExp_`mom'_rv l(1/2).InfExp_`mom'_rv `var'_ct50, vce(cluster date)
-	 eststo `var'`mom'rvlv3: reg  InfExp_`mom'_rv l(1/3).InfExp_`mom'_rv `var'_ct50, vce(cluster date)
+     replace InfExp_`mom'_rv =  `var'_`mom'0 - l4.`var'_`mom'
+	 
+	 reghdfe InfExp_`mom'_rv, a(date) vce(cluster date)
+	 estadd local hast "Yes",replace
+	 eststo `var'`mom'rvlv0
+	 
+	 reg InfExp_`mom'_rv l4.InfExp_`mom'_rv `var'_ct50, vce(cluster date)
+	 estadd local hast "No",replace
+	 eststo `var'`mom'rvlv1
+	 
+     reghdfe InfExp_`mom'_rv l4.InfExp_`mom'_rv, a(date) vce(cluster date)
+	 estadd local hast "Yes",replace
+	 eststo `var'`mom'rvlv2
+	 
+	 reghdfe  InfExp_`mom'_rv l(4/5).InfExp_`mom'_rv, a(date) vce(cluster date)
+	 estadd local hast "Yes",replace
+	 eststo  `var'`mom'rvlv3
+	 
+	 *eststo `var'`mom'rvlv3: areg  InfExp_`mom'_rv l4.InfExp_`mom'_rv `var'_ct50, absorb(date) vce(cluster date)
  }
 }
 
 foreach var in SPFCPI SPFPCE{
   foreach mom in Var{
-     replace InfExp_`mom'_rv =  `var'_`mom'0 - l1.`var'_`mom'
-	 eststo `var'`mom'rvlv0: reg InfExp_`mom'_rv, vce(cluster date) 
-     eststo `var'`mom'rvlv1: reg InfExp_`mom'_rv l1.InfExp_`mom'_rv, vce(cluster date) 
-	 eststo `var'`mom'rvlv2: reg  InfExp_`mom'_rv l(1/2).InfExp_`mom'_rv, vce(cluster date) 
-	 eststo `var'`mom'rvlv3: reg  InfExp_`mom'_rv l(1/3).InfExp_`mom'_rv, vce(cluster date)
+     replace InfExp_`mom'_rv =  `var'_`mom'0 - l4.`var'_`mom'
+	 
+	 reghdfe InfExp_`mom'_rv, a(date) vce(cluster date)
+	 estadd local hast "Yes",replace
+	 eststo `var'`mom'rvlv0
+	 
+	 reg InfExp_`mom'_rv l4.InfExp_`mom'_rv, vce(cluster date)
+	 estadd local hast "No",replace
+	 eststo `var'`mom'rvlv1
+	 
+     reghdfe InfExp_`mom'_rv l4.InfExp_`mom'_rv, a(date) vce(cluster date) 
+	 estadd local hast "Yes",replace
+	 eststo `var'`mom'rvlv2
+	 
+	 reghdfe  InfExp_`mom'_rv l(4/5).InfExp_`mom'_rv, a(date) vce(cluster date)
+	 estadd local hast "Yes",replace
+	 eststo `var'`mom'rvlv3
+	 
+	 *eststo `var'`mom'rvlv3: areg  InfExp_`mom'_rv l4.InfExp_`mom'_rv, absorb(date) vce(cluster date)
  }
 }
 
-esttab using "${sum_table_folder}/ind/RVEfficiencySPFIndQ.csv", mtitles b(%8.3f) se(%8.3f) scalars(N r2) sfmt(%8.3f %8.3f %8.3f) replace
-
+esttab using "${sum_table_folder}/ind/RVEfficiencySPFIndQ.csv", mtitles b(%8.3f) se(%8.3f) stats(r2 N hast) scalars(N r2) sfmt(%8.3f %8.3f %8.3f) replace
 
 
 *******************************************************
