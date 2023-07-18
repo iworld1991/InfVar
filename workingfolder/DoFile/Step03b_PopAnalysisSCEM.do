@@ -1,7 +1,7 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
+global mainfolder "C:\Users\WB585211\Downloads\InfVar-master\workingfolder"
 global folder "${mainfolder}/SurveyData/"
-global shadowfolder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
+global shadowfolder "C:\Users\WB585211\Downloads\InfVar-master\workingfolder\SurveyData/"
 
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"
@@ -242,12 +242,11 @@ label var `var'_FE2 "Square of Average Forecast Error"
 
 ** generate moving averages for charts 
 
-egen Q9_varmv = filter(Q9_var),  coef(1 1 1) lags(-1/1) normalise 
+tssmooth ma Q9_varmv = Q9_var,  window(1 1 1)
 
 foreach var in Inf1yf_CPIAU Q9_mean SCE_FE SCE_FE2 Q9_disg{
-egen `var'mv = filter(`var'), coef(1 1 1) lags(-1/1) normalise 
+tssmooth ma `var'mv =`var', window(1 1 1) 
 }
-
 label var Q9_meanmv "Expected Headline CPI Inflation"
 label var Inf1yf_CPIAUmv "Realized Headline CPI Inflation"
 label var SCE_FE "Average Forecast Error"
@@ -291,7 +290,7 @@ twoway (tsline Q9_meanp25, ytitle(" ",axis(1)) lcolor(navy)  lp("shortdash") lwi
 graph export "${sum_graph_folder}/IQRmeanSCEM.png", as(png) replace 
 */
 
-ddd
+
 ***************************
 ***  Population Moments *** 
 ***************************
@@ -330,7 +329,7 @@ local Moments Q9_mean Q9_var Q9_disg Q9_iqr CPI1y PCE1y CORECPI1y InfExpMichMed 
               Q9_mean_rd Q9_var_rd Q9_disg_rd Q9_fe_rd ///
               Q9c_mean Q9c_var Q9c_disg Q9c_iqr ///
 			  Q9_fe_var Q9_fe_atv Q9_atv ///
-              COREPCE1y CPI_disg PCE_disg CORECPI_disg COREPCE_disg SCE_FE SPFCPI_FE SPFPCE_FE ///
+              COREPCE1y CPI_disg PCE_disg CORECPI_disg COREPCE_disg SCE_FE SCE_FE2 SPFCPI_FE SPFPCE_FE ///
 			  CPI_atv PCE_atv CORECPI_atv COREPCE_atv ///
 			  CPI_fe_var PCE_fe_var CORECPI_fe_var COREPCE_fe_var ///
 			  CPI_fe_atv PCE_fe_atv CORECPI_fe_atv COREPCE_fe_atv ///
@@ -400,7 +399,6 @@ rename PCE1y SPFPCE_Mean
 rename COREPCE1y SPFCPCE_Mean
 rename CORECPI1y SPFCCPI_Mean
 
-
 rename CPI_disg SPFCPI_Disg
 rename PCE_disg SPFPCE_Disg 
 rename CORECPI_disg SPFCCPI_Disg
@@ -451,6 +449,7 @@ rename PRCPCEVarf0 SPFPCE_Varf0
 gen InfExp_Mean = .
 gen InfExp_Var = .
 gen InfExp_FE = .
+gen InfExp_FE2 = .
 gen InfExp_Disg = . 
 
 
@@ -584,21 +583,24 @@ eststo clear
 
 foreach var in SCE{
   foreach mom in Mean{
-     replace InfExp_`mom'_rv =  `var'_`mom' - l12.`var'_`mom'1
-	 eststo `var'`mom'rvlv0: reg InfExp_`mom'_rv, vce(cluster date)
-     eststo `var'`mom'rvlv1: reg InfExp_`mom'_rv l1.InfExp_`mom'_rv, robust
-	 eststo `var'`mom'rvlv2: reg  InfExp_`mom'_rv l(1/3).InfExp_`mom'_rv, robust
-	 eststo `var'`mom'rvlv3: reg  InfExp_`mom'_rv l(1/6).InfExp_`mom'_rv, robust
+     replace InfExp_`mom'_rv =  `var'_`mom' - l24.`var'_`mom'1
+	 replace InfExp_FE = `var'_FE
+	 eststo `var'`mom'rvlv0: reg InfExp_`mom'_rv
+     eststo `var'`mom'rvlv1: reg InfExp_`mom'_rv l24.InfExp_`mom'_rv l12.InfExp_FE,robust
+	 eststo `var'`mom'rvlv2: reg  InfExp_`mom'_rv l25.InfExp_`mom'_rv l12.InfExp_FE, robust
+	 eststo `var'`mom'rvlv3: reg  InfExp_`mom'_rv l26.InfExp_`mom'_rv l12.InfExp_FE, robust
  }
 }
 
 foreach var in SCE{
   foreach mom in Var{
-     replace InfExp_`mom'_rv =  `var'_`mom' - l12.`var'_`mom'1
-	 eststo `var'`mom'rvlv0: reg InfExp_`mom'_rv, vce(cluster date) 
-     eststo `var'`mom'rvlv1: reg InfExp_`mom'_rv l1.InfExp_`mom'_rv, robust
-	 eststo `var'`mom'rvlv2: reg  InfExp_`mom'_rv l(1/3).InfExp_`mom'_rv, robust
-	 eststo `var'`mom'rvlv3: reg  InfExp_`mom'_rv l(1/6).InfExp_`mom'_rv, robust
+     replace InfExp_`mom'_rv =  `var'_`mom' - l24.`var'_`mom'1
+	 replace InfExp_FE2 = `var'_FE2
+
+	 eststo `var'`mom'rvlv0: reg InfExp_`mom'_rv
+     eststo `var'`mom'rvlv1: reg InfExp_`mom'_rv l24.InfExp_`mom'_rv l12.InfExp_FE2, robust
+	 eststo `var'`mom'rvlv2: reg  InfExp_`mom'_rv l25.InfExp_`mom'_rv l12.InfExp_FE2, robust
+	 eststo `var'`mom'rvlv3: reg  InfExp_`mom'_rv l26.InfExp_`mom'_rv l12.InfExp_FE2, robust
  }
 }
 

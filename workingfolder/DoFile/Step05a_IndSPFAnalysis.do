@@ -64,6 +64,15 @@ gen SPFPCE_FE0 = PCE1y - Inf1y_PCE
 label var SPFPCE_FE "1-yr nowcasting error (SPF PCE)"
 
 
+gen SPFCPI_FE2 = SPFCPI_FE^2
+label var SPFCPI_FE2 "1-yr-ahead squared forecast error(SPF CPI)"
+gen SPFCCPI_FE2 = SPFCCPI_FE^2
+label var SPFCPI_FE2 "1-yr-ahead squared forecast error(SPF core CPI)"
+gen SPFPCE_FE2 = SPFPCE_FE^2
+label var SPFPCE_FE2 "1-yr-ahead forecast error(SPF PCE)"
+
+
+
 *****************************************
 ****  Renaming so that more consistent **
 *****************************************
@@ -85,6 +94,8 @@ rename PRCCPIVar0 SPFCPI_Var0
 rename SPFCPI_FE SPFCPI_FE
 rename SPFPCE_FE SPFPCE_FE
 
+rename SPFCPI_FE2 SPFCPI_FE2
+rename SPFPCE_FE2 SPFPCE_FE2
 
 rename CPI_ct50 SPFCPI_ct50
 rename PCE_ct50 SPFPCE_ct50
@@ -97,6 +108,7 @@ gen InfExp_Mean = .
 gen InfExp_Var = .
 gen InfExp_FE = .
 *gen InfExp_Disg = . 
+gen InfExp_FE2 = . 
 
 gen InfExp_Mean_ch = .
 gen InfExp_Var_ch = .
@@ -110,6 +122,9 @@ gen InfExp_Var0 = .
 gen InfExp_Mean_rv = .
 gen InfExp_Var_rv = .
 
+
+gen InfExp_Mean_ct50 =.
+gen InfExp_Var_ct50 = . 
 
 ************************************************
 ** Auto Regression of the Individual Moments  **
@@ -189,30 +204,33 @@ eststo clear
 foreach var in SPFCPI SPFPCE{
   foreach mom in Mean{
      replace InfExp_`mom'_rv =  `var'_`mom'0 - l4.`var'_`mom'
+	 replace InfExp_`mom'_ct50 = `var'_ct50 
+	 replace InfExp_FE = `var'_FE
 	 
 	 reghdfe InfExp_`mom'_rv, a(date) vce(cluster date)
 	 estadd local hast "Yes",replace
 	 eststo `var'`mom'rvlv0
 	 
-	 reg InfExp_`mom'_rv l4.InfExp_`mom'_rv `var'_ct50, vce(cluster date)
+	 reg InfExp_`mom'_rv l4.InfExp_`mom'_ct50, vce(cluster date)
 	 estadd local hast "No",replace
 	 eststo `var'`mom'rvlv1
 	 
-     reghdfe InfExp_`mom'_rv l4.InfExp_`mom'_rv, a(date) vce(cluster date)
+	reghdfe InfExp_`mom'_rv l4.InfExp_`mom'_rv, a(date) vce(cluster date)
 	 estadd local hast "Yes",replace
 	 eststo `var'`mom'rvlv2
 	 
-	 reghdfe  InfExp_`mom'_rv l(4/5).InfExp_`mom'_rv, a(date) vce(cluster date)
+	 reghdfe  InfExp_`mom'_rv l5.InfExp_`mom'_rv, a(date) vce(cluster date)
 	 estadd local hast "Yes",replace
 	 eststo  `var'`mom'rvlv3
 	 
-	 *eststo `var'`mom'rvlv3: areg  InfExp_`mom'_rv l4.InfExp_`mom'_rv `var'_ct50, absorb(date) vce(cluster date)
  }
 }
 
 foreach var in SPFCPI SPFPCE{
   foreach mom in Var{
      replace InfExp_`mom'_rv =  `var'_`mom'0 - l4.`var'_`mom'
+	 *replace InfExp_`mom'_cr50 = `var'_`mom'_ct50 
+	 replace InfExp_FE2 = `var'_FE2
 	 
 	 reghdfe InfExp_`mom'_rv, a(date) vce(cluster date)
 	 estadd local hast "Yes",replace
@@ -226,11 +244,10 @@ foreach var in SPFCPI SPFPCE{
 	 estadd local hast "Yes",replace
 	 eststo `var'`mom'rvlv2
 	 
-	 reghdfe  InfExp_`mom'_rv l(4/5).InfExp_`mom'_rv, a(date) vce(cluster date)
+	 reghdfe  InfExp_`mom'_rv l5.InfExp_`mom'_rv, a(date) vce(cluster date)
 	 estadd local hast "Yes",replace
 	 eststo `var'`mom'rvlv3
 	 
-	 *eststo `var'`mom'rvlv3: areg  InfExp_`mom'_rv l4.InfExp_`mom'_rv, absorb(date) vce(cluster date)
  }
 }
 
@@ -238,7 +255,7 @@ esttab using "${sum_table_folder}/ind/RVEfficiencySPFIndQ.csv", mtitles b(%8.3f)
 
 
 *******************************************************
-***  Weak test on changes of forecst and uncertainty **
+***  Weak test on changes of forecast and uncertainty **
 *******************************************************
 
 
@@ -269,7 +286,7 @@ esttab using "${sum_table_folder}/ind/ChEfficiencySPFIndQ.csv", mtitles b(%8.3f)
 
 
 *****************************************
-***  Revesion Efficiency test on level **
+***  Revision Efficiency test on level **
 *****************************************
 
 eststo clear
