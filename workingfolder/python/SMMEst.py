@@ -441,7 +441,7 @@ class RationalExpectationAR:
 # + code_folding=[]
 if __name__ == "__main__":
        
-    T_sim = 400
+    T_sim = 500
     ## first, simulate some AR1 inflation with known parameters 
     ρ0,σ0 = 0.98,0.02
     history0 = SimAR1(ρ0,
@@ -1223,7 +1223,7 @@ def Pkalman(process_para,
     return Pkalman.reshape(-1)
 
 
-# + code_folding=[22]
+# + code_folding=[0, 22]
 if __name__ == "__main__":
     
     ## plot steady state vars and Kalman gains
@@ -1323,7 +1323,7 @@ if __name__ == "__main__":
                  azim=20)
 
 
-# + code_folding=[1, 2, 17, 21, 128, 182]
+# + code_folding=[1, 2, 17, 21, 128, 182, 197]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1555,7 +1555,7 @@ if __name__ == "__main__":
 #
 # - The example below shows that NIAR seems to almost albeit imperfectly to identify sigma_pr and sigma_pb to be zero if rational expectation moments are used. 
 
-# + code_folding=[0, 3, 14]
+# + code_folding=[0, 14]
 if __name__ == "__main__":
 
 
@@ -1687,7 +1687,7 @@ if __name__ == "__main__":
     print('True expectation parameter',str(exp_paras_fake))  
     print('Estimates: ',str(Est[0:2]))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -1704,7 +1704,7 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[1, 2, 14, 18, 62, 124]
+# + code_folding=[2, 14]
 @jitclass(model_sv_data)
 class NoisyInformationSV:
     def __init__(self,
@@ -1735,7 +1735,7 @@ class NoisyInformationSV:
         
         ## get the information set 
         infoset = history 
-        y_now, p_now, sigmas_p_now, sigmas_t_now= infoset[0,:],infoset[1,:],infoset[2,:],infoset[3,:]
+        y_now, p_now, sigmas_p_now, sigmas_t_now = infoset[0,:],infoset[1,:],infoset[2,:],infoset[3,:]
         sigmas_now = np.concatenate((sigmas_p_now,sigmas_t_now),axis=0).reshape((2,-1))
         
         ## process parameters
@@ -1745,7 +1745,8 @@ class NoisyInformationSV:
         var_init = sigmas_now[0,0]**2+sigmas_now[1,0]**2
         
         ## other parameters 
-        sigma_v = np.array([[sigma_pb**2,0.0],[0.0,sigma_pr**2]]) ## variance matrix of signal noises         
+        sigma_v = np.array([[sigma_pb**2,0.0],[0.0,sigma_pr**2]]) ## variance matrix of signal noises      
+        ## this will be replaced by time-varying ones later 
         ## simulate signals 
         nb_s = 2                                    ## the number of signals 
         H = np.array([[1.0],[1.0]])                 ## a multiplicative matrix summing all signals
@@ -1754,6 +1755,8 @@ class NoisyInformationSV:
         np.random.seed(12434)
         ##########################################################
         signal_pb = p_now+sigma_pb*np.random.randn(n_history)   ## one series of public signals 
+        ## a special model assumption that public signal is the y itself, so redefine p_pb 
+        sigmal_pb = y_now
         signals_pb = signal_pb.repeat(n_sim).reshape((-1,n_sim)).T     ## shared by all agents
         np.random.seed(13435)
         signals_pr = p_now + sigma_pr*np.random.randn(n_sim*n_history).reshape((n_sim,n_history))
@@ -1780,8 +1783,10 @@ class NoisyInformationSV:
                                       γ[0])
                 step1_vars_to_burn = nowvars_to_burn[i,t] + step1var
                 ## prior uncertainty 
-                
-                inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v) 
+                sigma_pb_now = sigmas_t_now[t]
+                sigma_v_now = np.array([[sigma_pb_now**2,0.0],[0.0,sigma_pr**2]])
+                                                           
+                inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v_now) 
                 ## the inverse of the noisiness matrix  
                 
                 inv_sc = np.dot(np.dot(H.T,inv),H)
@@ -1797,7 +1802,7 @@ class NoisyInformationSV:
                 ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
                 ### this is necessary for Numba typing 
                 
-                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v))
+                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v_now))
                 ## update Kalman gains recursively using the signal extraction ratios 
                 
                 Pkalman_all = np.dot(Pkalman[t+1,:],H)[0] 
@@ -1897,7 +1902,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + AR1
 
-# + code_folding=[1, 21, 75, 128]
+# + code_folding=[1, 21, 75, 128, 135]
 @jitclass(model_data)
 class DiagnosticExpectationAR:
     def __init__(self,
@@ -2040,7 +2045,7 @@ class DiagnosticExpectationAR:
                       "FE":0.0,
                       "FEVar":1/(1-theta**2*ρ**2)*sum([ρ**(2*k)*σ**2 for k in range(horizon)]),  
                       "FEATV":-theta*ρ*σ**2/(1-theta**2*ρ**2),
-                      "Disg":np.nan,
+                      "Disg":ρ**(2*horizon)*theta_sigma**2*σ**2/(1-ρ**2)**2,
                       "DisgVar":np.nan,
                       "DisgATV":np.nan,
                       "Var":sum([ρ**k*σ**2 for k in range(horizon)]),
@@ -2076,7 +2081,7 @@ if __name__ == "__main__":
 
     moments0 = [#'FE',
                 'FEVar',
-                #'FEATV',
+                'FEATV',
                 'Disg',
                 'Var']
 
@@ -2119,11 +2124,11 @@ if __name__ == "__main__":
 
     ## only expectation estimation 
 
-    moments0 = ['FE',
+    moments0 = [#'FE',
                 'FEVar',
-                'FEATV',
+                #'FEATV',
                 'Disg',
-                'DisgVar',
+                #'DisgVar',
                 'Var']
 
     def Objdear_de(paras):
@@ -2137,8 +2142,10 @@ if __name__ == "__main__":
 
     ## invoke estimation 
     Est = ParaEst(Objdear_de,
-                  para_guess = np.array([0.2,0.3]),
-                  method='trust-constr')
+                  para_guess = np.array([0.0,0.1]),
+                  bounds = ((0,None),(0,None),),
+                  method='trust-constr'
+                 )
     
     print('True parameters: ',str(exp_paras_fake)) 
     print('Estimates: ',str(Est))
@@ -2159,10 +2166,10 @@ if __name__ == "__main__":
 if __name__ == "__main__":
 
     ## for joint estimation 
-    moments1 = [#'InfAV',
+    moments1 = ['InfAV',
                 'InfVar',
                 'InfATV',
-                'FE',
+                #'FE',
                 'FEVar',
                 'FEATV',
                 'Disg',
@@ -2180,6 +2187,7 @@ if __name__ == "__main__":
     ## invoke estimation 
     Est = ParaEst(Objdear_joint,
             para_guess = np.array([0.2,0.4,0.4,0.05]),
+            bounds = ((0,None),(0,None),(0,1),(0,None),),
             method='trust-constr')
     
     print('True process parameters: ',str(np.array([ρ0,σ0])))
@@ -2187,7 +2195,7 @@ if __name__ == "__main__":
     print('True expectation parameter',str(exp_paras_fake))  
     print('Estimates: ',str(Est[0:2]))
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -2612,7 +2620,7 @@ if __name__ == "__main__":
             method='trust-constr',
             bounds = ((0,1),(0,3),(0,3),))
     
-    print('True parameters: ',str(exp_paras_fake)) 
+    print('True parameters: ',str(deni_exp_paras_fake)) 
     print('Estimates: ',str(Est))
 
 # + code_folding=[0]
