@@ -1181,7 +1181,16 @@ if __name__ == "__main__":
 # ### Noisy Information (NI) + AR1
 #
 
-# + code_folding=[1]
+# \begin{equation}
+# \begin{split}
+#   & Var_{ss} = (1-P)(\rho^2 Var_{ss} + \sigma^2_\omega)  \\
+#  & P =\frac{Var_{ss}}{Var_{ss} + \sigma^2_{pr}} \\
+#  & \rightarrow Var_{ss} = \frac{\sigma^2_{pr}}{Var_{ss} + \sigma^2_{pr}}(\rho^2 Var_{ss} + \sigma^2_\omega) \\
+#   & \rightarrow Var^2_{ss} + (1- \rho^2 )\sigma^2_{pr} Var_{ss} - \sigma^4_\omega =0
+#  \end{split}
+# \end{equation}
+
+# + code_folding=[1, 15]
 @njit
 def SteadyStateVar(process_para,
                    exp_para):
@@ -1196,7 +1205,21 @@ def SteadyStateVar(process_para,
     return nowcast_var_ss
 
 
-# + code_folding=[1]
+@njit
+def SteadyStateVar1d(process_para,
+                     exp_para):
+    ## steady state nowcasting variance for kalman filtering 
+    ρ,σ = process_para
+    sigma_pr = exp_para
+    ## a, b, c are the parameters of the quadratic equation for the root-finding 
+    a = 1
+    b = sigma_pr**2*(1-ρ**2)
+    c = -σ**4
+    nowcast_var_ss = (-b+np.sqrt(b**2-4*a*c))/(2*a)
+    return nowcast_var_ss
+
+
+# + code_folding=[1, 27]
 @njit
 def Pkalman(process_para,
             exp_para,
@@ -1220,6 +1243,31 @@ def Pkalman(process_para,
     
     ## steady state Kalman
     Pkalman = step1_vars*np.dot(H.T,inv)
+    return Pkalman.reshape(-1)
+
+
+@njit
+def Pkalman1d(process_para,
+            exp_para,
+           nowvar):
+    ## paras 
+    ρ,σ = process_para
+    sigma_pr = exp_para
+
+    ## other paras
+    sigma_v = sigma_pr**2 ## variance matrix of signal noises 
+        
+    ## simulate signals 
+    #H = np.array([[1.0],[1.0]])                 ## an multiplicative matrix summing all signals
+    
+    ## one-step-ahead uncertainty 
+    step1_vars = ρ**2*nowvar+ σ**2
+    
+    ## prior uncertainty             
+    inv = 1/(step1_vars+sigma_v)
+    
+    ## steady state Kalman
+    Pkalman = step1_vars*inv
     return Pkalman.reshape(-1)
 
 
@@ -1323,7 +1371,7 @@ if __name__ == "__main__":
                  azim=20)
 
 
-# + code_folding=[1, 2, 17, 21, 128, 182, 197]
+# + code_folding=[2, 17, 21, 128, 181, 197]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1504,7 +1552,6 @@ class NoisyInformationAR:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
-    
     
     def GMM(self):
         ρ,σ = self.process_para
@@ -1704,7 +1751,7 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[2, 14]
+# + code_folding=[63, 161]
 @jitclass(model_sv_data)
 class NoisyInformationSV:
     def __init__(self,
@@ -1745,8 +1792,6 @@ class NoisyInformationSV:
         var_init = sigmas_now[0,0]**2+sigmas_now[1,0]**2
         
         ## other parameters 
-        sigma_v = np.array([[sigma_pb**2,0.0],[0.0,sigma_pr**2]]) ## variance matrix of signal noises      
-        ## this will be replaced by time-varying ones later 
         ## simulate signals 
         nb_s = 2                                    ## the number of signals 
         H = np.array([[1.0],[1.0]])                 ## a multiplicative matrix summing all signals
@@ -1754,9 +1799,9 @@ class NoisyInformationSV:
         # randomly simulated signals 
         np.random.seed(12434)
         ##########################################################
-        signal_pb = p_now+sigma_pb*np.random.randn(n_history)   ## one series of public signals 
+        #signal_pb = p_now+sigma_pb*np.random.randn(n_history)   ## one series of public signals 
         ## a special model assumption that public signal is the y itself, so redefine p_pb 
-        sigmal_pb = y_now
+        signal_pb = y_now
         signals_pb = signal_pb.repeat(n_sim).reshape((-1,n_sim)).T     ## shared by all agents
         np.random.seed(13435)
         signals_pr = p_now + sigma_pr*np.random.randn(n_sim*n_history).reshape((n_sim,n_history))
@@ -1821,7 +1866,6 @@ class NoisyInformationSV:
         forecasts = nowcasts 
         Vars = Vars_to_burn[:,n_burn:]
 
-        
         ## compute population moments
         forecasts_mean = np_mean(forecasts,axis=0)
         forecasts_var = np_var(forecasts,axis=0)
@@ -1883,6 +1927,7 @@ class NoisyInformationSV:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -2369,9 +2414,177 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
 
-# + code_folding=[1, 2, 21, 121]
+# + code_folding=[1, 21, 113]
 @jitclass(model_data)
 class DENIHybridAR:
+    def __init__(self,
+                 exp_para,
+                 process_para,
+                 real_time,
+                 history,
+                 horizon = 1):
+        self.exp_para = exp_para
+        self.process_para = process_para
+        if process_para[0] >1:
+            print("Warning:persistent parameter cannot be more than 1")
+            self.process_para[0] = 1.0
+        self.horizon = horizon
+        self.real_time = real_time
+        self.history = history
+
+    def GetRealization(self,
+                       realized_series):
+        self.realized = realized_series
+        
+    def SimForecasts(self,
+                     n_sim = 500):
+        ## inputs 
+        
+        real_time = self.real_time
+        history = self.history
+        realized = self.realized
+        n = len(real_time)
+        n_history = len(history)
+        n_burn = len(history) - n
+        
+        ## parameters 
+        ρ,σ = self.process_para
+        theta,sigma_pr = self.exp_para
+
+        #######################
+        ## using uncertainty at steady state of the Kalman filtering
+        var_init = SteadyStateVar1d(self.process_para,
+                                  self.exp_para[1:])    ## some initial level of uncertainty, will be washed out after long simulation
+        ##################
+        sigma_v = sigma_pr**2 ## variance matrix of signal noises 
+        horizon = self.horizon      
+        
+        ## simulate signals 
+
+        # randomly simulated signals 
+        np.random.seed(12434)
+  
+        signals_pr = self.history + sigma_pr*np.random.randn(n_sim*n_history).reshape((n_sim,n_history))
+                                                                 ### private signals are agent-specific 
+    
+        ## prepare matrices
+        nowcasts_to_burn = np.zeros((n_sim,n_history))  ### nowcasts matrix of which the initial simulation is to be burned 
+        nowcasts_to_burn[:,0] = history[0]
+        nowvars_to_burn = np.zeros((n_sim,n_history))   ### nowcasts uncertainty matrix
+        nowvars_to_burn[:,0] = var_init
+        Vars_to_burn = np.zeros((n_sim,n_history))      ### forecasting uncertainty matrix 
+        
+        
+        ## fill the matrices for individual moments
+        for i in range(n_sim):
+            signals_this_i = signals_pr[i,:]
+            
+            ## the histories signals specific to i: the first row is public signals and the second is private signals 
+            Pkalman = np.zeros(n_history)
+            
+            ## Kalman gains of this agent for respective signals 
+            Pkalman[0] = 0  ## some initial values 
+            
+            for t in range(n_history-1):
+                step1_vars_to_burn = ρ**2*nowvars_to_burn[i,t] + σ**2
+                ## prior uncertainty
+                
+                inv = 1/step1_vars_to_burn+sigma_v
+                ## the inverse of the noisiness matrix
+                
+                Pkalman[t+1] = step1_vars_to_burn*inv
+                ## update Kalman gains recursively using the signal extraction ratios 
+            
+                var_reduc = Pkalman[t+1]*step1_vars_to_burn
+                ## reduction in uncertainty from the update
+                
+                nowvars_this = step1_vars_to_burn - var_reduc
+                ## update equation of nowcasting uncertainty 
+                
+                nowvars_to_burn[i,t+1] = nowvars_this
+                ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
+                ### this is necessary for Numba typing 
+                
+                nowcasts_to_burn[i,t+1] = (1-(1+theta)*Pkalman[t+1])*ρ*nowcasts_to_burn[i,t]+ (1+theta)*Pkalman[t+1]*signals_this_i[t+1]
+                ## kalman filtering updating for nowcasting: weighted average of prior and signals 
+                
+            for t in range(n_history):
+                Vars_to_burn[i,t] = ρ**(2*horizon)*nowvars_to_burn[i,t] + hstepvar(horizon,ρ,σ)
+                
+        nowcasts = nowcasts_to_burn[:,n_burn:]
+        forecasts = ρ**horizon*nowcasts 
+        Vars = Vars_to_burn[:,n_burn:]
+        
+        ## compute population moments
+        forecasts_mean = np_mean(forecasts,axis=0)
+        forecasts_var = np_var(forecasts,axis=0)
+        FEs_mean = forecasts_mean - realized
+            
+        Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
+        
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
+                                "Disg":forecasts_var,
+                                "Var":Vars_mean}
+        return forecast_moments_sim
+    
+    def SMM(self):
+        
+        ρ,σ = self.process_para
+        horizon = self.horizon
+        #################################
+        # inflation moments 
+        #################################
+
+        InfAV  = 0.0
+        if ρ <1.0:
+            InfVar = σ**2/(1-ρ**2)
+        else:
+            Infvar = np.inf
+        InfATV = ρ**horizon*InfVar
+        
+        #################################
+        # expectation moments 
+        #################################
+        ## simulate forecasts
+        moms_sim = self.SimForecasts()
+        Forecasts_sim = moms_sim['Forecast']
+        FEs_sim = moms_sim['FE']
+        Disgs_sim = moms_sim['Disg']
+        Vars_sim = moms_sim['Var']
+        
+        ## SMM moments 
+        Forecast_sim = np.mean(Forecasts_sim)
+        FE_sim = np.mean(FEs_sim)
+        FEVar_sim = np.var(FEs_sim)
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
+        Disg_sim = np.mean(Disgs_sim)
+        DisgVar_sim = np.var(Disgs_sim)
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
+        
+        Var_sim = np.mean(Vars_sim)
+        VarVar_sim = np.var(Vars_sim)
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
+    
+        SMMMoments = {"InfAV":InfAV,
+                      "InfVar":InfVar,
+                      "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
+                      "FE":FE_sim,
+                      "FEVar":FEVar_sim,
+                      "FEATV":FEATV_sim,
+                      "Disg":Disg_sim,
+                      "DisgVar":DisgVar_sim,
+                      "DisgATV":DisgATV_sim,
+                      "Var":Var_sim,
+                      'VarVar':VarVar_sim,
+                      'VarATV':VarATV_sim}
+        return SMMMoments
+
+
+# + code_folding=[1, 2, 121]
+@jitclass(model_data)
+class DENIHybridAR2Signal:
     def __init__(self,
                  exp_para,
                  process_para,
@@ -2548,7 +2761,7 @@ class DENIHybridAR:
 if __name__ == "__main__":
 
     ## initialize the ar instance 
-    deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.4,0.3]),
+    deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.3]),
                            process_para = np.array([ρ0,σ0]),
                                 real_time = real_time0,
                                 history = history0,
@@ -2582,10 +2795,10 @@ if __name__ == "__main__":
 
     ## invoke estimation 
     Est = ParaEst(Objdeniar_re,
-            para_guess = np.array([0.5,0.5,0.5]),
+            para_guess = np.array([0.5,0.5]),
             method='trust-constr')
     
-    print('True parameters: ',str(np.array([0.0,0.0,0.0]))) ## rational expectations 
+    print('True parameters: ',str(np.array([0.0,0.0]))) ## rational expectations 
     print('Estimates: ',str(Est))
 # -
 
@@ -2597,7 +2810,7 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     
     ## get a fake data moment dictionary under a different parameter 
-    deni_exp_paras_fake = np.array([0.1,0.4,0.3])
+    deni_exp_paras_fake = np.array([0.1,0.3])
     deniar1 = DENIHybridAR(exp_para = deni_exp_paras_fake,
                            process_para = np.array([ρ0,σ0]),
                            real_time = real_time0,
@@ -2616,18 +2829,18 @@ if __name__ == "__main__":
 
     ## invoke estimation 
     Est = ParaEst(Objdeniar_deni,
-            para_guess = np.array([0.5,0.5,0.5]),
+            para_guess = np.array([0.5,0.5]),
             method='trust-constr',
-            bounds = ((0,1),(0,3),(0,3),))
+            bounds = ((0,1),(0,3),))
     
     print('True parameters: ',str(deni_exp_paras_fake)) 
     print('Estimates: ',str(Est))
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_deniar  = deniar1.SimForecasts()
-    plt.title(r"Simulated DENI forecasts: $\theta,\sigma_\epsilon,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    plt.title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
     plt.plot(simulated_deniar['Forecast'],label='Forecasts')
     plt.plot(deniar1.real_time,label='Real-time realization')
     plt.legend(loc=0)
@@ -2639,9 +2852,200 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[1, 2, 14, 18, 62, 124]
+# + code_folding=[1, 2, 18, 129]
 @jitclass(model_sv_data)
 class DENIHybridSV:
+    def __init__(self,
+                 exp_para,
+                 process_para,
+                 real_time,
+                 history,
+                 horizon = 1):
+        self.exp_para = exp_para
+        self.process_para = process_para
+        self.horizon = horizon
+        self.real_time = real_time
+        self.history = history
+
+    def GetRealization(self,
+                       realized_series):
+        self.realized = realized_series
+              
+    def SimForecasts(self,
+                     n_sim = 500):
+        ## inputs 
+        real_time = self.real_time
+        history  = self.history
+        n = len(real_time[0,:])
+        horizon = self.horizon
+        n_history = len(history[0,:]) # of course equal to len(history)
+        n_burn = n_history - n
+        
+        ## get the information set 
+        infoset = history 
+        y_now, p_now, sigmas_p_now, sigmas_t_now= infoset[0,:],infoset[1,:],infoset[2,:],infoset[3,:]
+        sigmas_now = np.concatenate((sigmas_p_now,sigmas_t_now),axis=0).reshape((2,-1))
+        
+        ## process parameters
+        γ = self.process_para
+        ## exp parameters 
+        theta, sigma_pr = self.exp_para
+        var_init = 2
+        
+        ## other parameters 
+        #sigma_v = np.array([[sigma_pb**2,0.0],[0.0,sigma_pr**2]]) ## variance matrix of signal noises         
+        ## simulate signals 
+        nb_s = 2                                    ## the number of signals 
+        H = np.array([[1.0],[1.0]])                 ## an multiplicative matrix summing all signals
+        
+        # randomly simulated signals 
+        np.random.seed(12434)
+        ##########################################################
+        #signal_pb = p_now+sigma_pb*np.random.randn(n_history)   ## one series of public signals
+        signal_pb = y_now
+        signals_pb = signal_pb.repeat(n_sim).reshape((-1,n_sim)).T     ## shared by all agents
+        np.random.seed(13435)
+        signals_pr = p_now + sigma_pr*np.random.randn(n_sim*n_history).reshape((n_sim,n_history))
+        #####################################################################################
+
+        ## prepare matrices
+        nowcasts_to_burn = np.zeros((n_sim,n_history))
+        nowcasts_to_burn[:,0] = p_now[0]
+        nowvars_to_burn = np.zeros((n_sim,n_history))
+        nowvars_to_burn[:,0] = var_init
+        Vars_to_burn = np.zeros((n_sim,n_history))
+        
+        ## fill the matrices for individual moments
+        for i in range(n_sim):
+            signals_this_i = np.concatenate((signals_pb[i,:],signals_pr[i,:]),axis=0).reshape((2,-1))
+            ## the histories signals specific to i: the first row is public signals and the second is private signals 
+            Pkalman = np.zeros((n_history,nb_s))
+            ## Kalman gains of this agent for respective signals 
+            Pkalman[0,:] = 0  ## some initial values 
+            
+            for t in range(n_history-1):
+                step1var = hstepvarSV(1,
+                                      sigmas_now[:,t],
+                                      γ[0])
+                step1_vars_to_burn = nowvars_to_burn[i,t] + step1var
+                ## prior uncertainty 
+                
+                ## noisiness of public signals is time-varying
+                sigma_pb_now = sigmas_t_now[t]
+                sigma_v_now = np.array([[sigma_pb_now**2,0.0],[0.0,sigma_pr**2]])
+                
+                inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v_now) 
+                ## the inverse of the noisiness matrix
+                
+                inv_sc = np.dot(np.dot(H.T,inv),H)
+                ## the total noisiness as a scalar 
+                
+                var_reduc = step1_vars_to_burn*inv_sc*step1_vars_to_burn
+                ## reduction in uncertainty from the update
+                
+                nowvars_this_2d = np.array([[step1_vars_to_burn]]) - var_reduc
+                ## update equation of nowcasting uncertainty 
+                
+                nowvars_to_burn[i,t+1] = nowvars_this_2d[0,0] 
+                ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
+                ### this is necessary for Numba typing 
+                
+                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v_now))
+                ## update Kalman gains recursively using the signal extraction ratios 
+                
+                Pkalman_all = np.dot(Pkalman[t+1,:],H)[0] 
+                ## the weight to the prior forecast 
+    
+                nowcasts_to_burn[i,t+1] = (1-(1+theta)*Pkalman_all)*nowcasts_to_burn[i,t]+ np.dot((1+theta)*Pkalman[t+1,:],signals_this_i[:,t+1])
+                ## kalman filtering updating for nowcasting: weighted average of prior and signals 
+                
+            for t in range(n_history):
+                stephvar = hstepvarSV(horizon,
+                                      sigmas_now[:,t],
+                                      γ[0])
+                Vars_to_burn[i,t] = nowvars_to_burn[i,t] + stephvar
+                
+        nowcasts = nowcasts_to_burn[:,n_burn:]
+        forecasts = nowcasts 
+        Vars = Vars_to_burn[:,n_burn:]
+
+        
+        ## compute population moments
+        forecasts_mean = np_mean(forecasts,axis=0)
+        forecasts_var = np_var(forecasts,axis=0)
+        FEs_mean = forecasts_mean - self.realized
+        Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
+        
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
+                                "Disg":forecasts_var,
+                                "Var":Vars_mean}
+        return forecast_moments_sim
+        
+    def SMM(self):
+        
+        γ = self.process_para
+        horizon = self.horizon 
+        #################################
+        # inflation moments 
+        #################################
+
+        InfAV  = 0.0
+        InfVar = np.nan
+        InfATV = np.nan
+        
+        #################################
+        # expectation moments 
+        #################################
+        ## simulate forecasts
+        moms_sim = self.SimForecasts()
+        Forecasts_sim = moms_sim['Forecast']
+        FEs_sim = moms_sim['FE']
+        Disgs_sim = moms_sim['Disg']
+        Vars_sim = moms_sim['Var']
+        
+        ## SMM moments     
+        Forecast_sim = np.mean(Forecasts_sim)
+        FE_sim = np.mean(FEs_sim)
+        FEVar_sim = np.var(FEs_sim)
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
+        Disg_sim = np.mean(Disgs_sim)
+        DisgVar_sim = np.var(Disgs_sim)
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
+        
+        Var_sim = np.mean(Vars_sim)
+        VarVar_sim = np.var(Vars_sim)
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
+    
+        SMMMoments = {"InfAV":InfAV,
+                      "InfVar":InfVar,
+                      "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
+                      "FE":FE_sim,
+                      "FEVar":FEVar_sim,
+                      "FEATV":FEATV_sim,
+                      "Disg":Disg_sim,
+                      "DisgVar":DisgVar_sim,
+                      "DisgATV":DisgATV_sim,
+                      "Var":Var_sim,
+                      'VarVar':VarVar_sim,
+                      'VarATV':VarATV_sim}
+        return SMMMoments
+
+# + code_folding=[0]
+if __name__ == "__main__":
+    ## initial a sv instance
+    denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.2]),
+                               process_para = np.array([0.1]),
+                               real_time = xx_real_time,
+                               history = xx_real_time) ## history does not matter here, 
+
+    ## get the realization 
+
+    denisv0.GetRealization(xx_realized)
+# + code_folding=[1, 2, 18]
+@jitclass(model_sv_data)
+class DENIHybridSV2Signal:
     def __init__(self,
                  exp_para,
                  process_para,
@@ -2813,18 +3217,4 @@ class DENIHybridSV:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
-
-# + code_folding=[0]
-if __name__ == "__main__":
-    ## initial a sv instance
-    denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.3,0.2]),
-                               process_para = np.array([0.1]),
-                               real_time = xx_real_time,
-                               history = xx_real_time) ## history does not matter here, 
-
-    ## get the realization 
-
-    denisv0.GetRealization(xx_realized)
-# -
-
 
