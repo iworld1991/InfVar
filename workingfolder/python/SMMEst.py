@@ -169,6 +169,17 @@ def d1tod2(x):
     return x.reshape(1,-1)
 
 
+
+# +
+## numba a list  
+
+def type_list(ls):
+    from numba.typed import List
+    typed_a = List()
+    [typed_a.append(x) for x in ls]
+    return typed_a
+
+
 # + code_folding=[2, 38]
 ## Objective functions for SMM
 @njit
@@ -295,6 +306,7 @@ def np_max(array, axis):
 @njit
 def np_min(array, axis):
     return np_apply_along_axis(np.min, axis, array)
+
 
 
 # -
@@ -438,7 +450,7 @@ class RationalExpectationAR:
 #
 # - Creating some simulated inflation data following AR1 and UCSV process separately 
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
        
     T_sim = 500
@@ -506,8 +518,8 @@ if __name__ == "__main__":
         
     ## specific objective function for estimation 
     
-    moments1 = ['FE', ## 
-                'Var'] ## helps identify sigma
+    moments1 = type_list(['FE', ## 
+                          'Var']) ## helps identify sigma
 
     ## specific objective function 
     def Objrear(paras):
@@ -668,7 +680,7 @@ class RationalExpectationSV:
         return None
 
 
-# + code_folding=[0]
+# + code_folding=[0, 2]
 if __name__ == "__main__":
     ### create a RESV instance 
     resv = RationalExpectationSV(exp_para = np.array([]),
@@ -684,7 +696,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + AR1
 
-# + code_folding=[2, 17, 21, 85, 140]
+# + code_folding=[1, 2, 17, 21, 85, 140]
 @jitclass(model_data)
 class StickyExpectationAR:
     def __init__(self,
@@ -884,12 +896,12 @@ if __name__ == "__main__":
 
     ## only expectation estimation 
 
-    moments0 = [#'FE',
-               #'FEATV',
-                'FEVar',
-               'Disg',
-                'Var'
-               ] ## or FE+Var, or FE + Disg
+    moments0 = type_list([#'FE',
+                           #'FEATV',
+                            'FEVar',
+                           'Disg',
+                            'Var'
+                           ]) ## or FE+Var, or FE + Disg
 
     def Objsear_re(paras):
         scalar = ObjGen(sear0,
@@ -929,12 +941,12 @@ if __name__ == "__main__":
     sear1.GetRealization(realized0)
     data_mom_dict_se = sear1.SMM()
 
-    moments0 = [#'FE',
-                'FEATV', ## autocovariance of FE is critical to identify lambda in SE
-                'FEVar',
-                'Disg',   ## or Disg alone is also enough 
-                #'Var'
-               ]
+    moments0 = type_list([#'FE',
+                        'FEATV', ## autocovariance of FE is critical to identify lambda in SE
+                        'FEVar',
+                        'Disg',   ## or Disg alone is also enough 
+                        #'Var'
+                       ])
     def Objsear_se(paras):
         scalar = ObjGen(sear0,
                         paras = paras,
@@ -973,15 +985,15 @@ if __name__ == "__main__":
 
     ## for joint estimation 
 
-    moments1 = ['InfAV',
-                'InfVar',
-                'InfATV',
-                #'FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-               'Var'
-               ]
+    moments1 = type_list(['InfAV',
+                            'InfVar',
+                            'InfATV',
+                            #'FE',
+                            'FEVar',
+                            'FEATV',
+                            'Disg',
+                           'Var'
+                           ])
 
     def Objsear_joint(paras):
         scalar = ObjGen(sear0,
@@ -1017,7 +1029,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[1, 2, 18, 89, 139]
+# + code_folding=[2, 18, 89, 139]
 @jitclass(model_sv_data)
 class StickyExpectationSV:
     def __init__(self,
@@ -1181,6 +1193,8 @@ if __name__ == "__main__":
 # ### Noisy Information (NI) + AR1
 #
 
+# If with only one private signal
+#
 # \begin{equation}
 # \begin{split}
 #   & Var_{ss} = (1-P)(\rho^2 Var_{ss} + \sigma^2_\omega)  \\
@@ -1219,7 +1233,7 @@ def SteadyStateVar1d(process_para,
     return nowcast_var_ss
 
 
-# + code_folding=[1, 27]
+# + code_folding=[27]
 @njit
 def Pkalman(process_para,
             exp_para,
@@ -1242,6 +1256,7 @@ def Pkalman(process_para,
     inv = np.linalg.inv(H*step1_vars*H.T+sigma_v) 
     
     ## steady state Kalman
+    #Pkalman = step1_vars*np.dot(H.T,inv)
     Pkalman = step1_vars*np.dot(H.T,inv)
     return Pkalman.reshape(-1)
 
@@ -1271,7 +1286,7 @@ def Pkalman1d(process_para,
     return Pkalman.reshape(-1)
 
 
-# + code_folding=[0, 22]
+# + code_folding=[0]
 if __name__ == "__main__":
     
     ## plot steady state vars and Kalman gains
@@ -1286,8 +1301,8 @@ if __name__ == "__main__":
     ss_vars = SteadyStateVar(np.array([rho,
                                        sigma]
                                      ),
-                             [sigma_pbs,
-                              sigma_prs]
+                             type_list([sigma_pbs,
+                                        sigma_prs])
                             )
     ## get Kalman gains as well   
     
@@ -1371,7 +1386,7 @@ if __name__ == "__main__":
                  azim=20)
 
 
-# + code_folding=[2, 17, 21, 128, 181, 197]
+# + code_folding=[1, 2, 17, 21, 131, 169, 184, 200]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1454,7 +1469,8 @@ class NoisyInformationAR:
                 inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v) 
                 ## the inverse of the noisiness matrix  
                 
-                inv_sc = np.dot(np.dot(H.T,inv),H)
+                #inv_sc = np.dot(np.dot(H.T,inv),H)
+                inv_sc = inv.sum()
                 ## the total noisiness as a scalar 
                 
                 var_reduc = step1_vars_to_burn*inv_sc*step1_vars_to_burn
@@ -1467,10 +1483,12 @@ class NoisyInformationAR:
                 ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
                 ### this is necessary for Numba typing 
                 
-                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v))
+                #Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v))
+                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,inv)
                 ## update Kalman gains recursively using the signal extraction ratios 
                 
-                Pkalman_all = np.dot(Pkalman[t+1,:],H)[0]  
+                #Pkalman_all = np.dot(Pkalman[t+1,:],H)[0]  
+                Pkalman_all = Pkalman[t+1,:].sum()  
                 ## the weight to the prior forecast 
     
                 nowcasts_to_burn[i,t+1] = (1-Pkalman_all)*ρ*nowcasts_to_burn[i,t]+ np.dot(Pkalman[t+1,:],
@@ -1602,20 +1620,20 @@ if __name__ == "__main__":
 #
 # - The example below shows that NIAR seems to almost albeit imperfectly to identify sigma_pr and sigma_pb to be zero if rational expectation moments are used. 
 
-# + code_folding=[0, 14]
+# + code_folding=[0, 3]
 if __name__ == "__main__":
 
 
-    moments0 = [#'FE',
-                'FEATV',
-                'FEVar',
-                'Disg',
-                #'DisgATV',
-                #'DisgVar',
-                'Var',
-                #'VarVar',
-                #'VarATV'
-               ]
+    moments0 = type_list([#'FE',
+                        #'FEATV',
+                        'FEVar',
+                        'Disg',
+                        #'DisgATV',
+                        #'DisgVar',
+                        'Var',
+                        #'VarVar',
+                        #'VarATV'
+                       ])
 
     def Objniar_re(paras):
         scalor = ObjGen(niar0,
@@ -1627,7 +1645,7 @@ if __name__ == "__main__":
 
     ## invoke estimation 
     Est = ParaEst(Objniar_re,
-            para_guess = np.array([0.1,0.1]),
+            para_guess = np.array([0.09,0.1]),
             method='trust-constr',
            bounds=((0,None),(0,None),))
     
@@ -1655,12 +1673,12 @@ if __name__ == "__main__":
 
     data_mom_dict_ni = niar1.SMM()
 
-    moments0 = ['FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-                'DisgVar',
-                'Var']
+    moments0 = type_list(['FE',
+                        'FEVar',
+                        'FEATV',
+                        'Disg',
+                        'DisgVar',
+                        'Var'])
 
     def Objniar_ni(paras):
         scalor = ObjGen(niar0,
@@ -1685,7 +1703,7 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     ## plot for validation 
     simulated_niar  = niar1.SimForecasts()
-    plt.title(r"Simulated NI forecasts: $\sigma^2_\epsilon$,$\sigma^2_\xi$={}".format(exp_paras_fake))
+    plt.title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
     plt.plot(simulated_niar['Forecast'],
              label='Forecasts')
     plt.plot(niar1.real_time,
@@ -1695,24 +1713,24 @@ if __name__ == "__main__":
 
 # #### Joint Estimation
 
-# + code_folding=[0, 5]
+# + code_folding=[0]
 if __name__ == "__main__":
 
 
     ## for joint estimation 
 
-    moments1 = ['InfAV',
-                'InfVar',
-                'InfATV',
-                'FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-               'DisgVar',
-               'DisgATV',
-               'Var',
-               'VarVar',
-               'VarATV']
+    moments1 = type_list(['InfAV',
+                        'InfVar',
+                        'InfATV',
+                        'FE',
+                        'FEVar',
+                        'FEATV',
+                        'Disg',
+                       'DisgVar',
+                       'DisgATV',
+                       'Var',
+                       'VarVar',
+                       'VarATV'])
 
     def Objniar_joint(paras):
         scalar = ObjGen(niar0,
@@ -1751,9 +1769,186 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[63, 161]
+# + code_folding=[1, 2, 18, 125]
 @jitclass(model_sv_data)
 class NoisyInformationSV:
+    def __init__(self,
+                 exp_para,
+                 process_para,
+                 real_time,
+                 history,
+                 horizon = 1):
+        self.exp_para = exp_para
+        self.process_para = process_para
+        self.horizon = horizon
+        self.real_time = real_time
+        self.history = history
+
+    def GetRealization(self,
+                       realized_series):
+        self.realized = realized_series
+              
+    def SimForecasts(self,
+                     n_sim = 500):
+        ## inputs 
+        real_time = self.real_time
+        history  = self.history
+        n = len(real_time[0,:])
+        horizon = self.horizon
+        n_history = len(history[0,:]) # of course equal to len(history)
+        n_burn = n_history - n
+        
+        ## get the information set 
+        infoset = history 
+        y_now, p_now, sigmas_p_now, sigmas_t_now = infoset[0,:],infoset[1,:],infoset[2,:],infoset[3,:]
+        sigmas_now = np.concatenate((sigmas_p_now,sigmas_t_now),axis=0).reshape((2,-1))
+        
+        ## process parameters
+        γ = self.process_para
+        ## exp parameters 
+        sigma_pb_shadow,sigma_pr = self.exp_para
+        var_init = sigmas_now[0,0]**2+sigmas_now[1,0]**2
+        
+        ## other parameters 
+        ## simulate signals 
+        nb_s = 2                                    ## the number of signals 
+        H = np.array([[1.0],[1.0]])                 ## a multiplicative matrix summing all signals
+        
+        # randomly simulated signals 
+        np.random.seed(12434)
+        ##########################################################
+        #signal_pb = p_now+sigma_pb*np.random.randn(n_history)   ## one series of public signals 
+        ## a special model assumption that public signal is the y itself, so redefine p_pb 
+        signal_pb = y_now
+        signals_pb = signal_pb.repeat(n_sim).reshape((-1,n_sim)).T     ## shared by all agents
+        signals_pr = p_now + sigma_pr*np.random.randn(n_sim*n_history).reshape((n_sim,n_history))
+        #####################################################################################
+
+        ## prepare matrices 
+        nowcasts_to_burn = np.zeros((n_sim,n_history))
+        nowcasts_to_burn[:,0] = p_now[0]
+        nowvars_to_burn = np.zeros((n_sim,n_history))
+        nowvars_to_burn[:,0] = var_init
+        Vars_to_burn = np.zeros((n_sim,n_history))
+        
+        ## fill the matricies for individual moments        
+        for i in range(n_sim):
+            signals_this_i = np.concatenate((signals_pb[i,:],signals_pr[i,:]),axis=0).reshape((2,-1))
+            ## the histories signals specific to i: the first row is public signals and the second is private signals 
+            Pkalman = np.zeros((n_history,nb_s))
+            ## Kalman gains of this agent for respective signals 
+            Pkalman[0,:] = 0.0  ## some initial values 
+            
+            for t in range(n_history-1):
+                step1var = hstepvarSV(1,
+                                      sigmas_now[:,t],
+                                      γ[0])
+                step1_vars_to_burn = nowvars_to_burn[i,t] + step1var
+                ## prior uncertainty 
+                sigma_pb_now = sigmas_t_now[t]
+                sigma_v_now = np.array([[sigma_pb_now**2,0.0],[0.0,sigma_pr**2]])
+                                                           
+                inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v_now) 
+                ## the inverse of the noisiness matrix  
+                
+                inv_sc = np.dot(np.dot(H.T,inv),H)
+                ## the total noisiness as a scalar 
+                
+                var_reduc = step1_vars_to_burn*inv_sc*step1_vars_to_burn
+                ## reduction in uncertainty from the update
+                
+                nowvars_this_2d = np.array([[step1_vars_to_burn]]) - var_reduc
+                ## update equation of nowcasting uncertainty 
+                
+                nowvars_to_burn[i,t+1] = nowvars_this_2d[0,0] 
+                ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
+                ### this is necessary for Numba typing 
+                
+                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v_now))
+                ## update Kalman gains recursively using the signal extraction ratios 
+                
+                Pkalman_all = np.dot(Pkalman[t+1,:],H)[0] 
+                ## the weight to the prior forecast 
+    
+                nowcasts_to_burn[i,t+1] = (1-Pkalman_all)*nowcasts_to_burn[i,t]+ np.dot(Pkalman[t+1,:],signals_this_i[:,t+1])
+                ## kalman filtering updating for nowcasting: weighted average of prior and signals 
+                
+            for t in range(n_history):
+                stephvar = hstepvarSV(horizon,
+                                      sigmas_now[:,t],
+                                      γ[0])
+                Vars_to_burn[i,t] = nowvars_to_burn[i,t] + stephvar
+                
+        nowcasts = nowcasts_to_burn[:,n_burn:]
+        forecasts = nowcasts 
+        Vars = Vars_to_burn[:,n_burn:]
+
+        ## compute population moments
+        forecasts_mean = np_mean(forecasts,axis=0)
+        forecasts_var = np_var(forecasts,axis=0)
+        FEs_mean = forecasts_mean - self.realized
+        Vars_mean = np_mean(Vars,axis=0) ## need to change for time-variant volatility
+        
+        forecast_moments_sim = {"Forecast":forecasts_mean,
+                                "FE":FEs_mean,
+                                "Disg":forecasts_var,
+                                "Var":Vars_mean}
+        return forecast_moments_sim
+        
+    def SMM(self):
+        
+        γ = self.process_para
+        horizon = self.horizon
+        #################################
+        # inflation moments 
+        #################################
+
+        InfAV  = np.nan
+        InfVar = np.nan
+        InfATV = np.nan
+        
+        #################################
+        # expectation moments 
+        #################################
+        ## simulate forecasts
+        moms_sim = self.SimForecasts()
+        Forecasts_sim = moms_sim['Forecast']
+        FEs_sim = moms_sim['FE']
+        Disgs_sim = moms_sim['Disg']
+        Vars_sim = moms_sim['Var']
+        
+        ## SMM moments
+        Forecast_sim = np.mean(Forecasts_sim)
+        FE_sim = np.mean(FEs_sim)
+        FEVar_sim = np.var(FEs_sim)
+        FEATV_sim = np.cov(np.stack( (FEs_sim[horizon:],FEs_sim[:-horizon]),axis = 0 ))[0,1]
+        Disg_sim = np.mean(Disgs_sim)
+        DisgVar_sim = np.var(Disgs_sim)
+        DisgATV_sim = np.cov(np.stack( (Disgs_sim[horizon:],Disgs_sim[:-horizon]),axis = 0))[0,1]
+        
+        Var_sim = np.mean(Vars_sim)
+        VarVar_sim = np.var(Vars_sim)
+        VarATV_sim = np.cov(np.stack( (Vars_sim[horizon:],Vars_sim[:-horizon]),axis = 0))[0,1]
+    
+        SMMMoments = {"InfAV":InfAV,
+                      "InfVar":InfVar,
+                      "InfATV":InfATV,
+                      "Forecast":Forecast_sim,
+                      "FE":FE_sim,
+                      "FEVar":FEVar_sim,
+                      "FEATV":FEATV_sim,
+                      "Disg":Disg_sim,
+                      "DisgVar":DisgVar_sim,
+                      "DisgATV":DisgATV_sim,
+                      "Var":Var_sim,
+                      'VarVar':VarVar_sim,
+                      'VarATV':VarATV_sim}
+        return SMMMoments
+
+
+# + code_folding=[1, 63, 161]
+@jitclass(model_sv_data)
+class NoisyInformationSV2Para:
     def __init__(self,
                  exp_para,
                  process_para,
@@ -1933,7 +2128,7 @@ class NoisyInformationSV:
 if __name__ == "__main__":
 
     ## initial a sv instance
-    nisv0 = NoisyInformationSV(exp_para = np.array([0.3,0.2]),
+    nisv0 = NoisyInformationSV(exp_para = np.array([0.1,0.2]),
                                process_para = np.array([0.1]),
                                real_time = xx_real_time,
                                history = xx_real_time) ## history does not matter here, 
@@ -2124,11 +2319,11 @@ if __name__ == "__main__":
 
     ## only expectation estimation 
 
-    moments0 = [#'FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-                'Var']
+    moments0 = type_list([#'FE',
+                        'FEVar',
+                        'FEATV',
+                        'Disg',
+                        'Var'])
 
     def Objdear_re(paras):
         scalar = ObjGen(dear0,
@@ -2169,12 +2364,12 @@ if __name__ == "__main__":
 
     ## only expectation estimation 
 
-    moments0 = [#'FE',
-                'FEVar',
-                #'FEATV',
-                'Disg',
-                #'DisgVar',
-                'Var']
+    moments0 = type_list([#'FE',
+                        'FEVar',
+                        #'FEATV',
+                        'Disg',
+                        #'DisgVar',
+                        'Var'])
 
     def Objdear_de(paras):
         scalar = ObjGen(dear0,
@@ -2195,7 +2390,7 @@ if __name__ == "__main__":
     print('True parameters: ',str(exp_paras_fake)) 
     print('Estimates: ',str(Est))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_dear  = dear1.SimForecasts()
@@ -2207,18 +2402,18 @@ if __name__ == "__main__":
 
 # #### Joint Estimation 
 
-# + code_folding=[0]
+# + code_folding=[0, 3]
 if __name__ == "__main__":
 
     ## for joint estimation 
-    moments1 = ['InfAV',
-                'InfVar',
-                'InfATV',
-                #'FE',
-                'FEVar',
-                'FEATV',
-                'Disg',
-               'Var']
+    moments1 = type_list(['InfAV',
+                        'InfVar',
+                        'InfATV',
+                        #'FE',
+                        'FEVar',
+                        'FEATV',
+                        'Disg',
+                       'Var'])
 
     def Objdear_joint(paras):
         scalar = ObjGen(dear0,
@@ -2240,7 +2435,7 @@ if __name__ == "__main__":
     print('True expectation parameter',str(exp_paras_fake))  
     print('Estimates: ',str(Est[0:2]))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## check if simulated moments and computed moments match 
@@ -2777,13 +2972,13 @@ if __name__ == "__main__":
 # + code_folding=[0]
 if __name__ == "__main__":
 
-    moments0 = [#'FE',
-                'FEVar',
-                #'FEATV',
-                'Disg',
-                #'DisgVar',
-                #'DisgVar',
-                'Var']
+    moments0 = type_list([#'FE',
+                        'FEVar',
+                        #'FEATV',
+                        'Disg',
+                        #'DisgVar',
+                        #'DisgVar',
+                        'Var'])
 
     def Objdeniar_re(paras):
         scalar = ObjGen(deniar0,
@@ -2806,7 +3001,7 @@ if __name__ == "__main__":
 #
 # - The example below shows that DENIAR SMM correctly identifies the model parameters. 
 
-# + code_folding=[0, 12]
+# + code_folding=[0]
 if __name__ == "__main__":
     
     ## get a fake data moment dictionary under a different parameter 
@@ -2836,7 +3031,7 @@ if __name__ == "__main__":
     print('True parameters: ',str(deni_exp_paras_fake)) 
     print('Estimates: ',str(Est))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_deniar  = deniar1.SimForecasts()
