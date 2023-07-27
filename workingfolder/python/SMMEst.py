@@ -170,7 +170,7 @@ def d1tod2(x):
 
 
 
-# +
+# + code_folding=[2]
 ## numba a list  
 
 def type_list(ls):
@@ -1029,7 +1029,7 @@ if __name__ == "__main__":
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[2, 18, 89, 139]
+# + code_folding=[1, 2, 18, 89, 139]
 @jitclass(model_sv_data)
 class StickyExpectationSV:
     def __init__(self,
@@ -1233,7 +1233,7 @@ def SteadyStateVar1d(process_para,
     return nowcast_var_ss
 
 
-# + code_folding=[27]
+# + code_folding=[1, 28]
 @njit
 def Pkalman(process_para,
             exp_para,
@@ -1386,7 +1386,7 @@ if __name__ == "__main__":
                  azim=20)
 
 
-# + code_folding=[1, 2, 17, 21, 131, 169, 184, 200]
+# + code_folding=[2, 17, 21, 66, 133, 171, 186, 202]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1469,27 +1469,29 @@ class NoisyInformationAR:
                 inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v) 
                 ## the inverse of the noisiness matrix  
                 
-                #inv_sc = np.dot(np.dot(H.T,inv),H)
-                inv_sc = inv.sum()
-                ## the total noisiness as a scalar 
-                
-                var_reduc = step1_vars_to_burn*inv_sc*step1_vars_to_burn
-                ## reduction in uncertainty from the update
-                
-                nowvars_this_2d = np.array([[step1_vars_to_burn]]) - var_reduc
-                ## update equation of nowcasting uncertainty 
-                
-                nowvars_to_burn[i,t+1] = nowvars_this_2d[0,0] 
-                ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
-                ### this is necessary for Numba typing 
-                
                 #Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v))
-                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,inv)
+                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,inv)  
                 ## update Kalman gains recursively using the signal extraction ratios 
                 
                 #Pkalman_all = np.dot(Pkalman[t+1,:],H)[0]  
                 Pkalman_all = Pkalman[t+1,:].sum()  
                 ## the weight to the prior forecast 
+                
+                #inv_sc = np.dot(np.dot(H.T,inv),H)
+                ## the total noisiness as a scalar 
+                
+                var_reduc = Pkalman_all*step1_vars_to_burn
+                ## reduction in uncertainty from the update
+                
+                #nowvars_this_2d = (1-Pkalman_all)*step1_vars_to_burn
+
+                ## update equation of nowcasting uncertainty 
+                nowvars_to_burn[i,t+1] =(1-Pkalman_all)*step1_vars_to_burn
+                ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
+                ### this is necessary for Numba typing 
+                
+    
+
     
                 nowcasts_to_burn[i,t+1] = (1-Pkalman_all)*ρ*nowcasts_to_burn[i,t]+ np.dot(Pkalman[t+1,:],
                                                                                           signals_this_i[:,t+1])
@@ -1605,7 +1607,7 @@ class NoisyInformationAR:
 
 # + code_folding=[0]
 if __name__ == "__main__":
-    ni_exp_para_fake = np.array([0.1,0.2])
+    ni_exp_para_fake = np.array([0.2,0.2])
     ## initialize the ar instance 
     niar0 = NoisyInformationAR(exp_para = ni_exp_para_fake,
                                 process_para = np.array([ρ0,σ0]),
@@ -1769,7 +1771,7 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[1, 2, 18, 125]
+# + code_folding=[2, 18, 62, 122]
 @jitclass(model_sv_data)
 class NoisyInformationSV:
     def __init__(self,
@@ -1843,6 +1845,7 @@ class NoisyInformationSV:
                 step1var = hstepvarSV(1,
                                       sigmas_now[:,t],
                                       γ[0])
+                
                 step1_vars_to_burn = nowvars_to_burn[i,t] + step1var
                 ## prior uncertainty 
                 sigma_pb_now = sigmas_t_now[t]
@@ -1851,24 +1854,20 @@ class NoisyInformationSV:
                 inv = np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v_now) 
                 ## the inverse of the noisiness matrix  
                 
-                inv_sc = np.dot(np.dot(H.T,inv),H)
-                ## the total noisiness as a scalar 
-                
-                var_reduc = step1_vars_to_burn*inv_sc*step1_vars_to_burn
-                ## reduction in uncertainty from the update
-                
-                nowvars_this_2d = np.array([[step1_vars_to_burn]]) - var_reduc
-                ## update equation of nowcasting uncertainty 
-                
-                nowvars_to_burn[i,t+1] = nowvars_this_2d[0,0] 
-                ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
-                ### this is necessary for Numba typing 
-                
-                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,np.linalg.inv(H*step1_vars_to_burn*H.T+sigma_v_now))
+                Pkalman[t+1,:] = step1_vars_to_burn*np.dot(H.T,inv)
                 ## update Kalman gains recursively using the signal extraction ratios 
                 
-                Pkalman_all = np.dot(Pkalman[t+1,:],H)[0] 
+                Pkalman_all = Pkalman[t+1,:].sum() 
                 ## the weight to the prior forecast 
+                
+                #inv_sc = np.dot(np.dot(H.T,inv),H)
+                ## the total noisiness as a scalar 
+                
+                var_reduc = Pkalman_all*step1_vars_to_burn
+                ## reduction in uncertainty from the update
+                
+                ## update equation of nowcasting uncertainty 
+                nowvars_to_burn[i,t+1] = (1-Pkalman_all)*step1_vars_to_burn
     
                 nowcasts_to_burn[i,t+1] = (1-Pkalman_all)*nowcasts_to_burn[i,t]+ np.dot(Pkalman[t+1,:],signals_this_i[:,t+1])
                 ## kalman filtering updating for nowcasting: weighted average of prior and signals 
