@@ -122,7 +122,7 @@ UniformStats(para_est['lb'],para_est['ub'])
 # - we simulate data from a true beta distribution with known parameters
 # - then we estimate the parameters with our module and see how close it is with the true parameters 
 
-# + code_folding=[]
+# + code_folding=[0]
 ## simulate a generalized distribution
 sim_n=1000
 true_alpha,true_beta,true_loc,true_scale=0.5,0.6,0.1,2
@@ -173,7 +173,7 @@ nobs=len(IndSPF)
 SPF_bins=np.array([-10,0,0.5,1,1.5,2,2.5,3,3.5,4,10])
 print("There are "+str(len(SPF_bins)-1)+" bins in SPF")
 
-# + code_folding=[]
+# + code_folding=[0, 15]
 ##############################################
 ### attention: the estimation happens here!!!!!
 ###################################################
