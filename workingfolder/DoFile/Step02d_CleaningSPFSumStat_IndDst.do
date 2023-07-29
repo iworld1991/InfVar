@@ -344,8 +344,8 @@ local MomentsMom PRCCPIMean0p25 PRCCPIMean1p25 PRCPCEMean0p25 PRCPCEMean1p25 ///
 			   PRCCPIMean0p90 PRCCPIMean1p90 PRCPCEMean0p90 PRCPCEMean1p90 /// 
               PRCCPIVar0p90 PRCCPIVar1p90 PRCPCEVar0p90 PRCPCEVar1p90 
 
-local Momentsrv PRCPCEMeanl1 PRCPCEMeanf0 PRCPCEVarl1  PRCPCEVarf0 ///
-                PRCCPIMeanl1 PRCCPIMeanf0 PRCCPIVarl1  PRCCPIVarf0 ///
+local Momentsrv PRCPCEMeanl1 PRCPCEMeanf1 PRCPCEMeanf4 PRCPCEVarl1  PRCPCEVarf1 PRCPCEVarf4 ///
+                PRCCPIMeanl1 PRCCPIMeanf1 PRCCPIMeanf4 PRCCPIVarl1  PRCCPIVarf1 PRCCPIVarf4 ///
                 PRCCPIMean_rv PRCPCEMean_rv PRCCPIVar_rv  PRCPCEVar_rv
 				
 				
