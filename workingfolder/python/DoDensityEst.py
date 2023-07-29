@@ -184,7 +184,8 @@ columns=['PRCCPIMean0','PRCCPIVar0', 'PRCCPIStd0','PRCCPIIqr10900',
          'PRCCPIMean1','PRCCPIVar1','PRCCPIStd1','PRCCPIIqr10901',
          'PRCPCEMean0','PRCPCEVar0','PRCPCEStd0','PRCPCEIqr10900',
          'PRCPCEMean1','PRCPCEVar1','PRCPCEStd1','PRCPCEIqr10901']
-IndSPF_moment_est = pd.DataFrame(index=index,columns=columns)
+IndSPF_moment_est = pd.DataFrame(index=index,
+                                 columns=columns)
 
 ## Invoking the estimation
 
@@ -276,6 +277,9 @@ IndSPF_pk = pd.read_pickle('./IndSPFDstIndQ.pkl')
 
 type_map = {columns[i]:'float' for i,column in enumerate(columns)}
 IndSPF_pk =IndSPF_pk.astype(type_map)
+# -
+
+IndSPF_pk.columns
 
 # +
 ## export to stata 
@@ -283,9 +287,10 @@ IndSPF_pk =IndSPF_pk.astype(type_map)
 IndSPF_pk.to_stata('../SurveyData/SPF/individual/InfExpSPFDstIndQ.dta')
 
 # + code_folding=[]
-### Robustness checks: focus on big negative mean estimates 
-nan_est = IndSPF_pk['PRCCPIMean0'].isna()
-missing_data = IndSPF_pk['PRCCPI1'].isna() ## no data to estimate in the first place 
+### Robustness checks: focus on missing mean estimates 
+
+nan_est = IndSPF_pk['PRCCPIVar0'].isna()
+missing_data = IndSPF_pk['PRCCPI2'].isna() ## no data to estimate in the first place 
 
 print(str(sum(nan_est))+' missing estimates')
 print(str(sum(missing_data))+' of which is due to missing data')
@@ -297,13 +302,16 @@ ct=0
 figure=plt.plot()
 for id in IndSPF_pk.index[(nan_est) & (~missing_data)]:
     print(id)
-    print(IndSPF_pk['PRCCPIMean1'][id])
-    sim_probs_data= np.flip(np.array([IndSPF['PRCCPI'+str(n)][id]/100 for n in range(11,21)]))
+    print(IndSPF_pk['PRCCPIVar0'][id])
+    sim_probs_data= np.flip(np.array([IndSPF_pk['PRCCPI'+str(n)][id]/100 for n in range(1,11)]))
     plt.bar(SPF_bins[1:],sim_probs_data)
     print(sim_probs_data)
     ## do estimation again 
-    stats_est=SynDensityStat(SPF_bins,sim_probs_data)
+    stats_est= SynDensityStat(SPF_bins,sim_probs_data)
     if stats_est is not None:
-        print(stats_est['mean'])
+        print(stats_est)
     else:
         print('Estimation is None!!!!')
+# -
+
+
