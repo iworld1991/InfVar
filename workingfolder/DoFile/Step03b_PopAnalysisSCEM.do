@@ -1,7 +1,7 @@
 clear
-global mainfolder "C:\Users\WB585211\Downloads\InfVar-master\workingfolder"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
-global shadowfolder "C:\Users\WB585211\Downloads\InfVar-master\workingfolder\SurveyData/"
+global shadowfolder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
 
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"
@@ -336,8 +336,8 @@ local Moments Q9_mean Q9_var Q9_disg Q9_iqr CPI1y PCE1y CORECPI1y InfExpMichMed 
 		      PRCCPIVar1mean PRCPCEVar1mean PRCCPIVar0mean PRCPCEVar0mean 
 				
 local MomentsRv PRCCPIMean_rv PRCPCEMean_rv  PRCCPIVar_rv PRCPCEVar_rv  ///
-                PRCCPIMeanl1  PRCCPIVarl1 PRCCPIMeanf0  PRCCPIVarf0 ///	
-				PRCPCEMeanl1  PRCPCEVarl1 PRCPCEMeanf0  PRCPCEVarf0
+                PRCCPIMeanl1  PRCCPIVarl1 PRCPCEMeanl1  PRCPCEVarl1  
+				*PRCCPIMeanf0  PRCCPIVarf0 PRCPCEMeanf0  PRCPCEVarf0
 				
 				
 local MomentsMom PRCCPIMean0p25 PRCCPIMean1p25 PRCPCEMean0p25 PRCPCEMean1p25 /// 
@@ -436,14 +436,14 @@ rename PRCCPIVar_rv SPFCPI_Var_rv
 rename PRCCPIMeanl1 SPFCPI_Meanl1
 rename PRCCPIVarl1 SPFCPI_Varl1
 
-rename PRCCPIMeanf0 SPFCPI_Meanf0
-rename PRCCPIVarf0 SPFCPI_Varf0
+*rename PRCCPIMeanf0 SPFCPI_Meanf0
+*rename PRCCPIVarf0 SPFCPI_Varf0
 
 rename PRCPCEMeanl1 SPFPCE_Meanl1
 rename PRCPCEVarl1 SPFPCE_Varl1
 
-rename PRCPCEMeanf0 SPFPCE_Meanf0
-rename PRCPCEVarf0 SPFPCE_Varf0
+*rename PRCPCEMeanf0 SPFPCE_Meanf0
+*rename PRCPCEVarf0 SPFPCE_Varf0
 
 ********************************
 gen InfExp_Mean = .
@@ -464,8 +464,8 @@ gen InfExp_Var_rv =.
 gen InfExp_Meanl1 =. 
 gen InfExp_Varl1 =. 
 
-gen InfExp_Meanf0 =. 
-gen InfExp_Varf0 =. 
+*gen InfExp_Meanf0 =. 
+*gen InfExp_Varf0 =. 
  
 
 foreach mom in Mean Var{

@@ -128,8 +128,9 @@ local Moments  Q9_mean Q9_var Q9_disg Q9_iqr ///
 			   PRCCPIVar1mean PRCPCEVar1mean PRCCPIVar0mean PRCPCEVar0mean 
 				
 local MomentsRv PRCCPIMean_rv PRCPCEMean_rv  PRCCPIVar_rv PRCPCEVar_rv  ///
-                PRCCPIMeanl1  PRCCPIVarl1 PRCCPIMeanf0  PRCCPIVarf0 ///	
-				PRCPCEMeanl1  PRCPCEVarl1 PRCPCEMeanf0  PRCPCEVarf0
+                PRCCPIMeanl1  PRCCPIVarl1 PRCPCEMeanl1  PRCPCEVarl1 
+				
+				/*PRCCPIMeanf0  PRCCPIVarf0 PRCPCEMeanf0  PRCPCEVarf0*/
 				
 				
 local MomentsMom PRCCPIMean0p25 PRCCPIMean1p25 PRCPCEMean0p25 PRCPCEMean1p25 /// 
@@ -335,7 +336,7 @@ foreach var in Inf1yf_CPICore CORECPI1y SPFCPI_FE2 CORECPI_disg{
 
 pwcorr `var' PRCCPIVar1mean if quarter==1, star(0.05)
 local rho: display %4.2f r(rho) 
-twoway (tsline `var'mv,ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
+twoway (tsline `var',ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
        (tsline PRCCPIVar1mean if quarter==1, yaxis(2) ytitle("",axis(2)) lcolor(maroon) lp("longdash") lwidth(thick)) ///
 	   if PRCCPIVar1mean!=., ///
 	   title("SPF(CPI)",size(large)) xtitle("Time") ytitle("") ///
@@ -349,7 +350,7 @@ foreach var in Inf1yf_PCECore COREPCE1y SPFPCE_FE2 COREPCE_disg{
 
 pwcorr `var' PRCPCEVar1mean if quarter==1, star(0.05)
 local rho: display %4.2f r(rho) 
-twoway (tsline `var'mv,ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
+twoway (tsline `var',ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
        (tsline PRCPCEVar1mean if quarter==1, yaxis(2) ytitle("",axis(2)) lcolor(maroon) lp("longdash") lwidth(thick)) ///
 	   if PRCPCEVar1mean!=., ///
 	   title("SPF(PCE)",size(large)) xtitle("Time") ytitle("") ///
@@ -437,14 +438,14 @@ rename PRCCPIVar_rv SPFCPI_Var_rv
 rename PRCCPIMeanl1 SPFCPI_Meanl1
 rename PRCCPIVarl1 SPFCPI_Varl1
 
-rename PRCCPIMeanf0 SPFCPI_Meanf0
-rename PRCCPIVarf0 SPFCPI_Varf0
+*rename PRCCPIMeanf0 SPFCPI_Meanf0
+*rename PRCCPIVarf0 SPFCPI_Varf0
 
 rename PRCPCEMeanl1 SPFPCE_Meanl1
 rename PRCPCEVarl1 SPFPCE_Varl1
 
-rename PRCPCEMeanf0 SPFPCE_Meanf0
-rename PRCPCEVarf0 SPFPCE_Varf0
+*rename PRCPCEMeanf0 SPFPCE_Meanf0
+*rename PRCPCEVarf0 SPFPCE_Varf0
 
 ********************************
 gen InfExp_Mean = .
@@ -463,8 +464,8 @@ gen InfExp_Var_rv =.
 gen InfExp_Meanl1 =. 
 gen InfExp_Varl1 =. 
 
-gen InfExp_Meanf0 =. 
-gen InfExp_Varf0 =. 
+*gen InfExp_Meanf0 =. 
+*gen InfExp_Varf0 =. 
  
 
 foreach mom in Mean Var{
@@ -592,16 +593,16 @@ foreach var in SPFCPI SPFPCE{
   foreach mom in Mean{
      replace InfExp_`mom' = `var'_`mom'
 	 replace InfExp_`mom'l1 = `var'_`mom'l1
-     replace InfExp_`mom'f0 = `var'_`mom'f0
-     eststo `var'`mom'rvlv1: reg InfExp_`mom'f0 InfExp_`mom'
+     replace InfExp_`mom' = `var'_`mom'
+     eststo `var'`mom'rvlv1: reg InfExp_`mom' InfExp_`mom'
 	 test _b[InfExp_`mom']=1
 	  scalar btestpv= r(p)
 	 estadd scalar btestpv
-	 eststo `var'`mom'rvlv2: reg InfExp_`mom'f0 l(0/1).InfExp_`mom'
+	 eststo `var'`mom'rvlv2: reg InfExp_`mom' l(0/1).InfExp_`mom'
 	 test _b[InfExp_`mom']=1
 	 scalar btestpv= r(p)
 	 estadd scalar btestpv
-	 eststo `var'`mom'rvlv3: reg InfExp_`mom'f0 l(0/2).InfExp_`mom'
+	 eststo `var'`mom'rvlv3: reg InfExp_`mom' l(0/2).InfExp_`mom'
      test _b[InfExp_`mom']=1
 	 scalar btestpv= r(p)
 	 estadd scalar btestpv
@@ -612,16 +613,16 @@ foreach var in SPFCPI SPFPCE{
   foreach mom in Var{
      replace InfExp_`mom' = `var'_`mom'
      replace InfExp_`mom'l1 = `var'_`mom'l1
-	 replace InfExp_`mom'f0 = `var'_`mom'f0
-     eststo `var'`mom'rvlv1: reg InfExp_`mom'f0 InfExp_`mom'
+	 replace InfExp_`mom' = `var'_`mom'
+     eststo `var'`mom'rvlv1: reg InfExp_`mom' InfExp_`mom'
 	 test _b[_cons]=0
 	 scalar btestpv= r(p)
 	 estadd scalar btestpv
-	 eststo `var'`mom'rvlv2: reg InfExp_`mom'f0 l(0/1).InfExp_`mom'
+	 eststo `var'`mom'rvlv2: reg InfExp_`mom' l(0/1).InfExp_`mom'
 	 test _b[_cons]=0
 	 scalar btestpv= r(p)
 	 estadd scalar btestpv
-	 eststo `var'`mom'rvlv3: reg InfExp_`mom'f0 l(0/2).InfExp_`mom'
+	 eststo `var'`mom'rvlv3: reg InfExp_`mom' l(0/2).InfExp_`mom'
 	 test _b[_cons]=0
 	 scalar btestpv= r(p)
 	 estadd scalar btestpv
