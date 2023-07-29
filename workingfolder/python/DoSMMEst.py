@@ -16,21 +16,12 @@
 
 # ## SMM Estimation of Theories of Expectation Formation with Inflation Expectation
 #
-# - The code is organized in following ways
-#
-#   1. Each pair of a theory of expectation formation (re, se, ni, de, denim etc) and an assumed process of inflation process (ar1 or sv)  are encapsulated in a specific python class. 
-#     - the class initializes corresponding parameters of the inflation process and expectation formation 
-#     - and embodies a specific function that generates all the simulated moments of both inflation and expectations 
-#     
-#   2. A generally written objective function that computes the distances in moments as a function of parameters specific to the chosen model, moments, and the data. 
-#   3.  The general function is to be used to compute the specific objective function that takes parameter as the only input for the minimizer to work
-#   4.  Then a general function that does an optimization algorithm takes the specific objective function and estimates the parameters
 
 # +
 import numpy as np
 import matplotlib.pyplot as plt
 from numba import types
-from numba.typed import Dict
+from numba.typed import Dict,List
 import pandas as pd
 from statsmodels.tsa.api import AutoReg as AR
 pd.options.display.float_format = '{:,.2f}'.format
@@ -39,15 +30,19 @@ plt.style.use('ggplot')
 ## figure config
 
 lw = 4  #line width
+
 # -
 
 # ## Model
 
-from SMMEst import SimAR1, SimUCSV,ObjGen, ObjWeight,ParaEst
+# +
+from SMMEst import SimAR1, SimUCSV,ObjGen, ObjWeight,ParaEst,type_list
+
 from SMMEst import StickyExpectationAR, StickyExpectationSV
 from SMMEst import NoisyInformationAR, NoisyInformationSV
 from SMMEst import DiagnosticExpectationAR, DiagnosticExpectationSV
 from SMMEst import DENIHybridAR, DENIHybridSV
+
 
 
 # + pycharm={"name": "#%%\n"} code_folding=[0]
@@ -86,16 +81,11 @@ xx_real_time= np.array([xx_real_time,
                       )[:,0:-2]
 # -
 
-#
-# ### Rational Expectation (RE) + AR1
-
-# ### Rational Expectation (RE) + SV
-
 # ### Sticky Expectation (SE) + AR1
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[0]
+# + code_folding=[]
 ## initialize the ar instance
 sear0 = StickyExpectationAR(exp_para = np.array([0.2]),
                             process_para = np.array([ρ0,σ0]),
@@ -180,7 +170,7 @@ desv0.GetRealization(xx_realized)
 
 # + code_folding=[1]
 ## initialize the ar instance
-deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.4,0.3]),
+deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.3]),
                        process_para = np.array([ρ0,σ0]),
                             real_time = real_time0,
                             history = history0,
@@ -188,9 +178,9 @@ deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.4,0.3]),
 
 deniar0.GetRealization(realized0)
 
-# + code_folding=[0]
+# + code_folding=[]
 ## initial a sv instance
-denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.3,0.2]),
+denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.2]),
                            process_para = np.array([0.1]),
                            real_time = xx_real_time,
                            history = xx_real_time) ## history does not matter here, 
@@ -222,7 +212,7 @@ real_time_inf = real_time_inf.dropna()
 
 # #### Inflation data 
 
-# + code_folding=[]
+# + code_folding=[0]
 ###############
 ## monthly ### 
 ##############
@@ -281,11 +271,44 @@ SCECPI = PopM[['SCE_Mean','SCE_FE','SCE_Disg','SCE_Var',
               'SCE_Mean_rd','SCE_FE_rd','SCE_Disg_rd','SCE_Var_rd']].dropna(how='any')
 
 # +
+## filter sample period 
+## we focus on period before the pandemic
+import datetime
+
+## tempoary date used to check the data moments 
+
+end_date_late = datetime.datetime(2022, 5, 30)
+end_date_early = datetime.datetime(2020, 3, 30)
+
+## SPF
+SPFCPI = SPFCPI[SPFCPI.index<end_date_late]
+
+## SCE
+SCECPI = SCECPI[SCECPI.index<end_date_late]
+
+
+# +
+## we only focus on 4th quarter observations from SPF 
+
+SPFCPI = SPFCPI[SPFCPI.index.quarter==4]
+
+# +
 print('SCE\n')
 print(SCECPI.mean())
+print('sample period, begin at '+str(SCECPI.index[0])+', and end at '+str(SCECPI.index[-1]))
+print('\n')
+print('before 2020\n')
+print(SCECPI[SCECPI.index<end_date_early].mean())
 
-print('SPF\n')
+print('\n')
+
+print('SPF (only in the forth quarter)\n')
 print(SPFCPI.mean())
+print('sample period, begin at '+str(SPFCPI.index[0])+', and end at '+str(SPFCPI.index[-1]))
+print('\n')
+
+print('before 2020\n')
+print(SPFCPI[SPFCPI.index<end_date_early].mean())
 
 # + code_folding=[]
 ## Combine expectation data and real-time data 
@@ -295,6 +318,7 @@ SPF_est= pd.concat([SPFCPI,
                     InfQ], 
                    join='inner', 
                    axis=1)
+
 SCE_est = pd.concat([SCECPI,
                      real_time_inf,
                      InfM], 
@@ -308,7 +332,7 @@ SCE_est = pd.concat([SCECPI,
 ## process parameters estimation AR1 
 # period filter 
 start_t='1995-01-01'
-end_t = '2022-6-30'   
+end_t = '2020-3-30'   ## 
 
 ######################
 ### quarterly data ##
@@ -316,11 +340,15 @@ end_t = '2022-6-30'
 
 CPICQ = InfQ['Inf1y_CPICore'].copy().loc[start_t:end_t]
 
+print('for SPF moments estimation, the sample is between '+str(start_t)+' and '+str(end_t))
+
 ###################
 ### monthly data ##
 ###################
 
 CPIM = InfM['Inf1y_CPIAU'].copy().loc[start_t:end_t]
+
+print('for SPF moments estimation, the sample is between '+str(start_t)+' and '+str(end_t))
 
 # + code_folding=[]
 ## history data, the series ends at the same dates with real-time data but startes earlier
@@ -360,11 +388,11 @@ realized_CPI = np.array(SCE_est['Inf1yf_CPIAU'])
 
 CPICQ_demean = CPICQ
 
-ARmodel = AR(CPICQ_demean,lags=[4],trend='n') ## 4 quarters of lag!!!!
+ARmodel = AR(CPICQ_demean,lags=[1],trend='n') 
 ar_rs = ARmodel.fit()
 rhoQ_est = ar_rs.params[0]
-if rhoQ_est>1.0:
-    rhoQ_est = 1.0
+#if rhoQ_est>1.0:
+#    rhoQ_est = 1.0
 sigmaQ_est = np.sqrt(ar_rs.sigma2) #np.sqrt(sum(ar_rs.resid**2)/(len(CPIM)-1))
 
 ###################
@@ -372,14 +400,16 @@ sigmaQ_est = np.sqrt(ar_rs.sigma2) #np.sqrt(sum(ar_rs.resid**2)/(len(CPIM)-1))
 ###################
 
 CPIM_demean = CPIM
-ARmodel2 = AR(CPIM_demean,lags=[12],trend='n') ## 12 months of lags!
+ARmodel2 = AR(CPIM_demean,lags=[1],trend='n') ## 12 months of lags!
 ar_rs2 = ARmodel2.fit()
 rhoM_est = ar_rs2.params[0]
-if rhoM_est>1.0:
-    rhoM_est = 1.0
+#if rhoM_est>1.0:
+#    rhoM_est = 1.0
 sigmaM_est = np.sqrt(ar_rs2.sigma2)  # or np.sqrt(sum(ar_rs2.resid**2)/(len(CPIM)-1))
 
 # + code_folding=[]
+print('For the sample before', str(end_t))
+
 print('quarterly AR(1) estimates for CPI core:')
 print(rhoQ_est)
 print(sigmaQ_est)
@@ -393,6 +423,8 @@ print(sigmaM_est)
 # #### Data moments 
 
 # + code_folding=[0]
+## not used for now 
+
 def calc_variance_at_low_freq(series,
                              horizon):
     """
@@ -414,8 +446,6 @@ def calc_variance_at_low_freq(series,
         varinace_sum +=variance
     return varinace_sum/horizon
 
-
-# + code_folding=[0]
 def newey_west_variance(series,
                         truncate):
     """
@@ -435,11 +465,6 @@ def newey_west_variance(series,
         adjust_term += weight
     return series.var()/adjust_term
 
-
-# -
-
-newey_west_variance(realized_CPIC,
-                   4)
 
 # + code_folding=[108]
 #####################################
@@ -473,16 +498,16 @@ Vars_data = exp_data_SPF['Var']
 
 FE_data = np.mean(FEs_data)
 FEVar_data = np.var(FEs_data)
-FEATV_data = np.cov(np.stack( (FEs_data[4:],FEs_data[:-4]),axis = 0))[0,1]  ## 4 quarters apart 
+FEATV_data = np.cov(np.stack( (FEs_data[1:],FEs_data[:-1]),axis = 0))[0,1]  ## one quarter apart 
 ## annual autocovariance
 
 
 Disg_data = np.mean(Disgs_data)
 DisgVar_data = np.var(Disgs_data)
-DisgATV_data = np.cov(np.stack( (Disgs_data[4:],Disgs_data[:-4]),axis = 0))[0,1]
+DisgATV_data = np.cov(np.stack( (Disgs_data[1:],Disgs_data[:-1]),axis = 0))[0,1]
 Var_data = np.mean(Vars_data)
 VarVar_data = np.var(Vars_data)
-VarATV_data = np.cov(np.stack( (Vars_data[4:],Vars_data[:-4]),axis = 0))[0,1]
+VarATV_data = np.cov(np.stack( (Vars_data[1:],Vars_data[:-1]),axis = 0))[0,1]
 ## annual autocovariance
 
 
@@ -540,14 +565,14 @@ Vars_data = exp_data_SCE['Var']
 
 FE_data = np.mean(FEs_data)
 FEVar_data = np.var(FEs_data)
-FEATV_data = np.cov(np.stack( (FEs_data[12:],FEs_data[:-12]),axis = 0 ))[0,1]
+FEATV_data = np.cov(np.stack( (FEs_data[1:],FEs_data[:-1]),axis = 0 ))[0,1]
 
 Disg_data = np.mean(Disgs_data)
 DisgVar_data = np.var(Disgs_data)
-DisgATV_data = np.cov(np.stack( (Disgs_data[12:],Disgs_data[:-12]),axis = 0))[0,1]
+DisgATV_data = np.cov(np.stack( (Disgs_data[1:],Disgs_data[:-1]),axis = 0))[0,1]
 Var_data = np.mean(Vars_data)
 VarVar_data = np.var(Vars_data)
-VarATV_data = np.cov(np.stack( (Vars_data[12:],Vars_data[:-12]),axis = 0))[0,1]
+VarATV_data = np.cov(np.stack( (Vars_data[1:],Vars_data[:-1]),axis = 0))[0,1]
 
 
 data_moms_dct_SCE = Dict.empty(
@@ -579,17 +604,17 @@ print(dict(data_moms_dct_SCE))
 
 # #### model moments 
 
-# + code_folding=[18, 37]
+# + code_folding=[0, 18, 39]
 fire_ar_mom_dct = {'InfAV':0.0,
-           'InfVar':r'$\sigma^2/(1-\rho^2)$',
-           'InfATV':r'$\rho\sigma^2/(1-\rho^2)$',
+           'InfVar':r'$\sigma^2_\omega/(1-\rho^2)$',
+           'InfATV':r'$\rho\sigma^2_\omega/(1-\rho^2)$',
            'FE':0.0,
-           'FEVar':r'$\sigma^2$',
+           'FEVar':r'$\sigma^2_\omega$',
            'FEATV':0.0,
            'Disg':0.0,
            'DisgVar':0.0,
            'DisgATV':0.0,
-           'Var':r'$\sigma^2$',
+           'Var':r'$\sigma^2_\omega$',
             'VarVar':0.0,
             'VarATV':0.0
            }
@@ -602,12 +627,12 @@ fire_sv_mom_dct = {'InfAV':0.0,
            'InfVar':'N/A',
            'InfATV':'N/A',
            'FE':0.0,
-           'FEVar':r'$\bar\sigma^2_{\eta}+\bar\sigma^2_{\epsilon}$',
+           'FEVar':r'$\bar\sigma^2_{\eta}+\bar\sigma^2_{z}$',
            'FEATV':0.0,
            'Disg':0.0,
            'DisgVar':0.0,
            'DisgATV':0.0,
-           'Var':r'$\bar\sigma^2_{\eta}+\bar\sigma^2_{\epsilon}$',
+           'Var':r'$\bar\sigma^2_{\eta}+\bar\sigma^2_{z}$',
             'VarVar':'>0',
             'VarATV':'>0'
            }
@@ -616,10 +641,12 @@ fire_sv_mom = pd.DataFrame([dict(fire_sv_mom_dct)])
 fire_sv_mom.index = ['FIRE+SV']
 
 
+## these moments have not been used yet 
+## need to make sure all is correct 
 
 sear_mom_dct = {'InfAV':0.0,
-           'InfVar':r'$\sigma^2/(1-\rho^2)$',
-           'InfATV':r'$\rho\sigma^2/(1-\rho^2)$',
+           'InfVar':r'$\sigma^2_\omega/(1-\rho^2)$',
+           'InfATV':r'$\rho\sigma^2\omega/(1-\rho^2)$',
            'FE':0.0,
            'FEVar':r'$\lambda^2\sigma^2/(1-(1-\lambda)^2\rho^2)$',
            'FEATV':r'$(1-\lambda)\rho\text{FEVar}$',
@@ -634,7 +661,7 @@ sear_mom_dct = {'InfAV':0.0,
 sear_mom = pd.DataFrame([sear_mom_dct])
 sear_mom.index = ['SE+AR']
 
-# + code_folding=[]
+# + code_folding=[0]
 ## data_moments 
 
 
@@ -651,13 +678,22 @@ data_mom_df = pd.concat([data_mom_SPF,
 data_mom_df = data_mom_df.applymap(lambda x: round(x, 3) 
                                    if isinstance(x, (int, float)) else x)
 
+
+### keep only selected moments 
+
+data_mom_df = data_mom_df.drop(columns=['FEATV',
+                                        'DisgVar',
+                                        'DisgATV',
+                                        'VarVar',
+                                        'VarATV'])
+
 data_mom_df.T.to_excel('tables/data_moments.xlsx')
 data_mom_df.T
 # -
 
 # ### Data moments
 
-# + code_folding=[]
+# + code_folding=[0]
 ## real time and history 
 
 ################
@@ -681,7 +717,7 @@ process_paraM_est_ar = np.array([rhoM_est,
 # + [markdown] code_folding=[]
 # #### SV  parameters and data  
 
-# + code_folding=[]
+# + code_folding=[0]
 ################
 ## quarterly ##
 ################
@@ -850,14 +886,18 @@ process_paraQ_est_sv = np.array([0.2])
 process_paraM_est_sv = np.array([0.2])
 # -
 
-# ### Test  Estimation
-
 # ### Estimation 
 
-# + code_folding=[4, 11, 23, 33, 42, 51, 60, 71, 76, 82, 88, 99, 108, 116, 126, 136, 147, 151, 156, 161, 167, 229, 260, 261, 287]
-agents_list = ['SPF','SCE']
+# + code_folding=[0, 3, 6, 10, 17, 27, 37, 48, 58, 68, 78, 81, 90, 96, 103, 109, 120, 128, 136, 146, 156, 167, 171, 176, 181, 187, 205, 329, 330]
+agents_list = ['SPF',
+               'SCE']
 
-process_list = ['AR','SV']
+horizon_list = [4,
+               12]
+
+process_list = ['AR',
+                'SV'
+               ]
 
 ex_model_list = ['SE',
                  'NI',
@@ -869,14 +909,22 @@ nb_ex_model = len(ex_model_list)
 moments_list = [['FE','FEVar','FEATV'],
                ['FE','FEVar','FEATV','Disg','DisgVar','DisgATV'],
                ['FE','FEVar','FEATV','Disg','DisgVar','DisgATV','Var','VarVar','VarATV']]
+
 nb_moments = len(moments_list)
 
 how_list =['2-step','Joint']
 
 moments_list_general = ['FE','FE+Disg','FE+Disg+Var']
 
-model_list = [sear0,niar0,dear0,deniar0,
-             sesv0,nisv0,desv0,denisv0]
+model_list = [sear0,
+              niar0,
+              dear0,
+              deniar0,
+              sesv0,
+              nisv0,
+              desv0,
+              denisv0
+]
 
 algorithm_list = ['trust-constr',
                  'trust-constr',
@@ -885,7 +933,8 @@ algorithm_list = ['trust-constr',
                  'trust-constr',
                  'trust-constr',
                  'trust-constr',
-                 'trust-constr']
+                 'trust-constr'
+                 ]
 
 
 algorithm_joint_list = ['trust-constr',
@@ -895,25 +944,28 @@ algorithm_joint_list = ['trust-constr',
                         None,
                         None,
                         None,
-                        None]
+                        None
+]
 
 bns_list =[((0,1),),
            ((0,3),(0,3),),
            ((-2,2),(0,5),),
-           ((-3,3),(0,3),(0,3),),
+           ((-3,3),(0,3),),
            ((0,1),),
            ((0,3),(0,3),),
            ((-2,2),(0,np.inf),),
-           ((-3,3),(0,3),(0,3),)]
+           ((-3,3),(0,3),)
+]
 
 bns_joint_list =[((0,1),(0.9,1),(0,np.inf),),
                  ((0,3),(0,3),(0.9,1),(0,np.inf),),
                  ((-2,2),(0,5),(0.9,1),(0,np.inf),),
-                 ((-3,3),(0,3),(0,3),(0.9,1),(0,np.inf),),
+                 ((-3,3),(0,3),(0.9,1),(0,np.inf),),
                  None,
                  None,
                  None,
-                 None]
+                 None
+]
 
 data_mom_dict_list = [data_moms_dct_SPF,
                       data_moms_dct_SCE]
@@ -921,7 +973,8 @@ data_mom_dict_list = [data_moms_dct_SPF,
 process_paras_list = [process_paraQ_est_ar,
                       process_paraQ_est_sv,
                       process_paraM_est_ar,
-                      process_paraM_est_sv]
+                      process_paraM_est_sv
+]
 
 realized_list = [realized_CPIC.astype(np.float64),
                  realized_CPI.astype(np.float64)]
@@ -929,39 +982,40 @@ realized_list = [realized_CPIC.astype(np.float64),
 real_time_list = [np.array(real_time_Q_ar),
                  np.array(real_time_Q_sv),  ## 4 x t array 
                 np.array(real_time_M_ar),
-                 np.array(real_time_M_sv)]  ## 4 x t array 
+                np.array(real_time_M_sv)
+]  ## 4 x t array 
 
 history_list = [np.array(history_Q_ar),
                np.array(history_Q_sv),     ## 4 x t array 
                np.array(history_M_ar), 
-               np.array(history_M_sv)]     ## 4 x t array 
+               np.array(history_M_sv)
+]     ## 4 x t array 
 
 ## parameter guesses 
-guesses_list = [np.array([0.3]),  ## se lbd 
+guesses_list = [np.array([0.2]),  ## se lbd 
                np.array([0.5,0.8]),  ## ni sigma_pb, sigma_pr
                np.array([0.3,0.4]),   ## de theta theta_sigma
-               np.array([0.1,0.2,0.3])
+               np.array([0.1,0.3])
                ]  ## deni theta, sigma_pb, sigma_pr
 
 guesses_joint_list = [np.array([0.2,0.98,0.1]),            ## se lbd 
-                       np.array([0.1,0.2,0.95,0.1]),      ## ni sigma_pb, sigma_pr
-                       np.array([0.3,0.4,0.95,0.1]),      ## de theta theta_sigma
-                       np.array([0.1,0.2,0.3,0.95,0.1]),  ## theta, sigma_pb, sigma_pr  
+                     np.array([0.1,0.2,0.95,0.1]),      ## ni sigma_pb, sigma_pr
+                     np.array([0.3,0.4,0.95,0.1]),      ## de theta theta_sigma
+                     np.array([0.1,0.3,0.95,0.1]),  ## theta, sigma_pb, sigma_pr  
                        ## for sv models not used
-                       np.array([0.3,0.2]),            ## se lbd 
-                       np.array([0.1,0.2,0.2]),      ## ni sigma_pb, sigma_pr
-                       np.array([0.3,0.4,0.2]),      ## de theta theta_sigma
-                       np.array([0.1,0.2,0.2])
+                      np.array([0.3,0.2]),            ## se lbd 
+                      np.array([0.1,0.2,0.2]),      ## ni sigma_pb, sigma_pr
+                       np.array([0.3,0.2]),      ## de theta theta_sigma
+                       np.array([0.1,0.2])
                      ]  ## deni theta, sigma_pb, sigma_pr]
 
 n_exp_paras_list = [1,
                     2,
                     2,
-                    3]
+                    2]
 
 
 ## names labels 
-
 
 se_ar_names = [r'$\hat\lambda$',
                    r'$\rho$',
@@ -992,12 +1046,12 @@ de_ar_names = [r'$\hat\theta$',
 
 
 deni_ar_names = [r'$\hat\theta$',
-                   r'$\hat\sigma_{pb}$',
+                  # r'$\hat\sigma_{pb}$',
                    r'$\hat\sigma_{pr}$',
                    r'$\rho$',
                    r'$\sigma$',
                    r'$\hat\theta$',
-                   r'$\hat\sigma_{pb}$',
+                  # r'$\hat\sigma_{pb}$',
                    r'$\hat\sigma_{pr}$',
                    r'$\rho$',
                    r'$\sigma$']
@@ -1017,7 +1071,7 @@ de_sv_names = [r'$\hat\theta$',
 
 
 deni_sv_names = [r'$\hat\theta$',
-                   r'$\hat\sigma_{pb}$',
+                  # r'$\hat\sigma_{pb}$',
                    r'$\hat\sigma_{pr}$',
                    r'$\gamma$']
 
@@ -1032,14 +1086,13 @@ names_list = [se_ar_names,
              deni_sv_names]
 
 ################################################################################
-## estimate the model for different agents, theory, inflation process and joint/theory 
+## A loop to estimate the model for different agents, theory, inflation process and joint/2-step 
 #################################################################################
 
 paras_list = []
 paras_step2_list = []
 paras_joint_list = []
 paras_joint_step2_list = []
-
 
 for agent_id,agent in enumerate(agents_list):
     print(agent)
@@ -1070,6 +1123,9 @@ for agent_id,agent in enumerate(agents_list):
             instance = model_instance
 
             print(instance)
+            print('horizon', horizon_list[agent_id])
+            instance.horizon = horizon_list[agent_id]
+            
             instance.GetRealization(realized_this)
             instance.real_time = real_time_this
             instance.history = history_this
@@ -1091,7 +1147,7 @@ for agent_id,agent in enumerate(agents_list):
                     scalor = ObjGen(instance,
                                     paras = paras_this,
                                     data_mom_dict = data_mom_dict_this,
-                                    moment_choice = moments_this,
+                                    moment_choice = List(moments_this),
                                     how ='expectation')
                     return scalor
                 
@@ -1101,12 +1157,17 @@ for agent_id,agent in enumerate(agents_list):
                                  para_guess = guess_this,
                                  method= alg_this,
                                 bounds = bounds_this)
+                
+                ## try it another time if no convergence 
+                if np.isnan(para_est).any()==True:
+                    para_est  = ParaEst(Obj_this,
+                                 para_guess = guess_this,
+                                 method= alg_this,
+                                bounds = bounds_this)
+                    
                 ## same para est
-                para_est = np.round(para_est,2)
-                print('Step 1:'+str(para_est))
-                paras_list_this_model.append(para_est)
-                paras_list.append(para_est)
-                if len(para_est)>0:
+                if np.isnan(para_est).any()==False:
+                    
                     ## compute the efficient weighting matrix 
                     instance.exp_para = para_est
                     smm_dict_this = instance.SMM()
@@ -1120,19 +1181,33 @@ for agent_id,agent in enumerate(agents_list):
                                            paras = paras_this,
                                            weight = wm1st,
                                            data_mom_dict = data_mom_dict_this,
-                                           moment_choice = moments_this,
+                                           moment_choice = List(moments_this),
                                            how ='expectation')
                         return scalor
-                    ## re-estimating
                     para_est_step2  = ParaEst(Obj_this_step2,
                                         para_guess = guess_this,
                                         method= alg_this,
                                         bounds = bounds_this)
+                    if np.isnan(para_est_step2).any()==True:
+                        print('the 2-step estimation is nan')
+                        para_est_step2_nan = np.array([np.nan])
+                        para_est_step2 = para_est_step2_nan
                 else:
-                    para_est_step2 = np.array([])
-                ## same para est
+                    print('the estimation is nan')
+                    para_est_nan = np.array([np.nan])
+                    para_est = para_est_nan
+                                        
+                    para_est_step2_nan = np.array([np.nan])
+                    para_est_step2 = para_est_step2_nan
+                    
+                ## save para est
+                
+                para_est = np.round(para_est,2)
+                print('Step 1:'+str(para_est))
+                paras_list_this_model.append(para_est)
+                paras_list.append(para_est)
+                
                 para_est_step2 = np.round(para_est_step2,2)
-
                 print('Step 2:'+str(para_est_step2))
                 paras_step2_list_this_model.append(para_est_step2)
                 paras_step2_list.append(para_est_step2)
@@ -1140,7 +1215,8 @@ for agent_id,agent in enumerate(agents_list):
                 
                 ##  joint estimation 
                 n_exp_paras_this = n_exp_paras_list[exp_id]
-                moments_this_ = moments_this+['InfAV','InfVar','InfATV'] ## added inflation moments 
+                
+                moments_this_ = List(moments_this+['InfAV','InfVar','InfATV']) ## added inflation moments 
                 
                 if pg_id <=0: ## no joint estimation for SV models 
                     def Obj_joint_this(paras):
@@ -1158,7 +1234,7 @@ for agent_id,agent in enumerate(agents_list):
                                               para_guess = guess_this_,
                                               method= alg_joint_this,
                                               bounds = bounds_joint_this) ##Nelder-Mead  
-                    if len(paras_joint_est)>0:
+                    if  np.isnan(paras_joint_est).any()==False:
                         ## compute the efficient weighting matrix 
                         instance.exp_para = paras_joint_est[0:n_exp_paras_this]     
                         instance.process_para = paras_joint_est[n_exp_paras_this:]
@@ -1181,13 +1257,19 @@ for agent_id,agent in enumerate(agents_list):
                         para_est_joint_step2  = ParaEst(Obj_joint_this_step2,
                                                         para_guess = guess_this_,
                                                         method = alg_joint_this,
-                                                        bounds = bounds_joint_this)     #  Nelder-Mead         
+                                                        bounds = bounds_joint_this)     #  Nelder-Mead
+                        if np.isnan(para_est_joint_step2).any()==True:
+                            print('the 2-step estimation is nan')
+                            para_est_joint_step2 = np.array([np.nan])
+                        
                     else:
-                        para_est_joint_step2 = np.array([])
+                        print('the estimation is nan')
+                        paras_joint_est = np.array([np.nan])
+                        para_est_joint_step2 = np.array([np.nan])
                 
                 else:
-                    paras_joint_est = np.array([])
-                    para_est_joint_step2 = np.array([])
+                    paras_joint_est = np.array([np.nan])
+                    para_est_joint_step2 = np.array([np.nan])
                 
                 ## save in the list 
                 paras_joint_est = np.round(paras_joint_est,2)
@@ -1223,10 +1305,14 @@ for agent_id,agent in enumerate(agents_list):
             para_all_est_tab_this_model.to_excel('tables/'+agent+'_'+process+'_'+ex_model+'.xlsx',
                                        float_format='%.2f',
                                        index = True)
+# -
 
 
-# + code_folding=[]
-## create multiple index to store coefficients estimates 
+## an example of para est list 
+paras_joint_list
+
+# + code_folding=[0]
+## create multiple index to store coefficient estimates 
 
 iterables = [agents_list, process_list, ex_model_list,moments_list_general]
 midx = pd.MultiIndex.from_product(iterables, names=['Agents', 'Process','Model','Moments'])
@@ -1238,7 +1324,6 @@ paras_table['ParaEst'] = paras_list
 
 paras_step2_list = [tuple(paras) for paras in paras_step2_list]
 paras_table['ParaEst2step'] = paras_step2_list
-
 
 ## joint table
 paras_joint_table = pd.DataFrame(index = midx)
@@ -1274,7 +1359,7 @@ paras_combine_table_2step = paras_combine_table[['2-step Estimate 2nd step','Joi
 
 paras_combine_table_2step
 
-# + code_folding=[2]
+# + code_folding=[0, 2]
 ## Flag those under-identified cases 
 
 ui_list = [('SPF','AR','NI','FE'),
@@ -1329,7 +1414,7 @@ def simulate_history(pg_para,
     return realized_this,history_this,real_time_this
 
 
-# + code_folding=[]
+# + code_folding=[4, 8]
 ## generate model moments
 
 smm_list = []
@@ -1404,7 +1489,7 @@ for agent_id,agent in enumerate(agents_list):
                     smm_this = {}
                     smm_joint_list.append(smm_this)
 
-# + code_folding=[]
+# + code_folding=[1, 5]
 ## model moments 
 smm_model = pd.DataFrame(smm_list,
                          columns = list(smm_list[0].keys()),
@@ -1429,13 +1514,14 @@ mom_compare_sce = smm_data_sce.append(smm_model.loc['SCE'])
 
 mom_joint_compare_spf = smm_data_spf.append(smm_joint_model.loc['SPF','AR'])
 mom_joint_compare_sce = smm_data_sce.append(smm_joint_model.loc['SCE','AR'])
-# -
 
+# + code_folding=[]
 ## export 
 mom_compare_spf.to_excel('./tables/spf_moments.xlsx')
 mom_compare_sce.to_excel('./tables/sce_moments.xlsx')
 mom_joint_compare_spf.to_excel('./tables/spf_joint_est_moments.xlsx')
 mom_joint_compare_sce.to_excel('./tables/sce_joint_est_moments.xlsx')
+# -
 
 mom_compare_spf
 
@@ -1444,7 +1530,5 @@ mom_joint_compare_spf
 mom_compare_sce
 
 mom_joint_compare_sce
-
-
 
 
