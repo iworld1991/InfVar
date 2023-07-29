@@ -2,17 +2,23 @@
 ** This do file imports and cleans the raw data of individual probability forecasts
 **  from SPF. It creats the InfExpSPFProbIndQ.dta file to be imported into DensEst.py
 **   for density and moment estimation. The output of that is InfExpSPFDstIndQ.dta."
-** That data will be processed by the do file next to this. *********************
-*note: date SPFmicrodata is downloaded from https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/individual-forecasts
+**  That data will be processed by the do file next to this. *********************
+**  Note: data SPFmicrodata is downloaded from https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/individual-forecasts
 ********************************************************************************* 
 
-clear 
-set more off 
-cd "/Users/Myworld/Dropbox/InfVar/workingfolder/SurveyData/SPF/individual"
 
-/*
+
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
+global folder "/Users/Myworld/Dropbox/InfVar/workingfolder/SurveyData"
+global sum_graph_folder "${mainfolder}/graphs/pop"
+global sum_table_folder "${mainfolder}/tables"
+global datafolder "${folder}/SPF"
+
+cd "${datafolder}/individual/"
+
+
 foreach var in PRCCPI PRCPCE{
-   import excel "/Users/Myworld/Dropbox/InfVar/workingfolder/SurveyData/SPF/individual/SPFmicrodata.xlsx", sheet("`var'") firstrow clear 
+   import excel "SPFmicrodata.xlsx", sheet("`var'") firstrow clear 
    save "`var'.dta",replace 
 }
 
@@ -44,7 +50,7 @@ drop date2
 order date year quarter 
 
 save InfExpSPFProbIndQ,replace 
-*/
+
 
 use InfExpSPFProbIndQ,clear
 

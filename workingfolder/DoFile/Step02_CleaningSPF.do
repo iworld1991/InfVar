@@ -1,3 +1,10 @@
+*******************************************************************************
+** This do file imports and cleans the raw data of individual forecasts
+**  from SPF. It generates the InfExpSPFPointPopQ.dta file.
+*  Note: data SPFmicrodata is downloaded from https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/individual-forecasts
+********************************************************************************* 
+
+
 *************************
 **** Import SPF *********
 *************************
@@ -9,17 +16,13 @@ global datafolder "/SPF/individual"
 
 cd ${folder}/${datafolder}
  
-import excel "Individual_CPI.xlsx", sheet("CPI") firstrow clear 
-save SPFCPI,replace
+ 
+ 
+foreach var in CPI PCE COREPCE CORECPI{
+   import excel "SPFmicrodata.xlsx", sheet("`var'") firstrow clear 
+   save "SPF`var'.dta",replace 
+}
 
-import excel "Individual_PCE.xlsx", sheet("PCE") firstrow clear 
-save SPFPCE,replace
-
-import excel "Individual_COREPCE.xlsx", sheet("COREPCE") firstrow clear
-save SPFCorePCE,replace
-
-import excel "Individual_CORECPI.xlsx", sheet("CORECPI") firstrow clear 
-save SPFCoreCPI,replace
 
 use SPFPCE,clear
 merge 1:1 YEAR QUARTER INDUSTRY ID using SPFCPI
@@ -33,7 +36,6 @@ rm "SPFPCE.dta"
 rm "SPFCPI.dta"
 rm "SPFCorePCE.dta"
 rm "SPFCoreCPI.dta"
-
 
 
 gen date_str = string(YEAR)+"Q"+string(QUARTER)
