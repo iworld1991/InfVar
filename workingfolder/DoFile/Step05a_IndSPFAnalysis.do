@@ -1,8 +1,8 @@
 clear
-global mainfolder "C:\Users\WB585211\Downloads\InfVar-master\workingfolder"
-global folder "${mainfolder}\SurveyData\"
-global sum_graph_folder "${mainfolder}\graphs\ind"
-global sum_table_folder "${mainfolder}\tables"
+global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder/"
+global folder "${mainfolder}/SurveyData/"
+global sum_graph_folder "${mainfolder}/graphs/ind"
+global sum_table_folder "${mainfolder}/tables"
 
 cd ${folder}
 pwd
@@ -37,6 +37,11 @@ sort ID year quarter
 
 drop if ID==ID[_n-1] & INDUSTRY != INDUSTRY[_n-1]
 
+****************************
+** Filter sample period 
+**************************
+
+keep if dateQ<=quarterly("2021Q2", "YQ")
 
 *******************************
 **  Summary Statistics of SPF **
