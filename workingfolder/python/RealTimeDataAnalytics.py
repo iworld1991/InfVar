@@ -16,6 +16,7 @@
 
 # ## Real Time Data 
 #
+# - [link](https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/real-time-data-set-full-time-series-history)
 
 import pandas as pd
 import numpy as np
@@ -84,13 +85,14 @@ def RT_this_date(real_time_data,
     
     return real_time_data_this_date
 
-# + {"code_folding": [0]}
+# + {"code_folding": []}
 ## get only the contemparaneous data point (last obs of the real-time data)
 
 if __name__ == "__main__":
     ### CPI 
 
     CPIMRT = pd.read_excel('../OtherData/RealTimeData/pcpiMvMd.xlsx')  
+    #https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/pcpi 
     CPIMRT = CPIMRT[-CPIMRT.DATE.isnull()]
     dateM_CPI  = pd.to_datetime(CPIMRT['DATE'],
                                 format='%Y:%m', 
@@ -132,6 +134,7 @@ if __name__ == "__main__":
     ### CPI Core
 
     CPICMRT = pd.read_excel('../OtherData/RealTimeData/pcpixMvMd.xlsx')  
+    #https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/pcpix
     CPICMRT = CPICMRT[-CPICMRT.DATE.isnull()]
     dateM_CPIC  = pd.to_datetime(CPICMRT['DATE'],
                                 format='%Y:%m', 
