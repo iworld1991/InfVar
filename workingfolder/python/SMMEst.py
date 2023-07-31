@@ -542,10 +542,28 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     ## plot for validation 
     simulated_re  = rear0.SimForecasts()
-    plt.title("Simulated FIRE forecasts")
-    plt.plot(simulated_re['Forecast'],label='Forecasts')
-    plt.plot(rear0.real_time,label='Real-time realization')
-    plt.legend(loc=0)
+    
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
+    
+    ax[0].set_title("Simulated FIRE forecasts")
+    ax[0].plot(simulated_re['Forecast'],
+             label='Forecasts')
+    #plt.plot(rear0.real_time,
+    #         label='Real-time realization')
+    ax[0].plot(rear0.realized,
+             label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title("Simulated FIRE forecasts")
+    ax[1].plot(simulated_re['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_re['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_re['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -680,7 +698,7 @@ class RationalExpectationSV:
         return None
 
 
-# + code_folding=[0, 2]
+# + code_folding=[2]
 if __name__ == "__main__":
     ### create a RESV instance 
     resv = RationalExpectationSV(exp_para = np.array([]),
@@ -690,9 +708,34 @@ if __name__ == "__main__":
 
     ## get the realization 
     resv.GetRealization(xx_realized)
-
-
 # -
+
+if __name__ == "__main__":
+    ## plot for validation 
+    simulated_resv  = resv.SimForecasts()
+    
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
+    
+    ax[0].set_title("Simulated FIRE forecasts under SV")
+    ax[0].plot(simulated_resv['Forecast'],
+             label='Forecasts')
+    #plt.plot(resv.real_time,
+    #         label='Real-time realization')
+    ax[0].plot(resv.realized,
+             label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title("Simulated FIRE forecasts under SV")
+    ax[1].plot(simulated_resv['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_resv['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_resv['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
+
 
 # ### Sticky Expectation (SE) + AR1
 
@@ -967,10 +1010,12 @@ if __name__ == "__main__":
 # + code_folding=[]
 if __name__ == "__main__":
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
     ## plot for validation 
     simulated_sear  = sear1.SimForecasts()
+    
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
     
     ax[0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
     ax[0].plot(simulated_sear['Forecast'],
@@ -1189,7 +1234,7 @@ class StickyExpectationSV:
         return None
 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
     ## initialize the sv instance 
@@ -1201,9 +1246,35 @@ if __name__ == "__main__":
     ## get the realization 
 
     sesv0.GetRealization(xx_realized)
-
-
 # -
+
+if __name__ == "__main__":
+    
+    ## plot for validation 
+    simulated_sesv  = sesv0.SimForecasts()
+    
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
+    
+    ax[0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    ax[0].plot(simulated_sesv['Forecast'],
+             label='Forecasts')
+    #plt.plot(sesv0.real_time,
+    #         label='Real-time realization')
+    ax[0].plot(sesv0.realized,
+             label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    ax[1].plot(simulated_sesv['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_sesv['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_sesv['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
+
 
 # ### Noisy Information (NI) + AR1
 #
@@ -1714,13 +1785,15 @@ if __name__ == "__main__":
     print('Estimates: ',str(Est))
 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
+    
+    
+    ## plot for validation 
+    simulated_niar  = niar1.SimForecasts()
     
     fig,ax = plt.subplots(1,2,
                           figsize=(10,4))
-    ## plot for validation 
-    simulated_niar  = niar1.SimForecasts()
     
     ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
     ax[0].plot(simulated_niar['Forecast'],
@@ -2165,9 +2238,34 @@ if __name__ == "__main__":
     ## get the realization 
 
     nisv0.GetRealization(xx_realized)
-
-
 # -
+
+if __name__ == "__main__":
+    
+    ## plot for validation 
+    simulated_nisv  = nisv0.SimForecasts()
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
+    
+    ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    ax[0].plot(simulated_nisv['Forecast'],
+             label='Forecasts')
+    #plt.plot(nisv0.real_time,
+    #         label='Real-time realization')
+    ax[0].plot(nisv0.realized,
+             label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    ax[1].plot(simulated_nisv['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_nisv['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_nisv['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
+    
 
 # ###  Diagnostic Expectation(DE) + AR1
 
@@ -2419,7 +2517,7 @@ if __name__ == "__main__":
     print('True parameters: ',str(exp_paras_fake)) 
     print('Estimates: ',str(Est))
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
     
     
@@ -2653,7 +2751,34 @@ if __name__ == "__main__":
 
     desv0.GetRealization(xx_realized)
 
-
+# + code_folding=[0]
+if __name__ == "__main__":
+    
+    
+    ## plot for validation 
+    simulated_desv  = desv0.SimForecasts()
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
+    
+    ax[0].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
+    ax[0].plot(simulated_desv['Forecast'],
+             label='Forecasts')
+    #plt.plot(desv0.real_time,
+    #         label='Real-time realization')
+    ax[0].plot(desv0.realized,
+             label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
+    ax[1].plot(simulated_desv['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_desv['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_desv['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
+ 
 # -
 
 # ###  Diagnostic Expectation and Noisy Information Hybrid(DENI) + AR1
@@ -3080,7 +3205,7 @@ if __name__ == "__main__":
     print('True parameters: ',str(deni_exp_paras_fake)) 
     print('Estimates: ',str(Est))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_deniar  = deniar1.SimForecasts()
@@ -3289,7 +3414,7 @@ class DENIHybridSV:
                       'VarATV':VarATV_sim}
         return SMMMoments
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
     ## initial a sv instance
     denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.2]),
@@ -3300,6 +3425,29 @@ if __name__ == "__main__":
     ## get the realization 
 
     denisv0.GetRealization(xx_realized)
+# + code_folding=[]
+if __name__ == "__main__":
+    ## plot for validation 
+    simulated_denisv  = denisv0.SimForecasts()
+    fig, ax = plt.subplots(1,2,figsize=(10,4))
+    
+    ax[0].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    ax[0].plot(simulated_denisv['Forecast'],
+               label='Forecasts')
+    ax[0].plot(denisv0.realized,
+               label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    ax[1].plot(simulated_denisv['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_denisv['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_denisv['Var'][1:],
+             label='Var')
+    ax[1].legend(loc=0)
+
+
 # + code_folding=[1, 2, 18]
 @jitclass(model_sv_data)
 class DENIHybridSV2Signal:
@@ -3474,7 +3622,6 @@ class DENIHybridSV2Signal:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
-
 # -
 
 
