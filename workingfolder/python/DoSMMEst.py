@@ -85,7 +85,7 @@ xx_real_time= np.array([xx_real_time,
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[0]
+# + code_folding=[1]
 ## initialize the ar instance
 sear0 = StickyExpectationAR(exp_para = np.array([0.2]),
                             process_para = np.array([ρ0,σ0]),
@@ -95,7 +95,7 @@ sear0 = StickyExpectationAR(exp_para = np.array([0.2]),
 
 sear0.GetRealization(realized0)
 
-# + code_folding=[0]
+# + code_folding=[]
 ## initialize the sv instance
 sesv0 = StickyExpectationSV(exp_para = np.array([0.3]),
                            process_para = np.array([0.1]),
@@ -848,7 +848,7 @@ process_paraM_est_sv = np.array([0.2])
 
 # ### Estimation 
 
-# + code_folding=[0, 3, 6, 10, 17, 27, 37, 48, 58, 68, 78, 81, 96, 103, 109, 120, 128, 136, 146, 156, 167, 171, 176, 181, 187, 205, 330]
+# + code_folding=[0, 3, 6, 10, 17, 27, 37, 48, 58, 68, 81, 96, 103, 109, 120, 128, 136, 146, 156, 167, 171, 176, 181, 187]
 agents_list = ['SPF',
                'SCE']
 
@@ -1045,6 +1045,7 @@ names_list = [se_ar_names,
              de_sv_names,
              deni_sv_names]
 
+# + code_folding=[9, 134]
 ################################################################################
 ## A loop to estimate the model for different agents, theory, inflation process and joint/2-step 
 #################################################################################
@@ -1265,11 +1266,7 @@ for agent_id,agent in enumerate(agents_list):
             para_all_est_tab_this_model.to_excel('tables/'+agent+'_'+process+'_'+ex_model+'.xlsx',
                                        float_format='%.2f',
                                        index = True)
-# -
 
-
-## an example of para est list 
-paras_joint_list
 
 # + code_folding=[]
 ## create multiple index to store coefficient estimates 
@@ -1296,8 +1293,10 @@ paras_joint_table['ParaEst2step'] = paras_joint_step2_list
 
 # -
 
-paras_table.columns = [['2-step Estimate','2-step Estimate 2nd step']]
-paras_joint_table.columns = [['Joint Estimate','Joint Estimate 2nd step']]
+paras_table.columns = [['2-step Estimate',
+                        '2-step Estimate 2nd step']]
+paras_joint_table.columns = [['Joint Estimate',
+                              'Joint Estimate 2nd step']]
 
 # + code_folding=[]
 paras_combine_table = pd.merge(paras_table,
@@ -1374,7 +1373,7 @@ def simulate_history(pg_para,
     return realized_this,history_this,real_time_this
 
 
-# + code_folding=[0, 6, 33, 54]
+# + code_folding=[6]
 ## generate model moments
 
 smm_list = []
@@ -1389,23 +1388,27 @@ for agent_id,agent in enumerate(agents_list):
     for pg_id,process in enumerate(process_list):
         print(process)
         process_paras_this = process_paras_list[agent_process_id]
+        
         ## history and real-time inflation that is fed in the model depends on agent type and process
         agent_process_id = agent_id*2+pg_id       
+        
         process_paras_this = process_paras_list[agent_process_id]
         real_time_this = real_time_list[agent_process_id]
         history_this = history_list[agent_process_id]
-        
         
         for exp_id,ex_model in enumerate(ex_model_list):
             n_exp_model = len(ex_model_list)
             print(ex_model)
             model_idx  = pg_id*n_exp_model+exp_id
             #print(model_idx)
-            model_instance = model_list[model_idx]
-
-            ## feed inputs to the instance 
-            instance = model_instance
+            instance = model_list[model_idx]
             print(instance)
+            
+            ## directly use the history 
+            instance.GetRealization(realized_this)   
+            instance.history = history_this
+            instance.real_time = real_time_this
+            print("Length of real time series is "+str(len(instance.real_time)))
             
             ## compute moments with these parameters 
             for moments in moments_list_general:
@@ -1413,19 +1416,12 @@ for agent_id,agent in enumerate(agents_list):
                 para_est_this = np.array(list(paras_combine_table.loc[agent,process,ex_model,moments]['2-step Estimate 2nd step'])).flatten()
                 print(para_est_this)
                 print(process_paras_this)
-                ## simulate history and realization
-                #realized_this,history_this,real_time_this = simulate_history(process_paras_this,
-                #                                                                 t_sim,
-                #                                                                t_burn)
-                ## or directly use the history 
-                instance.GetRealization(realized_this)
-                instance.real_time = real_time_this
-                instance.history = history_this
                 
                 try:
                     instance.process_para = process_paras_this
                     instance.exp_para = para_est_this
                     smm_ts_this = instance.SimForecasts()
+                    print('Length of simulated moments is '+str(len(smm_ts_this['FE'])))
                     smm_this = instance.SMM()
                     print(smm_this)
 
@@ -1446,13 +1442,6 @@ for agent_id,agent in enumerate(agents_list):
                 try:
                     instance.exp_para = para_est_this_[0:n_exp_paras_this]     
                     instance.process_para = para_est_this_[n_exp_paras_this:]
-                    ## simulate history 
-                    realized_this,history_this,real_time_this = simulate_history(instance.process_para,
-                                                                                 t_sim,
-                                                                                 t_burn)
-                    instance.GetRealization(realized_this)
-                    instance.real_time = real_time_this
-                    instance.history = history_this
                     
                     try:
                         smm_this = instance.SMM()
@@ -1465,7 +1454,7 @@ for agent_id,agent in enumerate(agents_list):
                     smm_this = {}
                     smm_joint_list.append(smm_this)
 
-# + code_folding=[5]
+# + code_folding=[]
 ## model moments 
 smm_model = pd.DataFrame(smm_list,
                          columns = list(smm_list[0].keys()),
@@ -1482,17 +1471,17 @@ smm_names = ['Forecast','FE','Disg','Var']
 
 iterables = [agents_list, process_list, ex_model_list,moments_list_general,smm_names]
 
-midx = pd.MultiIndex.from_product(iterables, names=['Agents', 'Process','Model','Moments','Variable'])
+midx_ts = pd.MultiIndex.from_product(iterables, names=['Agents', 'Process','Model','Moments','Variable'])
 
-smm_ts_table = pd.DataFrame(index = midx)
+smm_ts_table = pd.DataFrame(index = midx_ts)
 
-smm_ts_list_new = [ts[var] for ts in smm_ts_list for var in smm_ts_list[0].keys()]
+smm_ts_list_new = [ts[name] for ts in smm_ts_list for name in smm_names]
 
 smm_ts_table['smm_ts'] = smm_ts_list_new
 # -
 
 #plt.plot(realized_CPIC)
-plt.plot(smm_ts_table.loc['SCE','AR','SE','FE',:].loc['Forecast','smm_ts'])
+plt.plot(smm_ts_table.loc['SPF','AR','NI','FE+Disg+Var',:].loc['FE','smm_ts'])
 
 # + code_folding=[]
 ## data moments
@@ -1525,5 +1514,7 @@ mom_joint_compare_spf
 mom_compare_sce
 
 mom_joint_compare_sce
+
+
 
 
