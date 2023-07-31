@@ -85,7 +85,7 @@ xx_real_time= np.array([xx_real_time,
 
 # ### Sticky Expectation (SE) + SV
 
-# + code_folding=[]
+# + code_folding=[0]
 ## initialize the ar instance
 sear0 = StickyExpectationAR(exp_para = np.array([0.2]),
                             process_para = np.array([ρ0,σ0]),
@@ -178,7 +178,7 @@ deniar0 = DENIHybridAR(exp_para = np.array([0.1,0.3]),
 
 deniar0.GetRealization(realized0)
 
-# + code_folding=[]
+# + code_folding=[0]
 ## initial a sv instance
 denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.2]),
                            process_para = np.array([0.1]),
@@ -249,7 +249,7 @@ InfQ = InfQ[['Inf1y_CPICore',
 
 # #### Expectation data
 
-# + code_folding=[]
+# + code_folding=[0]
 ## expectation data from SPF 
 
 PopQ = pd.read_stata('../SurveyData/InfExpQ.dta')  
@@ -267,30 +267,28 @@ dateM = pd.to_datetime(PopM['date'],format='%Y%m%d')
 dateM_str = dateM.dt.year.astype(int).astype(str) + \
              "M" + dateM.dt.month.astype(int).astype(str)
 PopM.index = pd.DatetimeIndex(dateM)
+
 SCECPI = PopM[['SCE_Mean','SCE_FE','SCE_Disg','SCE_Var',
               'SCE_Mean_rd','SCE_FE_rd','SCE_Disg_rd','SCE_Var_rd']].dropna(how='any')
 
 # +
-## filter sample period 
-## we focus on period before the pandemic
+## plot times eries of 
+
+SPFCPI.plot(title='SPF Expectations')
+
+SCECPI.plot(title='SCE Expectations')
+
+# + code_folding=[]
 import datetime
 
 ## tempoary date used to check the data moments 
 
-end_date_late = datetime.datetime(2022, 5, 30)
+end_date_late = datetime.datetime(2023, 3, 30)
 end_date_early = datetime.datetime(2020, 3, 30)
 
-## SPF
-SPFCPI = SPFCPI[SPFCPI.index<end_date_late]
-
-## SCE
-SCECPI = SCECPI[SCECPI.index<end_date_late]
-
-
-# +
 ## we only focus on 4th quarter observations from SPF 
-
 SPFCPI = SPFCPI[SPFCPI.index.quarter==4]
+
 
 # +
 print('SCE\n')
@@ -309,6 +307,15 @@ print('\n')
 
 print('before 2020\n')
 print(SPFCPI[SPFCPI.index<end_date_early].mean())
+
+# +
+## filter sample period 
+
+## SPF
+SPFCPI = SPFCPI[SPFCPI.index<end_date_early]
+
+## SCE
+SCECPI = SCECPI[SCECPI.index<end_date_early]
 
 # + code_folding=[]
 ## Combine expectation data and real-time data 
@@ -350,7 +357,7 @@ CPIM = InfM['Inf1y_CPIAU'].copy().loc[start_t:end_t]
 
 print('for SPF moments estimation, the sample is between '+str(start_t)+' and '+str(end_t))
 
-# + code_folding=[]
+# + code_folding=[0]
 ## history data, the series ends at the same dates with real-time data but startes earlier
 
 st_t_history = '2000-01-01'
@@ -381,7 +388,7 @@ realized_CPI = np.array(SCE_est['Inf1yf_CPIAU'])
 
 # #### AR1 parameters 
 
-# + code_folding=[]
+# + code_folding=[0]
 ######################
 ### quarterly data ##
 #####################
@@ -416,57 +423,11 @@ print(sigmaQ_est)
 print('monthly AR(1) estimates for CPI headline:')
 print(rhoM_est)
 print(sigmaM_est)
-
-
 # -
 
 # #### Data moments 
 
-# + code_folding=[0]
-## not used for now 
-
-def calc_variance_at_low_freq(series,
-                             horizon):
-    """
-    input
-    ===== 
-    series: data at higher frequency with serial correlation
-    horizon: nb of periods between two non-serially correlated data point
-    
-    out
-    ====
-    variance: average variance of the non-serially correlated series 
-    """
-    
-    varinace_sum = 0.0
-    for cut in range(0,horizon):
-        ids = np.arange(cut,len(series),horizon)
-        print(ids)
-        variance = series[ids].var()
-        varinace_sum +=variance
-    return varinace_sum/horizon
-
-def newey_west_variance(series,
-                        truncate):
-    """
-    input
-    ===== 
-    series: data at higher frequency with serial correlation
-    truncate: nb of periods between two non-serially correlated data point
-    
-    out
-    ====
-    variance: average variance of the non-serially correlated series 
-    """
-    adjust_term = 1.0
-    
-    for truc in range(1,truncate):
-        weight = 2*(truncate-truc)/truncate
-        adjust_term += weight
-    return series.var()/adjust_term
-
-
-# + code_folding=[108]
+# + code_folding=[80, 108]
 #####################################
 ## preparing data moments
 #####################################
@@ -591,7 +552,6 @@ data_moms_dct_SCE['DisgATV'] = DisgATV_data
 data_moms_dct_SCE['Var'] = Var_data
 data_moms_dct_SCE['VarVar'] = VarVar_data
 data_moms_dct_SCE['VarATV'] = VarATV_data
-
 
 ############# need to compute the unconditional moments here 
 # -
@@ -888,7 +848,7 @@ process_paraM_est_sv = np.array([0.2])
 
 # ### Estimation 
 
-# + code_folding=[0, 3, 6, 10, 17, 27, 37, 48, 58, 68, 78, 81, 90, 96, 103, 109, 120, 128, 136, 146, 156, 167, 171, 176, 181, 187, 205, 329, 330]
+# + code_folding=[0, 3, 6, 10, 17, 27, 37, 48, 58, 68, 78, 81, 96, 103, 109, 120, 128, 136, 146, 156, 167, 171, 176, 181, 187, 205, 330]
 agents_list = ['SPF',
                'SCE']
 
@@ -1311,7 +1271,7 @@ for agent_id,agent in enumerate(agents_list):
 ## an example of para est list 
 paras_joint_list
 
-# + code_folding=[0]
+# + code_folding=[]
 ## create multiple index to store coefficient estimates 
 
 iterables = [agents_list, process_list, ex_model_list,moments_list_general]
@@ -1339,7 +1299,7 @@ paras_joint_table['ParaEst2step'] = paras_joint_step2_list
 paras_table.columns = [['2-step Estimate','2-step Estimate 2nd step']]
 paras_joint_table.columns = [['Joint Estimate','Joint Estimate 2nd step']]
 
-# + code_folding=[0]
+# + code_folding=[]
 paras_combine_table = pd.merge(paras_table,
                                paras_joint_table,
                                how='outer',
@@ -1380,7 +1340,7 @@ for case in ui_list:
         paras_combine_table.loc[case,name]= tuple(np.array([]))
         #paras_combine_table.loc[case][name] = tuple(np.array([]))
 
-# + code_folding=[3]
+# + code_folding=[3, 14]
 t_sim = 500
 t_burn = 30
 
@@ -1414,22 +1374,28 @@ def simulate_history(pg_para,
     return realized_this,history_this,real_time_this
 
 
-# + code_folding=[4, 8]
+# + code_folding=[0, 6, 33, 54]
 ## generate model moments
 
 smm_list = []
 smm_joint_list = []
+smm_ts_list = []
+
 for agent_id,agent in enumerate(agents_list):
     print(agent)
-    
+    realized_this = realized_list[agent_id]
     data_mom_dict_this = data_mom_dict_list[agent_id]
+
     for pg_id,process in enumerate(process_list):
         print(process)
         process_paras_this = process_paras_list[agent_process_id]
         ## history and real-time inflation that is fed in the model depends on agent type and process
         agent_process_id = agent_id*2+pg_id       
         process_paras_this = process_paras_list[agent_process_id]
-               
+        real_time_this = real_time_list[agent_process_id]
+        history_this = history_list[agent_process_id]
+        
+        
         for exp_id,ex_model in enumerate(ex_model_list):
             n_exp_model = len(ex_model_list)
             print(ex_model)
@@ -1447,21 +1413,31 @@ for agent_id,agent in enumerate(agents_list):
                 para_est_this = np.array(list(paras_combine_table.loc[agent,process,ex_model,moments]['2-step Estimate 2nd step'])).flatten()
                 print(para_est_this)
                 print(process_paras_this)
-                realized_this,history_this,real_time_this = simulate_history(process_paras_this,
-                                                                                 t_sim,
-                                                                                 t_burn)
+                ## simulate history and realization
+                #realized_this,history_this,real_time_this = simulate_history(process_paras_this,
+                #                                                                 t_sim,
+                #                                                                t_burn)
+                ## or directly use the history 
                 instance.GetRealization(realized_this)
                 instance.real_time = real_time_this
                 instance.history = history_this
+                
                 try:
                     instance.process_para = process_paras_this
                     instance.exp_para = para_est_this
+                    smm_ts_this = instance.SimForecasts()
                     smm_this = instance.SMM()
                     print(smm_this)
+
                 except:
                     print('failed')
                     smm_this = {}
+                    smm_ts_this = {"Forecast":np.nan,
+                                  "FE":np.nan,
+                                  'Disg':np.nan,
+                                  'Var':np.nan}
                 smm_list.append(smm_this)
+                smm_ts_list.append(smm_ts_this)
 
                 ## joint moments
                 n_exp_paras_this = n_exp_paras_list[exp_id]
@@ -1489,7 +1465,7 @@ for agent_id,agent in enumerate(agents_list):
                     smm_this = {}
                     smm_joint_list.append(smm_this)
 
-# + code_folding=[1, 5]
+# + code_folding=[5]
 ## model moments 
 smm_model = pd.DataFrame(smm_list,
                          columns = list(smm_list[0].keys()),
@@ -1498,6 +1474,25 @@ smm_model = pd.DataFrame(smm_list,
 smm_joint_model = pd.DataFrame(smm_joint_list,
                                columns = list(smm_joint_list[1].keys()),
                                index = midx)
+
+# +
+## store times series of moments 
+
+smm_names = ['Forecast','FE','Disg','Var']
+
+iterables = [agents_list, process_list, ex_model_list,moments_list_general,smm_names]
+
+midx = pd.MultiIndex.from_product(iterables, names=['Agents', 'Process','Model','Moments','Variable'])
+
+smm_ts_table = pd.DataFrame(index = midx)
+
+smm_ts_list_new = [ts[var] for ts in smm_ts_list for var in smm_ts_list[0].keys()]
+
+smm_ts_table['smm_ts'] = smm_ts_list_new
+# -
+
+#plt.plot(realized_CPIC)
+plt.plot(smm_ts_table.loc['SCE','AR','SE','FE',:].loc['Forecast','smm_ts'])
 
 # + code_folding=[]
 ## data moments
