@@ -450,10 +450,10 @@ class RationalExpectationAR:
 #
 # - Creating some simulated inflation data following AR1 and UCSV process separately 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
        
-    T_sim = 500
+    T_sim = 100
     ## first, simulate some AR1 inflation with known parameters 
     ρ0,σ0 = 0.98,0.02
     history0 = SimAR1(ρ0,
@@ -466,7 +466,7 @@ if __name__ == "__main__":
     plt.plot(realized0)
     plt.title('Simulated AR1')
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
     ### create a RESV instance 
 
@@ -475,7 +475,7 @@ if __name__ == "__main__":
     σs_now_fake = [0.2,0.3]
 
     ucsv_fake = SimUCSV(γ_fake,
-                        nobs = 200,
+                        nobs = T_sim,
                         p0 = p0_fake,
                         ) 
 
@@ -499,7 +499,7 @@ if __name__ == "__main__":
 # - For instance, the example below shows that how auto-covariance (ATV) of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
 #
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
 
 
@@ -538,7 +538,7 @@ if __name__ == "__main__":
     print('Estimates: ',str(est))
 
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_re  = rear0.SimForecasts()
@@ -928,7 +928,7 @@ if __name__ == "__main__":
 #
 # - SEAR SMM correctly identifies rigidity parameter in SE 
 
-# + code_folding=[0, 18]
+# + code_folding=[18]
 if __name__ == "__main__":
     ## get a fake data moment dictionary under a different parameter 
     
@@ -964,23 +964,38 @@ if __name__ == "__main__":
     print('True parameter',str(se_exp_para_fake))  
     print('Estimates: ',str(Est))
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
     ## plot for validation 
     simulated_sear  = sear1.SimForecasts()
-    plt.title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
-    plt.plot(simulated_sear['Forecast'],
+    
+    ax[0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    ax[0].plot(simulated_sear['Forecast'],
              label='Forecasts')
-    plt.plot(sear1.real_time,
-             label='Real-time realization')
-    plt.legend(loc=0)
+    #plt.plot(sear1.real_time,
+    #         label='Real-time realization')
+    ax[0].plot(sear1.realized,
+             label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    ax[1].plot(simulated_sear['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_sear['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_sear['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
 # -
 
 # #### Joint Estimation 
 #
 # - The joint estimation below illustrates the mutual-dependence between the stickiness parameter and AR1 coefficients.
 
-# + code_folding=[0, 14]
+# + code_folding=[0, 4, 14]
 if __name__ == "__main__":
 
     ## for joint estimation 
@@ -988,7 +1003,7 @@ if __name__ == "__main__":
     moments1 = type_list(['InfAV',
                             'InfVar',
                             'InfATV',
-                            #'FE',
+                            'FE',
                             'FEVar',
                             'FEATV',
                             'Disg',
@@ -1386,7 +1401,7 @@ if __name__ == "__main__":
                  azim=20)
 
 
-# + code_folding=[2, 17, 21, 66, 133, 171, 186, 202]
+# + code_folding=[2, 17, 21, 66, 131, 140, 142, 184, 200]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1460,7 +1475,7 @@ class NoisyInformationAR:
             ## the histories signals specific to i: the first row is public signals and the second is private signals 
             Pkalman = np.zeros((n_history,nb_s))
             ## Kalman gains of this agent for respective signals 
-            Pkalman[0,:] = 0  ## some initial values 
+            Pkalman[0,:] = 0.0  ## some initial values 
             
             for t in range(n_history-1):
                 step1_vars_to_burn = ρ**2*nowvars_to_burn[i,t] + σ**2
@@ -1484,15 +1499,12 @@ class NoisyInformationAR:
                 ## reduction in uncertainty from the update
                 
                 #nowvars_this_2d = (1-Pkalman_all)*step1_vars_to_burn
-
-                ## update equation of nowcasting uncertainty 
-                nowvars_to_burn[i,t+1] =(1-Pkalman_all)*step1_vars_to_burn
                 ## nowvars_this_2d is a 2-d matrix with only one entry. We take the element and set it to the matrix
                 ### this is necessary for Numba typing 
                 
-    
-
-    
+                ## update equation of nowcasting uncertainty 
+                nowvars_to_burn[i,t+1] =(1-Pkalman_all)*step1_vars_to_burn
+ 
                 nowcasts_to_burn[i,t+1] = (1-Pkalman_all)*ρ*nowcasts_to_burn[i,t]+ np.dot(Pkalman[t+1,:],
                                                                                           signals_this_i[:,t+1])
                 ## kalman filtering updating for nowcasting: weighted average of prior and signals 
@@ -1512,8 +1524,9 @@ class NoisyInformationAR:
         FEs_mean = forecasts_mean - realized
             
         Vars_mean = np_mean(Vars,
-                            axis=0) ## need to change for time-variant volatility
+                            axis=0) 
         
+        ## time series of average population moments 
         forecast_moments_sim = {"Forecast":forecasts_mean,
                                 "FE":FEs_mean,
                                 "Disg":forecasts_var,
@@ -1703,14 +1716,30 @@ if __name__ == "__main__":
 
 # + code_folding=[0]
 if __name__ == "__main__":
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
     ## plot for validation 
     simulated_niar  = niar1.SimForecasts()
-    plt.title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
-    plt.plot(simulated_niar['Forecast'],
+    
+    ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    ax[0].plot(simulated_niar['Forecast'],
              label='Forecasts')
-    plt.plot(niar1.real_time,
-             label='Real-time realization')
-    plt.legend(loc=0)
+    #plt.plot(niar1.real_time,
+    #         label='Real-time realization')
+    ax[0].plot(niar1.realized,
+             label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    ax[1].plot(simulated_niar['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_niar['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_niar['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
+    
 # -
 
 # #### Joint Estimation
@@ -1771,7 +1800,7 @@ if __name__ == "__main__":
 #
 #
 
-# + code_folding=[2, 18, 62, 122]
+# + code_folding=[1, 2, 63, 123]
 @jitclass(model_sv_data)
 class NoisyInformationSV:
     def __init__(self,
@@ -1808,6 +1837,7 @@ class NoisyInformationSV:
         ## process parameters
         γ = self.process_para
         ## exp parameters 
+        ## sigma_pb_shadow is actually not affecting any moments
         sigma_pb_shadow,sigma_pr = self.exp_para
         var_init = sigmas_now[0,0]**2+sigmas_now[1,0]**2
         
@@ -2141,7 +2171,7 @@ if __name__ == "__main__":
 
 # ###  Diagnostic Expectation(DE) + AR1
 
-# + code_folding=[1, 21, 75, 128, 135]
+# + code_folding=[1, 2, 21, 75, 128, 135]
 @jitclass(model_data)
 class DiagnosticExpectationAR:
     def __init__(self,
@@ -2391,12 +2421,32 @@ if __name__ == "__main__":
 
 # + code_folding=[0]
 if __name__ == "__main__":
+    
+    
     ## plot for validation 
     simulated_dear  = dear1.SimForecasts()
-    plt.title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
-    plt.plot(simulated_dear['Forecast'],label='Forecasts')
-    plt.plot(dear1.real_time,label='Real-time realization')
-    plt.legend(loc=0)
+    
+    fig,ax = plt.subplots(1,2,
+                          figsize=(10,4))
+    
+    ax[0].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
+    ax[0].plot(simulated_dear['Forecast'],
+             label='Forecasts')
+    #plt.plot(dear1.real_time,
+    #         label='Real-time realization')
+    ax[0].plot(dear1.realized,
+             label='Realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
+    ax[1].plot(simulated_dear['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_dear['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_dear['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
+ 
 # -
 
 # #### Joint Estimation 
@@ -3030,14 +3080,27 @@ if __name__ == "__main__":
     print('True parameters: ',str(deni_exp_paras_fake)) 
     print('Estimates: ',str(Est))
 
-# + code_folding=[0]
+# + code_folding=[]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_deniar  = deniar1.SimForecasts()
-    plt.title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
-    plt.plot(simulated_deniar['Forecast'],label='Forecasts')
-    plt.plot(deniar1.real_time,label='Real-time realization')
-    plt.legend(loc=0)
+    fig, ax = plt.subplots(1,2,figsize=(10,4))
+    
+    ax[0].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    ax[0].plot(simulated_deniar['Forecast'],
+               label='Forecasts')
+    ax[0].plot(deniar1.real_time,
+               label='Real-time realization')
+    ax[0].legend(loc=0)
+    
+    ax[1].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    ax[1].plot(simulated_deniar['Disg'],
+             label='Disg')
+    ax[1].plot(simulated_deniar['FE']**2,
+             label='FE2')
+    ax[1].plot(simulated_deniar['Var'],
+             label='Var')
+    ax[1].legend(loc=0)
 
 
 # -
@@ -3411,4 +3474,7 @@ class DENIHybridSV2Signal:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
+
+# -
+
 
