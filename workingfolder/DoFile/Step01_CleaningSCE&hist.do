@@ -18,12 +18,13 @@ cd ${folder}
 pwd
 set more off 
 
-
 *** import SCE xls to dta
 
-use "${big_data_folder}/SCE/NYFED_SCE_13_16.dta",clear
-append using "${big_data_folder}/SCE/NYFED_SCE_17_19.dta",force
-append using  "${big_data_folder}/SCE/NYFED_SCE_20.dta",force
+use "${folder}/SCE/NYFED_SCE_13_16.dta",clear
+append using "${folder}/SCE/NYFED_SCE_17_19.dta",force
+append using  "${folder}/SCE/NYFED_SCE_20.dta",force
+
+** if no data is found, first download SCE data using DownloadSCE.ipynb 
 
 sort date
 unique userid
