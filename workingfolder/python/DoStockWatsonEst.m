@@ -3,14 +3,13 @@
 clc;
 clear;
 
-
 % Quarterly 
 %% Set up the Import Options and import the data
 opts = spreadsheetImportOptions("NumVariables", 2);
 
 % Specify sheet and range
 opts.Sheet = "Sheet1";
-opts.DataRange = "A2:B107";
+opts.DataRange = "A2:B114";
 
 % Specify column names and types
 opts.VariableNames = ["date", "Inf1y_CPICore"];
@@ -21,6 +20,7 @@ opts = setvaropts(opts, "date", "InputFormat", "");
 
 % Import the data
 CPICQ = readtable("../OtherData/CPICQ.xlsx", opts, "UseExcel", false);
+CPICQ = rmmissing(CPICQ);
 
 %% Clear temporary variables
 clear opts
@@ -28,6 +28,9 @@ clear opts
 % get the series 
 
 InfQ = CPICQ.Inf1y_CPICore;
+
+%drop nan
+InfQ = InfQ(~isnan(InfQ));
 
 % do estimation 
 var_esp_min = 0.01;
@@ -50,7 +53,7 @@ opts = spreadsheetImportOptions("NumVariables", 2);
 
 % Specify sheet and range
 opts.Sheet = "Sheet1";
-opts.DataRange = "A2:B318";
+opts.DataRange = "A2:B340";
 
 % Specify column names and types
 opts.VariableNames = ["date", "Inf1y_CPIAU"];
@@ -61,6 +64,7 @@ opts = setvaropts(opts, "date", "InputFormat", "");
 
 % Import the data
 CPIM = readtable("../OtherData/CPIM.xlsx", opts, "UseExcel", false);
+CPIM = rmmissing(CPIM);
 
 %% Clear temporary variables
 clear opts
@@ -68,6 +72,9 @@ clear opts
 % get the series 
 
 InfM = CPIM.Inf1y_CPIAU;
+
+% dropna 
+InfM = InfM(~isnan(InfM));
 
 % do estimation 
 var_esp_min = 0.01;
