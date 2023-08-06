@@ -26,17 +26,23 @@
 #   3.  The general function is to be used to compute the specific objective function that takes parameter as the only input for the minimizer to work
 #   4.  Then a general function that does an optimization algorithm takes the specific objective function and estimates the parameters
 
+# +
 import numpy as np
 from scipy.optimize import minimize
 from numba import njit, float64, int64
 from numba.experimental import jitclass
 import matplotlib.pyplot as plt
 
+plt.style.use('fivethirtyeight')
+
+
+# -
 
 # ## Model 
 
-# + code_folding=[2, 23, 47, 72, 120]
-## auxiliary functions 
+# + code_folding=[3, 24, 48, 73, 121]
+## auxiliary functions that can be njitted with numbda 
+
 @njit
 def hstepvar(h,
              ρ,
@@ -155,6 +161,7 @@ def SimUCSV(γ,
     y = p + t
     return y, p, svols_p, svols_t
 
+### 1-dimensional parameter into 2-dimensional
 @njit
 def d1tod2(x):
     '''
@@ -251,6 +258,7 @@ def ParaEst(ObjSpec,
             para_guess,
             method = 'Nelder-Mead',
             bounds = None,
+            jac = None,
             options = {'disp': True,
                       'maxiter': 1500}):
     """
@@ -260,6 +268,7 @@ def ParaEst(ObjSpec,
                          x0 = para_guess,
                          method = method,
                          bounds = bounds,
+                         jac = jac,
                          options = options)
     if results['success']==True:
         parameter = results['x']
@@ -499,7 +508,7 @@ if __name__ == "__main__":
 # - For instance, the example below shows that how auto-covariance (ATV) of inflation, the rational forecast error, and forecast uncertainty together identify the rho and sigma of inflation correctly. 
 #
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
 
@@ -708,8 +717,8 @@ if __name__ == "__main__":
 
     ## get the realization 
     resv.GetRealization(xx_realized)
-# -
 
+# + code_folding=[0]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_resv  = resv.SimForecasts()
@@ -736,6 +745,8 @@ if __name__ == "__main__":
              label='Var')
     ax[1].legend(loc=0)
 
+
+# -
 
 # ### Sticky Expectation (SE) + AR1
 
@@ -971,7 +982,7 @@ if __name__ == "__main__":
 #
 # - SEAR SMM correctly identifies rigidity parameter in SE 
 
-# + code_folding=[18]
+# + code_folding=[0, 18]
 if __name__ == "__main__":
     ## get a fake data moment dictionary under a different parameter 
     
@@ -1007,7 +1018,7 @@ if __name__ == "__main__":
     print('True parameter',str(se_exp_para_fake))  
     print('Estimates: ',str(Est))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     
     ## plot for validation 
@@ -1234,7 +1245,7 @@ class StickyExpectationSV:
         return None
 
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
 
     ## initialize the sv instance 
@@ -1246,8 +1257,8 @@ if __name__ == "__main__":
     ## get the realization 
 
     sesv0.GetRealization(xx_realized)
-# -
 
+# + code_folding=[0]
 if __name__ == "__main__":
     
     ## plot for validation 
@@ -1275,6 +1286,8 @@ if __name__ == "__main__":
              label='Var')
     ax[1].legend(loc=0)
 
+
+# -
 
 # ### Noisy Information (NI) + AR1
 #
@@ -1472,7 +1485,7 @@ if __name__ == "__main__":
                  azim=20)
 
 
-# + code_folding=[2, 17, 21, 66, 131, 140, 142, 184, 200]
+# + code_folding=[1, 2, 17, 21, 66, 131, 140, 142, 184, 200]
 @jitclass(model_data)
 class NoisyInformationAR:
     def __init__(self,
@@ -1704,14 +1717,13 @@ if __name__ == "__main__":
 
 # #### Estimating NI using RE data 
 #
-# - The example below shows that NIAR seems to almost albeit imperfectly to identify sigma_pr and sigma_pb to be zero if rational expectation moments are used. 
+# - The example below shows that NIAR is unable to simultaneously identify sigma_pr and sigma_pb to be zero if FIRE moments are used. There is an issue of non-identification under the corner case of FIRE. Instead, what the estimation always can achieve is the zero noisines of whichever signal with a smaller noisiness provided in the initial guess. This make senses for NI: as long as one signal is perfect, the model can generate FIRE moments including zero autocovariance of FE and zero Disg. In practice, I should set the initial guesses based on some informed piror about the relative size of public and private signals. 
 
-# + code_folding=[0, 3]
+# + code_folding=[0, 2, 13]
 if __name__ == "__main__":
 
-
     moments0 = type_list([#'FE',
-                        #'FEATV',
+                        'FEATV',
                         'FEVar',
                         'Disg',
                         #'DisgATV',
@@ -1728,12 +1740,13 @@ if __name__ == "__main__":
                         moment_choice = moments0,
                         how = 'expectation')
         return scalor
-
+    
     ## invoke estimation 
     Est = ParaEst(Objniar_re,
-            para_guess = np.array([0.09,0.1]),
+            para_guess = np.array([0.1,0.5]),
             method='trust-constr',
-           bounds=((0,None),(0,None),))
+           bounds=((1e-05,3.0),(1e-05,3.0),)
+                 )
     
     print('True parameters: ',str(np.array([0.0,0.0]))) ## rational expectations 
     print('Estimates: ',str(Est))
@@ -1743,7 +1756,7 @@ if __name__ == "__main__":
 #
 # - The example below shows that NIAR SMM correctly identifies the noisiness of both private and public signals using fake moments with known parameters. 
 
-# + code_folding=[0, 22]
+# + code_folding=[0]
 if __name__ == "__main__":
 
 
@@ -1785,7 +1798,7 @@ if __name__ == "__main__":
     print('Estimates: ',str(Est))
 
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     
     
@@ -2238,8 +2251,8 @@ if __name__ == "__main__":
     ## get the realization 
 
     nisv0.GetRealization(xx_realized)
-# -
 
+# + code_folding=[0]
 if __name__ == "__main__":
     
     ## plot for validation 
@@ -2265,7 +2278,9 @@ if __name__ == "__main__":
     ax[1].plot(simulated_nisv['Var'],
              label='Var')
     ax[1].legend(loc=0)
-    
+
+
+# -
 
 # ###  Diagnostic Expectation(DE) + AR1
 
@@ -2517,7 +2532,7 @@ if __name__ == "__main__":
     print('True parameters: ',str(exp_paras_fake)) 
     print('Estimates: ',str(Est))
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     
     
@@ -3414,7 +3429,7 @@ class DENIHybridSV:
                       'VarATV':VarATV_sim}
         return SMMMoments
 
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     ## initial a sv instance
     denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.2]),
@@ -3425,7 +3440,7 @@ if __name__ == "__main__":
     ## get the realization 
 
     denisv0.GetRealization(xx_realized)
-# + code_folding=[]
+# + code_folding=[0]
 if __name__ == "__main__":
     ## plot for validation 
     simulated_denisv  = denisv0.SimForecasts()
