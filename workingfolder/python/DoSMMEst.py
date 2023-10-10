@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.11.2
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -234,7 +234,8 @@ dateQ = pd.to_datetime(InfQ['date'],format='%Y%m%d')
 dateQ_str = dateQ.dt.year.astype(int).astype(str) + \
              "Q" + dateQ.dt.quarter.astype(int).astype(str)
 
-InfQ.index = pd.DatetimeIndex(dateQ_str,freq='infer')
+InfQ.index = pd.DatetimeIndex(dateQ_str,
+                              freq='infer')
 
 ###########################
 #keep only needed variables 
@@ -260,6 +261,9 @@ dateQ_str = dateQ.dt.year.astype(int).astype(str) + \
 PopQ.index = pd.DatetimeIndex(dateQ_str)
 SPFCPI = PopQ[['SPFCPI_Mean','SPFCPI_FE','SPFCPI_Disg','SPFCPI_Var']].dropna(how='any')
 
+## we only focus on 4th quarter observations from SPF 
+SPFCPI = SPFCPI[SPFCPI.index.quarter==4]
+
 ## expectation data from SCE
 PopM = pd.read_stata('../SurveyData/InfExpM.dta')
 PopM = PopM[-PopM.date.isnull()]
@@ -270,6 +274,7 @@ PopM.index = pd.DatetimeIndex(dateM)
 
 SCECPI = PopM[['SCE_Mean','SCE_FE','SCE_Disg','SCE_Var',
               'SCE_Mean_rd','SCE_FE_rd','SCE_Disg_rd','SCE_Var_rd']].dropna(how='any')
+
 
 # +
 ## plot times eries of 
@@ -286,8 +291,6 @@ import datetime
 end_date_late = datetime.datetime(2023, 3, 30)
 end_date_early = datetime.datetime(2020, 3, 30)
 
-## we only focus on 4th quarter observations from SPF 
-SPFCPI = SPFCPI[SPFCPI.index.quarter==4]
 
 
 # +
@@ -338,7 +341,7 @@ SCE_est = pd.concat([SCECPI,
 # + code_folding=[]
 ## process parameters estimation AR1 
 # period filter 
-start_t='1995-01-01'
+start_t='2000-01-01'
 end_t = '2020-3-30'   ## 
 
 ######################
@@ -360,7 +363,7 @@ print('for SPF moments estimation, the sample is between '+str(start_t)+' and '+
 # + code_folding=[0]
 ## history data, the series ends at the same dates with real-time data but startes earlier
 
-st_t_history = '2000-01-01'
+st_t_history = '1995-01-01'
 ed_t_SPF = SPF_est.index[-1].strftime('%Y%m%d')
 ed_t_SCE = SCE_est.index[-1].strftime('%Y-%m-%d')
 
@@ -420,9 +423,12 @@ print('For the sample before', str(end_t))
 print('quarterly AR(1) estimates for CPI core:')
 print(rhoQ_est)
 print(sigmaQ_est)
+print('Unconditional variance:'+str(sigmaQ_est**2/(1-rhoQ_est**2)))
 print('monthly AR(1) estimates for CPI headline:')
 print(rhoM_est)
 print(sigmaM_est)
+print('Unconditional variance:'+str(sigmaM_est**2/(1-rhoM_est**2)))
+
 # -
 
 # #### Data moments 
@@ -442,10 +448,10 @@ print(sigmaM_est)
 
 ### inflation moments 
 
-realized_CPIC = realized_CPIC[~np.isnan(realized_CPIC)]
-InfAV_data = np.mean(realized_CPIC-np.mean(realized_CPIC))
-InfVar_data = np.var(realized_CPIC)
-InfATV_data = np.cov(np.stack( (realized_CPIC[1:],realized_CPIC[:-1]),axis = 0 ))[0,1]
+CPIQ_array = np.array(CPICQ)
+InfAV_data = np.mean(CPIQ_array-np.mean(CPIQ_array))
+InfVar_data = np.var(CPIQ_array)
+InfATV_data = np.cov(np.stack( (CPIQ_array[1:],CPIQ_array[:-1]),axis = 0 ))[0,1]
 ## annual autocovariance
 
 ### expectation moments 
@@ -513,11 +519,10 @@ else:
 
 ## inflation moments 
 
-realized_CPI = realized_CPI[~np.isnan(realized_CPI)]
-
-InfAV_data = np.mean(realized_CPI-np.mean(realized_CPI))
-InfVar_data = np.var(realized_CPI)
-InfATV_data = np.cov(np.stack( (realized_CPI[1:],realized_CPI[:-1]),axis = 0 ))[0,1]
+CPIM_array = np.array(CPIM)
+InfAV_data = np.mean(CPIM_array-np.mean(CPIM_array))
+InfVar_data = np.var(CPIM_array)
+InfATV_data = np.cov(np.stack( (CPIM_array[1:],CPIM_array[:-1]),axis = 0 ))[0,1]
 
 ## expectation moments 
 FEs_data = exp_data_SCE['FE']
@@ -866,9 +871,9 @@ ex_model_list = ['SE',
                 ]
 nb_ex_model = len(ex_model_list)
 
-moments_list = [['FE','FEVar','FEATV'],
-               ['FE','FEVar','FEATV','Disg','DisgVar','DisgATV'],
-               ['FE','FEVar','FEATV','Disg','DisgVar','DisgATV','Var','VarVar','VarATV']]
+moments_list = [['FEVar','FEATV'],
+               ['FEVar','FEATV','Disg'],
+               ['FEVar','FEATV','Disg','Var']]
 
 nb_moments = len(moments_list)
 
