@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.11.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -45,7 +45,7 @@ from SMMEst import DENIHybridAR, DENIHybridSV
 
 
 
-# + pycharm={"name": "#%%\n"} code_folding=[0]
+# + code_folding=[0] pycharm={"name": "#%%\n"}
 ## create some fake parameters and data to initialize model class
 ### not used for estimation
 
@@ -98,7 +98,7 @@ sear0.GetRealization(realized0)
 # + code_folding=[]
 ## initialize the sv instance
 sesv0 = StickyExpectationSV(exp_para = np.array([0.3]),
-                           process_para = np.array([0.1]),
+                           process_para = np.array([0.05]),
                            real_time = xx_real_time,
                            history = xx_real_time) ## history does not matter here, 
 
@@ -153,7 +153,7 @@ dear0.GetRealization(realized0)
 # + code_folding=[0]
 ## initial a sv instance
 desv0 = DiagnosticExpectationSV(exp_para = np.array([0.3,0.2]),
-                               process_para = np.array([0.1]),
+                               process_para = np.array([0.05]),
                                real_time = xx_real_time,
                                history = xx_real_time) ## history does not matter here, 
 
@@ -181,7 +181,7 @@ deniar0.GetRealization(realized0)
 # + code_folding=[0]
 ## initial a sv instance
 denisv0 = DENIHybridSV(exp_para = np.array([0.1,0.2]),
-                           process_para = np.array([0.1]),
+                           process_para = np.array([0.05]),
                            real_time = xx_real_time,
                            history = xx_real_time) ## history does not matter here, 
 
@@ -284,7 +284,7 @@ import datetime
 ## tempoary date used to check the data moments 
 
 end_date_late = datetime.datetime(2023, 3, 30)
-end_date_early = datetime.datetime(2020, 3, 30)
+end_date_early = datetime.datetime(2020, 4, 30)
 
 ## we only focus on 4th quarter observations from SPF 
 SPFCPI = SPFCPI[SPFCPI.index.quarter==4]
@@ -312,10 +312,10 @@ print(SPFCPI[SPFCPI.index<end_date_early].mean())
 ## filter sample period 
 
 ## SPF
-SPFCPI = SPFCPI[SPFCPI.index<end_date_early]
+SPFCPI = SPFCPI[SPFCPI.index<end_date_late]
 
 ## SCE
-SCECPI = SCECPI[SCECPI.index<end_date_early]
+SCECPI = SCECPI[SCECPI.index<end_date_late]
 
 # + code_folding=[]
 ## Combine expectation data and real-time data 
@@ -339,7 +339,7 @@ SCE_est = pd.concat([SCECPI,
 ## process parameters estimation AR1 
 # period filter 
 start_t='2000-01-01'
-end_t = '2023-3-30'   ## 
+end_t = '2023-4-30'   ## 
 
 ######################
 ### quarterly data ##
@@ -360,7 +360,7 @@ print('for SPF moments estimation, the sample is between '+str(start_t)+' and '+
 # + code_folding=[0]
 ## history data, the series ends at the same dates with real-time data but startes earlier
 
-st_t_history = '2000-01-01'
+st_t_history = '1995-01-01'
 ed_t_SPF = SPF_est.index[-1].strftime('%Y%m%d')
 ed_t_SCE = SCE_est.index[-1].strftime('%Y-%m-%d')
 
@@ -423,6 +423,16 @@ print(sigmaQ_est)
 print('monthly AR(1) estimates for CPI headline:')
 print(rhoM_est)
 print(sigmaM_est)
+
+# +
+FEVar_Q_est = np.array([rhoQ_est**(2*h)*sigmaQ_est**2 for h in range(3)]).sum()
+FEVar_M_est = np.array([rhoM_est**(2*h)*sigmaM_est**2 for h in range(12)]).sum()
+
+print('Under the estimated AR(1), 4q-ahead annualized CPI core inflation forecast error should have a variance equal to \n')
+print(str(round(FEVar_Q_est,3)))
+
+print('Under the estimated AR(1), 12m-ahead annualized CPI inflation forecast error should have a variance equal to \n')
+print(str(round(FEVar_M_est,3)))
 # -
 
 # #### Data moments 
@@ -442,10 +452,10 @@ print(sigmaM_est)
 
 ### inflation moments 
 
-realized_CPIC = CPICQ
-InfAV_data = np.mean(realized_CPIC-np.mean(realized_CPIC))
-InfVar_data = np.var(realized_CPIC)
-InfATV_data = np.cov(np.stack( (realized_CPIC[1:],realized_CPIC[:-1]),axis = 0 ))[0,1]
+CPIQ_array = np.array(CPICQ)
+InfAV_data = np.mean(CPIQ_array-np.mean(CPIQ_array))
+InfVar_data = np.var(CPIQ_array)
+InfATV_data = np.cov(np.stack( (CPIQ_array[1:],CPIQ_array[:-1]),axis = 0 ))[0,1]
 ## annual autocovariance
 
 ### expectation moments 
@@ -513,11 +523,11 @@ else:
 
 ## inflation moments 
 
-realized_CPI = CPIM
+CPIM_array = np.array(CPIM)
 
-InfAV_data = np.mean(realized_CPI-np.mean(realized_CPI))
-InfVar_data = np.var(realized_CPI)
-InfATV_data = np.cov(np.stack( (realized_CPI[1:],realized_CPI[:-1]),axis = 0 ))[0,1]
+InfAV_data = np.mean(CPIM_array-np.mean(CPIM_array))
+InfVar_data = np.var(CPIM_array)
+InfATV_data = np.cov(np.stack( (CPIM_array[1:],CPIM_array[:-1]),axis = 0 ))[0,1]
 
 ## expectation moments 
 FEs_data = exp_data_SCE['FE']
@@ -842,8 +852,8 @@ real_time_M_sv = np.array([real_time_yM,
 
 # + code_folding=[]
 ## process parameters 
-process_paraQ_est_sv = np.array([0.2])
-process_paraM_est_sv = np.array([0.2])
+process_paraQ_est_sv = np.array([0.05])
+process_paraM_est_sv = np.array([0.05])
 # -
 
 # ### Estimation 
@@ -979,49 +989,49 @@ n_exp_paras_list = [1,
 
 se_ar_names = [r'$\hat\lambda$',
                    r'$\rho$',
-                   r'$\sigma$',
+                   r'$\sigma_\omega$',
                    r'$\hat\lambda$', 
                    r'$\rho$',
-                   r'$\sigma$']
+                   r'$\sigma_\omega$']
 
 
-ni_ar_names = [r'$\hat\sigma_{pb}$',
-                   r'$\hat\sigma_{pr}$',
+ni_ar_names = [r'$\hat\sigma_{\epsilon}$',
+                   r'$\hat\sigma_{\xi}$',
                    r'$\rho$',
-                   r'$\sigma$',
-                   r'$\hat\sigma_{pb}$',
-                   r'$\hat\sigma_{pr}$',
+                   r'$\sigma_\omega$',
+                   r'$\hat\sigma_{\epsilon}$',
+                   r'$\hat\sigma_{\xi}$',
                    r'NI: $\rho$',
-                   r'NI: $\sigma$']
+                   r'NI: $\sigma_\omega$']
 
 
 de_ar_names = [r'$\hat\theta$',
                    r'$\sigma_\theta$',
                    r'$\rho$',
-                   r'$\sigma$',
+                   r'$\sigma_\omega$',
                    r'$\hat\theta$',
                    r'$\sigma_\theta$',
                    r'$\rho$',
-                   r'$\sigma$']
+                   r'$\sigma_\omega$']
 
 
 deni_ar_names = [r'$\hat\theta$',
                   # r'$\hat\sigma_{pb}$',
-                   r'$\hat\sigma_{pr}$',
+                   r'$\hat\sigma_{\xi}$',
                    r'$\rho$',
-                   r'$\sigma$',
+                   r'$\sigma_\omega$',
                    r'$\hat\theta$',
                   # r'$\hat\sigma_{pb}$',
-                   r'$\hat\sigma_{pr}$',
+                   r'$\hat\sigma_{\xi}$',
                    r'$\rho$',
-                   r'$\sigma$']
+                   r'$\sigma_\omega$']
 
 se_sv_names = [r'$\hat\lambda$',
                r'$\gamma$']
 
 
-ni_sv_names = [r'$\hat\sigma_{pb}$',
-               r'$\hat\sigma_{pr}$',
+ni_sv_names = [r'$\hat\sigma_{\epsilon}$',
+               r'$\hat\sigma_{\xi}$',
                r'$\gamma$']
 
 
@@ -1032,7 +1042,7 @@ de_sv_names = [r'$\hat\theta$',
 
 deni_sv_names = [r'$\hat\theta$',
                   # r'$\hat\sigma_{pb}$',
-                   r'$\hat\sigma_{pr}$',
+                   r'$\hat\sigma_{\xi}$',
                    r'$\gamma$']
 
 
@@ -1480,8 +1490,24 @@ smm_ts_list_new = [ts[name] for ts in smm_ts_list for name in smm_names]
 smm_ts_table['smm_ts'] = smm_ts_list_new
 # -
 
-#plt.plot(realized_CPIC)
-plt.plot(smm_ts_table.loc['SPF','SV','DE','FE+Disg+Var',:].loc['Disg','smm_ts'])
+exp_data_SPF['Var'].index
+
+# +
+plt.plot(exp_data_SPF['Var'].index,smm_ts_table.loc['SPF','SV','SE','FE+Disg+Var',:].loc['Var','smm_ts'],label='SE')
+plt.plot(exp_data_SPF['Var'].index,smm_ts_table.loc['SPF','SV','NI','FE+Disg+Var',:].loc['Var','smm_ts'],label='NI')
+plt.plot(exp_data_SPF['Var'].index,np.array(exp_data_SPF['Var']),label='SPF')
+#plt.plot(smm_ts_table.loc['SPF','SV','DE','FE+Disg+Var',:].loc['Var','smm_ts'],label='DE')
+#plt.plot(smm_ts_table.loc['SPF','SV','DENI','FE+Disg+Var',:].loc['Var','smm_ts'],label='DENI')
+
+plt.legend(loc=1)
+
+# +
+plt.plot(exp_data_SCE['Var'].index,smm_ts_table.loc['SCE','SV','SE','FE+Disg+Var',:].loc['Var','smm_ts'],label='SE')
+plt.plot(exp_data_SCE['Var'].index,smm_ts_table.loc['SCE','SV','DE','FE+Disg+Var',:].loc['Var','smm_ts'],label='DE')
+plt.plot(exp_data_SCE['Var'].index,smm_ts_table.loc['SCE','SV','DENI','FE+Disg+Var',:].loc['Var','smm_ts'],label='DENI')
+
+plt.plot(exp_data_SCE['Var'].index,np.array(exp_data_SCE['Var']),label='SCE')
+plt.legend(loc=1)
 
 # + code_folding=[]
 ## data moments

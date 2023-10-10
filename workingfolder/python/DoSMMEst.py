@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.11.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -433,7 +433,7 @@ print('Unconditional variance:'+str(sigmaM_est**2/(1-rhoM_est**2)))
 
 # #### Data moments 
 
-# + code_folding=[80, 108]
+# + code_folding=[80]
 #####################################
 ## preparing data moments
 #####################################
@@ -1050,7 +1050,7 @@ names_list = [se_ar_names,
              de_sv_names,
              deni_sv_names]
 
-# + code_folding=[9, 134]
+# + code_folding=[]
 ################################################################################
 ## A loop to estimate the model for different agents, theory, inflation process and joint/2-step 
 #################################################################################
@@ -1344,7 +1344,7 @@ for case in ui_list:
         paras_combine_table.loc[case,name]= tuple(np.array([]))
         #paras_combine_table.loc[case][name] = tuple(np.array([]))
 
-# + code_folding=[3, 14]
+# + code_folding=[]
 t_sim = 500
 t_burn = 30
 

@@ -553,8 +553,8 @@ if __name__ == "__main__":
     simulated_re  = rear0.SimForecasts()
     
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
+    fig,ax = plt.subplots(1,3,
+                          figsize=(12,4))
     
     ax[0].set_title("Simulated FIRE forecasts")
     ax[0].plot(simulated_re['Forecast'],
@@ -573,6 +573,18 @@ if __name__ == "__main__":
     ax[1].plot(simulated_re['Var'],
              label='Var')
     ax[1].legend(loc=0)
+    
+    ax[2].set_title("Simulated FIRE forecasts")
+    ax[2].plot(simulated_re['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_re['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_re['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -724,10 +736,10 @@ if __name__ == "__main__":
     simulated_resv  = resv.SimForecasts()
     
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
+    fig,ax = plt.subplots(1,3,
+                          figsize=(12,4))
     
-    ax[0].set_title("Simulated FIRE forecasts under SV")
+    ax[0].set_title("Simulated FIRE \n forecasts under SV")
     ax[0].plot(simulated_resv['Forecast'],
              label='Forecasts')
     #plt.plot(resv.real_time,
@@ -736,7 +748,7 @@ if __name__ == "__main__":
              label='Realization')
     ax[0].legend(loc=0)
     
-    ax[1].set_title("Simulated FIRE forecasts under SV")
+    ax[1].set_title("Simulated FIRE \nforecasts under SV")
     ax[1].plot(simulated_resv['Disg'],
              label='Disg')
     ax[1].plot(simulated_resv['FE']**2,
@@ -744,6 +756,18 @@ if __name__ == "__main__":
     ax[1].plot(simulated_resv['Var'],
              label='Var')
     ax[1].legend(loc=0)
+    
+    ax[2].set_title("Simulated \n FIRE forecasts")
+    ax[2].plot(simulated_resv['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_resv['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_resv['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 
 
 # -
@@ -1025,8 +1049,8 @@ if __name__ == "__main__":
     simulated_sear  = sear1.SimForecasts()
     
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
+    fig,ax = plt.subplots(1,3,
+                          figsize=(13,4))
     
     ax[0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
     ax[0].plot(simulated_sear['Forecast'],
@@ -1045,6 +1069,18 @@ if __name__ == "__main__":
     ax[1].plot(simulated_sear['Var'],
              label='Var')
     ax[1].legend(loc=0)
+    
+    ax[2].set_title("Simulated FIRE forecasts")
+    ax[2].plot(simulated_sear['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_sear['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_sear['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 # -
 
 # #### Joint Estimation 
@@ -1265,10 +1301,10 @@ if __name__ == "__main__":
     simulated_sesv  = sesv0.SimForecasts()
     
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
+    fig,ax = plt.subplots(1,3,
+                          figsize=(12,4))
     
-    ax[0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    #ax[0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
     ax[0].plot(simulated_sesv['Forecast'],
              label='Forecasts')
     #plt.plot(sesv0.real_time,
@@ -1285,6 +1321,18 @@ if __name__ == "__main__":
     ax[1].plot(simulated_sesv['Var'],
              label='Var')
     ax[1].legend(loc=0)
+    
+    #ax[2].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    ax[2].plot(simulated_sesv['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_sesv['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_sesv['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 
 
 # -
@@ -1805,10 +1853,10 @@ if __name__ == "__main__":
     ## plot for validation 
     simulated_niar  = niar1.SimForecasts()
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
+    fig,ax = plt.subplots(1,3,
+                          figsize=(12,4))
     
-    ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    #ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
     ax[0].plot(simulated_niar['Forecast'],
              label='Forecasts')
     #plt.plot(niar1.real_time,
@@ -1826,6 +1874,17 @@ if __name__ == "__main__":
              label='Var')
     ax[1].legend(loc=0)
     
+    #ax[2].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    ax[2].plot(simulated_niar['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_niar['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_niar['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 # -
 
 # #### Joint Estimation
@@ -2258,10 +2317,10 @@ if __name__ == "__main__":
     ## plot for validation 
     simulated_nisv  = nisv0.SimForecasts()
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
+    fig,ax = plt.subplots(1,3,
+                          figsize=(12,4))
     
-    ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    #ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
     ax[0].plot(simulated_nisv['Forecast'],
              label='Forecasts')
     #plt.plot(nisv0.real_time,
@@ -2278,6 +2337,18 @@ if __name__ == "__main__":
     ax[1].plot(simulated_nisv['Var'],
              label='Var')
     ax[1].legend(loc=0)
+    
+    #ax[2].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    ax[2].plot(simulated_nisv['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_nisv['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_nisv['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 
 
 # -
@@ -2539,10 +2610,10 @@ if __name__ == "__main__":
     ## plot for validation 
     simulated_dear  = dear1.SimForecasts()
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
+    fig,ax = plt.subplots(1,3,
+                          figsize=(12,4))
     
-    ax[0].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
+    #ax[0].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
     ax[0].plot(simulated_dear['Forecast'],
              label='Forecasts')
     #plt.plot(dear1.real_time,
@@ -2559,7 +2630,17 @@ if __name__ == "__main__":
     ax[1].plot(simulated_dear['Var'],
              label='Var')
     ax[1].legend(loc=0)
- 
+    
+    ax[2].plot(simulated_dear['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_dear['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_dear['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 # -
 
 # #### Joint Estimation 
@@ -2773,10 +2854,10 @@ if __name__ == "__main__":
     ## plot for validation 
     simulated_desv  = desv0.SimForecasts()
     
-    fig,ax = plt.subplots(1,2,
-                          figsize=(10,4))
+    fig,ax = plt.subplots(1,3,
+                          figsize=(12,4))
     
-    ax[0].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
+    #ax[0].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
     ax[0].plot(simulated_desv['Forecast'],
              label='Forecasts')
     #plt.plot(desv0.real_time,
@@ -2793,6 +2874,17 @@ if __name__ == "__main__":
     ax[1].plot(simulated_desv['Var'],
              label='Var')
     ax[1].legend(loc=0)
+    
+    ax[2].plot(simulated_desv['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_desv['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_desv['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
  
 # -
 
@@ -3224,9 +3316,9 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     ## plot for validation 
     simulated_deniar  = deniar1.SimForecasts()
-    fig, ax = plt.subplots(1,2,figsize=(10,4))
+    fig, ax = plt.subplots(1,3,figsize=(12,4))
     
-    ax[0].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    #ax[0].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
     ax[0].plot(simulated_deniar['Forecast'],
                label='Forecasts')
     ax[0].plot(deniar1.real_time,
@@ -3241,6 +3333,17 @@ if __name__ == "__main__":
     ax[1].plot(simulated_deniar['Var'],
              label='Var')
     ax[1].legend(loc=0)
+    
+    ax[2].plot(simulated_deniar['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_deniar['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_deniar['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 
 
 # -
@@ -3444,9 +3547,9 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     ## plot for validation 
     simulated_denisv  = denisv0.SimForecasts()
-    fig, ax = plt.subplots(1,2,figsize=(10,4))
+    fig, ax = plt.subplots(1,3,figsize=(12,4))
     
-    ax[0].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    #ax[0].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
     ax[0].plot(simulated_denisv['Forecast'],
                label='Forecasts')
     ax[0].plot(denisv0.realized,
@@ -3461,6 +3564,17 @@ if __name__ == "__main__":
     ax[1].plot(simulated_denisv['Var'][1:],
              label='Var')
     ax[1].legend(loc=0)
+    
+    ax[2].plot(simulated_denisv['Disg'].mean(),
+               "o",
+             label='Disg')
+    ax[2].plot(simulated_denisv['FE'].var(),
+               "*",
+             label='FE2')
+    ax[2].plot(simulated_denisv['Var'].mean(),
+               "v",
+             label='Var')
+    ax[2].legend(loc=0)
 
 
 # + code_folding=[1, 2, 18]
