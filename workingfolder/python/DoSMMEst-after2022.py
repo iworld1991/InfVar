@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.11.2
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -687,7 +687,7 @@ process_paraM_est_ar = np.array([rhoM_est,
 # + [markdown] code_folding=[]
 # #### SV  parameters and data  
 
-# + code_folding=[0]
+# +
 ################
 ## quarterly ##
 ################
@@ -780,6 +780,50 @@ plt.title('Estimated Stochastic Volatility of CPI Inflation')
 plt.ylabel('std')
 plt.legend(loc=1)
 plt.savefig('../graphs/inflation/UCSVM.png')
+
+# +
+########################################################################################
+## be careful with the order, I define eta as the permanent and eps to be the transitory
+######################################################################################
+    
+
+### quarterly plot 
+
+plt.figure(figsize=(10,5))
+plt.plot(CPICQ_UCSV_Est['sd_p_est'],
+         'r--',
+          lw = lw,
+         label='permanent volatility')
+plt.plot(CPICQ_UCSV_Est['sd_t_est'],
+         'k-.',
+         lw = lw,
+         label='transitory volatility')
+plt.plot(np.sqrt(exp_data_SPF['Var']),
+         'b-',
+        label='SPF')
+plt.title('Estimated Stochastic Volatility of Core CPI Inflation')
+plt.ylabel('std')
+plt.legend(loc=1)
+    
+### monthly plot 
+
+plt.figure(figsize=(10,5))
+plt.plot(CPIM_UCSV_Est['sd_p_est'],
+         'r--',
+          lw = lw,
+         label='permanent volatility')
+plt.plot(CPIM_UCSV_Est['sd_t_est'],
+         'k-.',
+         lw = lw,
+         label='transitory volatility')
+
+plt.plot(np.sqrt(exp_data_SCE['Var']),
+         'b-',
+        label='SCE')
+plt.title('Estimated Stochastic Volatility of CPI Inflation')
+plt.ylabel('std')
+plt.legend(loc=1)
+
 
 # + code_folding=[0]
 #########################################################
