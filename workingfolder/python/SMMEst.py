@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.11.2
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -462,7 +462,7 @@ class RationalExpectationAR:
 # + code_folding=[]
 if __name__ == "__main__":
        
-    T_sim = 100
+    T_sim = 500
     ## first, simulate some AR1 inflation with known parameters 
     ρ0,σ0 = 0.98,0.02
     history0 = SimAR1(ρ0,
@@ -585,6 +585,7 @@ if __name__ == "__main__":
                "v",
              label='Var')
     ax[2].legend(loc=0)
+
 
 # + code_folding=[0]
 if __name__ == "__main__":
@@ -768,6 +769,15 @@ if __name__ == "__main__":
                "v",
              label='Var')
     ax[2].legend(loc=0)
+    
+    corr_disg_var_resv = np.corrcoef(simulated_resv['Var'],
+                                 simulated_resv['Disg'])[0,1]
+    print('Correlation between Disg and Var',str(corr_disg_var_resv)) 
+    
+    corr_fe2_var_resv = np.corrcoef(simulated_resv['Var'],
+                                simulated_resv['FE']**2)[0,1]
+    
+    print('Correlation between FE2 and Var',str(corr_fe2_var_resv)) 
 
 
 # -
@@ -1333,6 +1343,15 @@ if __name__ == "__main__":
                "v",
              label='Var')
     ax[2].legend(loc=0)
+    
+    corr_disg_var_sesv = np.corrcoef(simulated_sesv['Var'],
+                                 simulated_sesv['Disg'])[0,1]
+    print('Correlation between Disg and Var',str(corr_disg_var_sesv)) 
+    
+    corr_fe2_var_sesv = np.corrcoef(simulated_sesv['Var'],
+                                simulated_sesv['FE']**2)[0,1]
+    
+    print('Correlation between FE2 and Var',str(corr_fe2_var_sesv)) 
 
 
 # -
@@ -2302,7 +2321,7 @@ class NoisyInformationSV2Para:
 if __name__ == "__main__":
 
     ## initial a sv instance
-    nisv0 = NoisyInformationSV(exp_para = np.array([0.1,0.2]),
+    nisv0 = NoisyInformationSV(exp_para = np.array([np.nan,0.5]),
                                process_para = np.array([0.1]),
                                real_time = xx_real_time,
                                history = xx_real_time) ## history does not matter here, 
@@ -2349,6 +2368,15 @@ if __name__ == "__main__":
                "v",
              label='Var')
     ax[2].legend(loc=0)
+    
+    corr_disg_var_nisv = np.corrcoef(simulated_nisv['Var'],
+                                 simulated_nisv['Disg'])[0,1]
+    print('Correlation between Disg and Var',str(corr_disg_var_nisv)) 
+    
+    corr_fe2_var_nisv = np.corrcoef(simulated_nisv['Var'],
+                                simulated_nisv['FE']**2)[0,1]
+    
+    print('Correlation between FE2 and Var',str(corr_fe2_var_nisv)) 
 
 
 # -
@@ -2563,7 +2591,7 @@ if __name__ == "__main__":
 
 
     ## get a fake data moment dictionary under a different parameter 
-    de_exp_paras_fake = np.array([0.3,0.1])
+    de_exp_paras_fake = np.array([0.2,0.3])
     dear1 = DiagnosticExpectationAR(exp_para = de_exp_paras_fake,
                                     process_para = np.array([ρ0,σ0]),
                                     real_time = real_time0,
@@ -2579,7 +2607,7 @@ if __name__ == "__main__":
 
     moments0 = type_list([#'FE',
                         'FEVar',
-                        #'FEATV',
+                        'FEATV',
                         'Disg',
                         #'DisgVar',
                         'Var'])
@@ -2885,6 +2913,15 @@ if __name__ == "__main__":
                "v",
              label='Var')
     ax[2].legend(loc=0)
+    
+    corr_disg_var_desv = np.corrcoef(simulated_desv['Var'],
+                                 simulated_desv['Disg'])[0,1]
+    print('Correlation between Disg and Var',str(corr_disg_var_desv)) 
+    
+    corr_fe2_var_desv = np.corrcoef(simulated_desv['Var'],
+                                simulated_desv['FE']**2)[0,1]
+    
+    print('Correlation between FE2 and Var',str(corr_fe2_var_desv)) 
  
 # -
 
@@ -3575,6 +3612,15 @@ if __name__ == "__main__":
                "v",
              label='Var')
     ax[2].legend(loc=0)
+    
+    corr_disg_var_denisv = np.corrcoef(simulated_denisv['Var'],
+                                 simulated_denisv['Disg'])[0,1]
+    print('Correlation between Disg and Var',str(corr_disg_var_nisv)) 
+    
+    corr_fe2_var_denisv = np.corrcoef(simulated_denisv['Var'],
+                                simulated_denisv['FE']**2)[0,1]
+    
+    print('Correlation between FE2 and Var',str(corr_fe2_var_denisv)) 
 
 
 # + code_folding=[1, 2, 18]
