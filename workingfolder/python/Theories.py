@@ -826,7 +826,7 @@ plt.savefig('figures/ir_popseni.png')
 # - Population disagreements rise in each period as time approaches the period of realization. Disagreetments will never be zero. 
 # - Average variance declines unambiguously each period. 
 
-# + code_folding=[4, 19, 28, 30, 55, 58, 70, 77, 83]
+# + code_folding=[4, 19, 28, 30, 55, 58, 70, 77]
 from SMMEst import SteadyStateVar,Pkalman
 
 rho,sigma = 0.95,0.1
@@ -920,8 +920,8 @@ surf3 = ax.plot_surface(sigma_pbs,
 ax.set_xlabel(r'$\sigma_{pb}$',size=20)
 ax.set_ylabel('$\sigma_{pr}$',size=20)
 ax.set_zlabel(r'moments',size=20)
-ax.view_init(elev=10,
-             azim=50)
+ax.view_init(elev=30,
+             azim=80)
 
 # -
 
