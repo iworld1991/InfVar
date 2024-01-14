@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.2
+#       jupytext_version: 1.11.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -40,7 +40,7 @@ plt.style.use('fivethirtyeight')
 
 # ## Model 
 
-# + code_folding=[3, 24, 48, 73, 121]
+# + code_folding=[3, 24, 48, 73, 122]
 ## auxiliary functions that can be njitted with numbda 
 
 @njit
@@ -1823,12 +1823,12 @@ if __name__ == "__main__":
 #
 # - The example below shows that NIAR SMM correctly identifies the noisiness of both private and public signals using fake moments with known parameters. 
 
-# + code_folding=[0]
+# + code_folding=[0, 22]
 if __name__ == "__main__":
 
 
     ## get a fake data moment dictionary under a different parameter 
-    exp_paras_fake = np.array([0.1,0.08])
+    exp_paras_fake = np.array([0.8,0.8])
     niar1 = NoisyInformationAR(exp_para = exp_paras_fake,
                                 process_para = np.array([ρ0,σ0]),
                                 real_time = real_time0,
@@ -3797,6 +3797,3 @@ class DENIHybridSV2Signal:
                       'VarVar':VarVar_sim,
                       'VarATV':VarATV_sim}
         return SMMMoments
-# -
-
-

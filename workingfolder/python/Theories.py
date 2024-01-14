@@ -826,7 +826,7 @@ plt.savefig('figures/ir_popseni.png')
 # - Population disagreements rise in each period as time approaches the period of realization. Disagreetments will never be zero. 
 # - Average variance declines unambiguously each period. 
 
-# + code_folding=[4, 19, 28, 30, 55, 58, 70, 77]
+# + code_folding=[28, 30, 60]
 from SMMEst import SteadyStateVar,Pkalman
 
 rho,sigma = 0.95,0.1
@@ -875,6 +875,8 @@ def Disg_NI(sigma_pb,
 #plt.title('NI')
 
 import matplotlib.pyplot as plt 
+import matplotlib.patches as mpatches
+
 sigma_pb_ = np.linspace(0.01, 0.8, 50)
 sigma_pr_ = np.linspace(0.01, 0.8, 50)
 
@@ -891,7 +893,7 @@ Var_NIs = Var_NI(sigma_pbs,
 Disg_NIs = np.array([Disg_NI(sigma_pbs[i,j],
                  sigma_prs[i,j]) for i in range(row) for j in range(col)]).reshape((row,col))
 
-fig = plt.figure(figsize = (20,10))
+fig = plt.figure(figsize = (10,8))
 #fig.colorbar(surf)    
 ax = fig.add_subplot(1, 1, 1, projection='3d')
 ax.invert_xaxis()
@@ -902,13 +904,14 @@ surf = ax.plot_surface(sigma_pbs,
                        FE2_NIs, 
                        label='FE',
                        #cmap = plt.cm.red
-                      color='red')
+                      color='red',
+                      alpha=0.3)
 
 surf2 = ax.plot_surface(sigma_pbs, 
                        sigma_prs, 
                        Var_NIs, 
                        #cmap = plt.cm.summer
-                       color='blue')
+                       color='lightblue')
 
 surf3 = ax.plot_surface(sigma_pbs, 
                        sigma_prs, 
@@ -916,12 +919,38 @@ surf3 = ax.plot_surface(sigma_pbs,
                        #cmap = plt.cm.winter
                        color='gray')
 
+# Create legend
+legend_FE = mpatches.Patch(color='red', label='FE')
+legend_Var = mpatches.Patch(color='blue', label='Var')
+legend_Disg = mpatches.Patch(color='gray', label='Disg')
+ax.legend(handles=[legend_FE, legend_Var, legend_Disg])
+
 # Set axes label
 ax.set_xlabel(r'$\sigma_{pb}$',size=20)
 ax.set_ylabel('$\sigma_{pr}$',size=20)
 ax.set_zlabel(r'moments',size=20)
 ax.view_init(elev=30,
-             azim=80)
+             azim=50)
+
+
+# +
+# Compare arrays
+import matplotlib.colors as mcolors
+
+condition = Var_NIs > FE2_NIs
+# Create a custom colormap: Solid Red for True, Solid Blue for False
+cmap = mcolors.ListedColormap(['navy', 'red'])
+bounds = [0, 0.5, 1]
+norm = mcolors.BoundaryNorm(bounds, cmap.N)
+
+
+plt.figure(figsize=(4,3))
+plt.pcolormesh(sigma_pbs,sigma_prs, condition, cmap=cmap, norm=norm, shading='auto', alpha=0.3)
+plt.title("Var and FE2")
+plt.colorbar(format=plt.FuncFormatter(lambda val, 
+                                                          loc: 'Var > FE2' if val > 0.5 else 'FE2 > Var'))
+plt.xlabel(r'$\sigma_{pb}$')
+plt.ylabel(r'$\sigma_{pr}$')
 
 # -
 
