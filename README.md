@@ -5,7 +5,14 @@
 - Bank of Canada 
 
 ## [Most recent draft](/InfVar.pdf)
-## Data 
+
+## Data sources
+- [__Survey of Professional Forecasters__](https://www.philadelphiafed.org/surveys-and-data/data-files)
+- [__Survey of Consumer Expectations]__ data](https://www.newyorkfed.org/microeconomics/sce/background.html)
+- [__Real-time data__](https://www.philadelphiafed.org/surveys-and-data/real-time-data-research)
+- [__Inflation realizations__](https://fred.stlouisfed.org/)
+
+## Data code
 
 For replication, 
 - __either__ mannually download following data and put them into the folder workingfolder/SurveyData/SCE/
@@ -15,7 +22,7 @@ For replication,
 
 - __or__ run the [Python code](/workingfolder/python/DownloadSCE.ipynb)
 
-## Code
+## Other Code
 
 - [Stata code](/workingfolder/DoFile)
  - [Cleaning inflation data](/workingfolder/DoFile/Step00_InflationData.do)
@@ -28,12 +35,14 @@ For replication,
  - [Population regression analysis for SCE](/workingfolder/DoFile/Step03b_PopAnalysisSCEM.do)
  - [Individual regression analysis for SPF](/workingfolder/DoFile/Step05a_IndSPFAnalysis.do)
  - [Individual regression analysis for SCE](/workingfolder/DoFile/Step05b_IndSCEAnalyais.do)
-
+ 
 - [Python](/workingfolder/python)
   - [Density Estimation of SPF](/workingfolder/python/DoDensityEst.ipynb), which draws the model class from 
      - [DensityEstimation](/workingfolder/python/DensityEst.py)
 
   - [Preparing real-time inflation data](/workingfolder/python/RealTimeDataAnalytics.ipynb)
+
+  - [Estimating stochastic volatility of inflation (in Matlab)](/workingfolder/python/DoStockWatsonEst.m)
   
   - [Structural estimation](/workingfolder/python/DoSMMEst.ipynb), which imports model classes from 
      - [Model Class](/workingfolder/python/SMMEst.ipynb), which tests if each model could correctly identify model parameters using various moments. 
