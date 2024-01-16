@@ -8,7 +8,7 @@
 
 ## Data sources
 - [__Survey of Professional Forecasters__](https://www.philadelphiafed.org/surveys-and-data/data-files)
-- [__Survey of Consumer Expectations]__ data](https://www.newyorkfed.org/microeconomics/sce/background.html)
+- [__Survey of Consumer Expectations__](https://www.newyorkfed.org/microeconomics/sce/background.html)
 - [__Real-time data__](https://www.philadelphiafed.org/surveys-and-data/real-time-data-research)
 - [__Inflation realizations__](https://fred.stlouisfed.org/)
 
