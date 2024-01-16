@@ -1,8 +1,8 @@
 # InfVar 
 
-- the working repo of the research project of density forecasts: How Do Agents Form Inflation Expectations? Evidence from the Forecast Uncertainty
+- the replication repo of the research project of density forecasts: How Do Agents Form Macroeconomic Expectations? Evidence from the Inflation Uncertainty
 - Tao Wang
-- Johns Hopkins University 
+- Bank of Canada 
 
 ## [Most recent draft](/InfVar.pdf)
 ## Data 
@@ -18,14 +18,27 @@ For replication,
 ## Code
 
 - [Stata code](/workingfolder/DoFile)
+ - [Cleaning inflation data](/workingfolder/DoFile/Step00_InflationData.do)
+ - [Cleaning SCE micro data](/workingfolder/DoFile/Step01_CleaningSCE%26hist.do)
+ - [CLeaning SPF micro data](/workingfolder/DoFile/Step02_CleaningSPF.do)
+ - [Cleaning SPF population probablistic data](/workingfolder/DoFile/Step02b_CleaningSPF_Prob.do)
+ - [Cleaning SPF individual probablistic data](/workingfolder/DoFile/Step02c_CleaningSPF_IndProb.do)
+ - [Cleaning SPF summary statistics](/workingfolder/DoFile/Step02d_CleaningSPFSumStat_IndDst.do)
+ - [Population regression analysis for SPF](/workingfolder/DoFile/Step03a_PopAnalysisQ.do)
+ - [Population regression analysis for SCE](/workingfolder/DoFile/Step03b_PopAnalysisSCEM.do)
+ - [Individual regression analysis for SPF](/workingfolder/DoFile/Step05a_IndSPFAnalysis.do)
+ - [Individual regression analysis for SCE](/workingfolder/DoFile/Step05b_IndSCEAnalyais.do)
 
 - [Python](/workingfolder/python)
   - [Density Estimation of SPF](/workingfolder/python/DoDensityEst.ipynb), which draws the model class from 
      - [DensityEstimation](/workingfolder/python/DensityEst.py)
 
-
-  - [SMM estimation](/workingfolder/python/DoSMMEst.ipynb), which imports model classes from 
+  - [Preparing real-time inflation data](/workingfolder/python/RealTimeDataAnalytics.ipynb)
+  
+  - [Structural estimation](/workingfolder/python/DoSMMEst.ipynb), which imports model classes from 
      - [Model Class](/workingfolder/python/SMMEst.ipynb), which tests if each model could correctly identify model parameters using various moments. 
+    - [Structural estimation for extended sample](/workingfolder/python/DoSMMEst-after2022.ipynb)
+   
 
 ```python
 
