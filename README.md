@@ -25,16 +25,16 @@ For replication,
 ## Other Code
 
 - [Stata code](/workingfolder/DoFile)
- - [Cleaning inflation data](/workingfolder/DoFile/Step00_InflationData.do)
- - [Cleaning SCE micro data](/workingfolder/DoFile/Step01_CleaningSCE%26hist.do)
- - [CLeaning SPF micro data](/workingfolder/DoFile/Step02_CleaningSPF.do)
- - [Cleaning SPF population probablistic data](/workingfolder/DoFile/Step02b_CleaningSPF_Prob.do)
- - [Cleaning SPF individual probablistic data](/workingfolder/DoFile/Step02c_CleaningSPF_IndProb.do)
- - [Cleaning SPF summary statistics](/workingfolder/DoFile/Step02d_CleaningSPFSumStat_IndDst.do)
- - [Population regression analysis for SPF](/workingfolder/DoFile/Step03a_PopAnalysisQ.do)
- - [Population regression analysis for SCE](/workingfolder/DoFile/Step03b_PopAnalysisSCEM.do)
- - [Individual regression analysis for SPF](/workingfolder/DoFile/Step05a_IndSPFAnalysis.do)
- - [Individual regression analysis for SCE](/workingfolder/DoFile/Step05b_IndSCEAnalyais.do)
+    - [Cleaning inflation data](/workingfolder/DoFile/Step00_InflationData.do)
+    - [Cleaning SCE micro data](/workingfolder/DoFile/Step01_CleaningSCE%26hist.do)
+    - [CLeaning SPF micro data](/workingfolder/DoFile/Step02_CleaningSPF.do)
+    - [Cleaning SPF population probablistic data](/workingfolder/DoFile/Step02b_CleaningSPF_Prob.do)
+    - [Cleaning SPF individual probablistic data](/workingfolder/DoFile/Step02c_CleaningSPF_IndProb.do)
+    - [Cleaning SPF summary statistics](/workingfolder/DoFile/Step02d_CleaningSPFSumStat_IndDst.do)
+    - [Population regression analysis for SPF](/workingfolder/DoFile/Step03a_PopAnalysisQ.do)
+    - [Population regression analysis for SCE](/workingfolder/DoFile/Step03b_PopAnalysisSCEM.do)
+    - [Individual regression analysis for SPF](/workingfolder/DoFile/Step05a_IndSPFAnalysis.do)
+    - [Individual regression analysis for SCE](/workingfolder/DoFile/Step05b_IndSCEAnalyais.do)
  
 - [Python](/workingfolder/python)
   - [Density Estimation of SPF](/workingfolder/python/DoDensityEst.ipynb), which draws the model class from 
