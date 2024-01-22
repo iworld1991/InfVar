@@ -30,6 +30,8 @@ The datasets used for this paper are all publicly accessible without restriction
         - \workingfolder\graphs\pop
         -  \workingfolder\graphs\pop\hist
     - \workingfolder\ind
+         This folder contains regressions with individual survey answers.
+    
     - \workingfolder\OtherData
 
         This folder contains all non-survey data used in this paper, including the real-time and historical realizations of various inflation rates. 
@@ -46,7 +48,7 @@ The datasets used for this paper are all publicly accessible without restriction
         \workingfolder\tables\reduced_form_results
         - \workingfolder\tables\reduced_form_results\before2019
     - \workingfolder\python 
-      See below for detailed information.
+       See below for detailed information.
         - \workingfolder\python\figures
         - \workingfolder\python\tables
         - \workingfolder\python\tables\after2022
@@ -71,8 +73,8 @@ The citations for these data files are as follows:
     - [Cleaning inflation data](/workingfolder/DoFile/Step00_InflationData.do)
     - [Cleaning SCE micro data](/workingfolder/DoFile/Step01_CleaningSCE%26hist.do)
     - [CLeaning SPF micro data](/workingfolder/DoFile/Step02_CleaningSPF.do)
-    - [Cleaning SPF population probablistic data](/workingfolder/DoFile/Step02b_CleaningSPF_Prob.do)
-    - [Cleaning SPF individual probablistic data](/workingfolder/DoFile/Step02c_CleaningSPF_IndProb.do)
+    - [Cleaning SPF population density data](/workingfolder/DoFile/Step02b_CleaningSPF_Prob.do)
+    - [Cleaning SPF individual density data](/workingfolder/DoFile/Step02c_CleaningSPF_IndProb.do)
     - [Cleaning SPF summary statistics](/workingfolder/DoFile/Step02d_CleaningSPFSumStat_IndDst.do)
     - [Population regression analysis for SPF](/workingfolder/DoFile/Step03a_PopAnalysisQ.do)
     - [Population regression analysis for SCE](/workingfolder/DoFile/Step03b_PopAnalysisSCEM.do)
