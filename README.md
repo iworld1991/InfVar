@@ -1,6 +1,7 @@
 # InfVar 
 
 - the replication repo of the research project: How Do Agents Form Macroeconomic Expectations? Evidence from the Inflation Uncertainty
+- this branch includes work that's not used in the main body of the paper, on exogenously identified shocks to inflation and the IRF responses of expectations to these shocks.
 - Tao Wang
 - Bank of Canada 
 
