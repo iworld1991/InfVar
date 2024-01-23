@@ -2,13 +2,35 @@
 
 - the replication repo of the research project: How Do Agents Form Macroeconomic Expectations? Evidence from the Inflation Uncertainty
 - Tao Wang
+- taowang@bank-banque-canada.ca
 - Bank of Canada 
 
-## Data sources
-- Federal Reserve Bank of Philadelphia. Survey of Professional Forecasters.[__Survey of Professional Forecasters__](https://www.philadelphiafed.org/surveys-and-data/data-files): individual probabilistic forecasts of core CPI and core PCE inflation from 2007 to 2023.  
-- Federal Reserve Bank of New York. [__Survey of Consumer Expectations__](https://www.newyorkfed.org/microeconomics/sce/background.html): micro data from 2013 to 2023. 
-- Federal Reserve Bank of Philadelphia [__Real-time data__](https://www.philadelphiafed.org/surveys-and-data/real-time-data-research): real-time core CPI and core PCE inflation from 1967 to 2022.
-- Federal Reserve Bank of St. Louis. FRED Economic Data [FRED](https://fred.stlouisfed.org/): CPI, Core CPI, Core PCE inflation rates from 2007 to 2023.
+
+
+# Data sources
+
+Federal Reserve Bank of New York. Survey of Consumer Expectations Complete Microdata (Public). 2013-2016, 2017-2019, 2020-2023. https://www.newyorkfed.org/microeconomics/sce#/ 
+
+Federal Reserve Bank of Philadelphia. Survey of Professional Forecasters (CORECPI): Core CPI Inflation Rate (CORECPI) – Individual responses, 2007-2023. https://www.philadelphiafed.org/surveys-and-data/corecpi 
+
+Federal Reserve Bank of Philadelphia. Survey of Professional Forecasters (COREPCE): Core PCE Inflation Rate (COREPCE) – Individual responses, 2007-2023. https://www.philadelphiafed.org/surveys-and-data/corepce
+
+Federal Reserve Bank of Philadelphia. Real-Time Data Set (CPI), 1967-2022. https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/cpi 
+
+Federal Reserve Bank of Philadelphia. Real-Time Data Set (Core CPI), 1967-2022. https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/pcpi 
+
+Federal Reserve Bank of Philadelphia. Real-Time Data Set (Core PCE), 1967-2022. https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/pcon 
+
+Federal Reserve Bank of Philadelphia. Survey of Professional Forecasters (Core CPI), 1967-2022. https://www.philadelphiafed.org/surveys-and-data/corecpi 
+
+Federal Reserve Bank of Philadelphia. Survey of Professional Forecasters (Core PCE), 1967-2022. https://www.philadelphiafed.org/surveys-and-data/corepce 
+
+Federal Reserve Bank of St Louis. Consumer Price Index for All Urban Consumers: All Items in U.S. City Average (CPIAUCSL), 2007-2023.  FRED Economic Data. https://fred.stlouisfed.org/series/CPIAUCSL [CPI]
+
+Federal Reserve Bank of St Louis. Consumer Price Index for All Urban Consumers: All Items Less Food and Energy in U.S. City Average (CPILFESL), 2007-2023. FRED Economic Data. https://fred.stlouisfed.org/series/CPILFESL [Core CPI]
+
+Federal Reserve Bank of St Louis. Personal Consumption Expenditures Excluding Food and Energy (Chain-Type Price Index) (PCEPILFE), 2007-2023.  FRED Economic Data. https://fred.stlouisfed.org/series/PCEPILFE [Core PCE]
+
 
 The datasets used for this paper are all publicly accessible without restriction or limitation.
 
@@ -30,6 +52,7 @@ The datasets used for this paper are all publicly accessible without restriction
         - \workingfolder\graphs\pop
         -  \workingfolder\graphs\pop\hist
     - \workingfolder\ind
+    
          This folder contains regressions with individual survey answers.
     
     - \workingfolder\OtherData
@@ -48,14 +71,15 @@ The datasets used for this paper are all publicly accessible without restriction
         \workingfolder\tables\reduced_form_results
         - \workingfolder\tables\reduced_form_results\before2019
     - \workingfolder\python 
-       See below for detailed information.
+       
+        See below for detailed information.
         - \workingfolder\python\figures
         - \workingfolder\python\tables
         - \workingfolder\python\tables\after2022
 
 ## Data code
 
-- For downloading the SCE data run this [Python code](/workingfolder/python/DownloadSCE.ipynb). This Python program downloads the three datasets above and formats them as .dta files.  
+- For downloading the SCE data run this [Python code](/workingfolder/python/DownloadSCE.ipynb). This Python program downloads the three datasets listed and formats them as .dta files.  
 
 The citations for these data files are as follows: 
 
