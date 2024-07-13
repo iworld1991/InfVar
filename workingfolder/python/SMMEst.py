@@ -32,6 +32,7 @@ from scipy.optimize import minimize
 from numba import njit, float64, int64
 from numba.experimental import jitclass
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 plt.style.use('fivethirtyeight')
 
@@ -550,41 +551,35 @@ if __name__ == "__main__":
 # + code_folding=[]
 if __name__ == "__main__":
     ## plot for validation 
-    simulated_re  = rear0.SimForecasts()
+    simulated_re = rear0.SimForecasts()
+
+    fig, ax = plt.subplots(2, 2, figsize=(8, 6))
     
+    # Plot in the first subplot (0,0)
+    ax[0, 0].set_title("Simulated FIRE forecasts")
+    ax[0, 0].plot(simulated_re['Forecast'], label='Forecasts')
+    ax[0, 0].plot(rear0.realized, label='Realization')
+    ax[0, 0].legend(loc=0)
     
-    fig,ax = plt.subplots(1,3,
-                          figsize=(12,4))
+    # Plot in the second subplot (0,1)
+    ax[0, 1].plot(simulated_re['Disg'], label='Disg')
+    ax[0, 1].plot(simulated_re['FE']**2, label='FE2')
+    ax[0, 1].plot(simulated_re['Var'], label='Var')
+    ax[0, 1].legend(loc=0)
     
-    ax[0].set_title("Simulated FIRE forecasts")
-    ax[0].plot(simulated_re['Forecast'],
-             label='Forecasts')
-    #plt.plot(rear0.real_time,
-    #         label='Real-time realization')
-    ax[0].plot(rear0.realized,
-             label='Realization')
-    ax[0].legend(loc=0)
-    
-    ax[1].set_title("Simulated FIRE forecasts")
-    ax[1].plot(simulated_re['Disg'],
-             label='Disg')
-    ax[1].plot(simulated_re['FE']**2,
-             label='FE2')
-    ax[1].plot(simulated_re['Var'],
-             label='Var')
-    ax[1].legend(loc=0)
-    
-    ax[2].set_title("Simulated FIRE forecasts")
-    ax[2].plot(simulated_re['Disg'].mean(),
-               "o",
-             label='Disg')
-    ax[2].plot(simulated_re['FE'].var(),
-               "*",
-             label='FE2')
-    ax[2].plot(simulated_re['Var'].mean(),
-               "v",
-             label='Var')
-    ax[2].legend(loc=0)
+    # Plot in the third subplot (1,0)
+    ax[1, 0].plot(simulated_re['Disg'].mean(), "o", label='Disg')
+    ax[1, 0].plot(simulated_re['FE'].var(), "*", label='FE2')
+    ax[1, 0].plot(simulated_re['Var'].mean(), "v", label='Var')
+    ax[1, 0].legend(loc=0)
+
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_re['Var'], y=simulated_re['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
+
+    plt.tight_layout()
+
 
 
 # + code_folding=[0]
@@ -737,39 +732,48 @@ if __name__ == "__main__":
     simulated_resv  = resv.SimForecasts()
     
     
-    fig,ax = plt.subplots(1,3,
-                          figsize=(12,4))
+    fig,ax = plt.subplots(2,2,
+                          figsize=(8,6))
     
-    ax[0].set_title("Simulated FIRE \n forecasts under SV")
-    ax[0].plot(simulated_resv['Forecast'],
+    ax[0,0].set_title("Simulated FIRE \n forecasts under SV")
+    ax[0,0].plot(simulated_resv['Forecast'],
              label='Forecasts')
     #plt.plot(resv.real_time,
     #         label='Real-time realization')
-    ax[0].plot(resv.realized,
+    ax[0,0].plot(resv.realized,
              label='Realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title("Simulated FIRE \nforecasts under SV")
-    ax[1].plot(simulated_resv['Disg'],
+    ax[0,1].set_title("Simulated FIRE \nforecasts under SV")
+    ax[0,1].plot(simulated_resv['Disg'],
              label='Disg')
-    ax[1].plot(simulated_resv['FE']**2,
+    ax[0,1].plot(simulated_resv['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_resv['Var'],
+    ax[0,1].plot(simulated_resv['Var'],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[0,1].legend(loc=0)
     
-    ax[2].set_title("Simulated \n FIRE forecasts")
-    ax[2].plot(simulated_resv['Disg'].mean(),
+    ax[1,0].set_title("Simulated \n FIRE forecasts")
+    ax[1,0].plot(simulated_resv['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_resv['FE'].var(),
+    ax[1,0].plot(simulated_resv['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_resv['Var'].mean(),
+    ax[1,0].plot(simulated_resv['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
+
     
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_resv['Var'], y=simulated_resv['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
+
+    plt.tight_layout()
+
+  
     corr_disg_var_resv = np.corrcoef(simulated_resv['Var'],
                                  simulated_resv['Disg'])[0,1]
     print('Correlation between Disg and Var',str(corr_disg_var_resv)) 
@@ -1059,38 +1063,45 @@ if __name__ == "__main__":
     simulated_sear  = sear1.SimForecasts()
     
     
-    fig,ax = plt.subplots(1,3,
-                          figsize=(13,4))
+    fig,ax = plt.subplots(2,2,
+                          figsize=(8,6))
     
-    ax[0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
-    ax[0].plot(simulated_sear['Forecast'],
+    ax[0,0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    ax[0,0].plot(simulated_sear['Forecast'],
              label='Forecasts')
     #plt.plot(sear1.real_time,
     #         label='Real-time realization')
-    ax[0].plot(sear1.realized,
+    ax[0,0].plot(sear1.realized,
              label='Realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
-    ax[1].plot(simulated_sear['Disg'],
+    #ax[0,1].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    ax[0,1].plot(simulated_sear['Disg'],
              label='Disg')
-    ax[1].plot(simulated_sear['FE']**2,
+    ax[0,1].plot(simulated_sear['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_sear['Var'],
+    ax[0,1].plot(simulated_sear['Var'],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[0,1].legend(loc=0)
     
-    ax[2].set_title("Simulated FIRE forecasts")
-    ax[2].plot(simulated_sear['Disg'].mean(),
+    #ax[1,0].set_title("Simulated FIRE forecasts")
+    ax[1,0].plot(simulated_sear['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_sear['FE'].var(),
+    ax[1,0].plot(simulated_sear['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_sear['Var'].mean(),
+    ax[1,0].plot(simulated_sear['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
+
+
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_sear['Var'], y=simulated_sear['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
+
 # -
 
 # #### Joint Estimation 
@@ -1105,7 +1116,7 @@ if __name__ == "__main__":
     moments1 = type_list(['InfAV',
                             'InfVar',
                             'InfATV',
-                            'FE',
+                            #'FE',
                             'FEVar',
                             'FEATV',
                             'Disg',
@@ -1311,41 +1322,49 @@ if __name__ == "__main__":
     simulated_sesv  = sesv0.SimForecasts()
     
     
-    fig,ax = plt.subplots(1,3,
-                          figsize=(12,4))
+    fig,ax = plt.subplots(2,2,
+                          figsize=(8,6))
     
     #ax[0].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
-    ax[0].plot(simulated_sesv['Forecast'],
+    ax[0,0].plot(simulated_sesv['Forecast'],
              label='Forecasts')
     #plt.plot(sesv0.real_time,
     #         label='Real-time realization')
-    ax[0].plot(sesv0.realized,
+    ax[0,0].plot(sesv0.realized,
              label='Realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
-    ax[1].plot(simulated_sesv['Disg'],
+    ax[0,1].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
+    ax[0,1].plot(simulated_sesv['Disg'],
              label='Disg')
-    ax[1].plot(simulated_sesv['FE']**2,
+    ax[0,1].plot(simulated_sesv['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_sesv['Var'],
+    ax[0,1].plot(simulated_sesv['Var'],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[0,1].legend(loc=0)
     
     #ax[2].set_title(r"Simulated SE forecasts: $\lambda$={}".format(sear1.exp_para[0]))
-    ax[2].plot(simulated_sesv['Disg'].mean(),
+    ax[1,0].plot(simulated_sesv['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_sesv['FE'].var(),
+    ax[1,0].plot(simulated_sesv['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_sesv['Var'].mean(),
+    ax[1,0].plot(simulated_sesv['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
     
+
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_sesv['Var'], y=simulated_sesv['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
+
+
     corr_disg_var_sesv = np.corrcoef(simulated_sesv['Var'],
                                  simulated_sesv['Disg'])[0,1]
+    
     print('Correlation between Disg and Var',str(corr_disg_var_sesv)) 
     
     corr_fe2_var_sesv = np.corrcoef(simulated_sesv['Var'],
@@ -1872,45 +1891,61 @@ if __name__ == "__main__":
     ## plot for validation 
     simulated_niar  = niar1.SimForecasts()
     
-    fig,ax = plt.subplots(1,3,
-                          figsize=(12,4))
+    fig,ax = plt.subplots(2,2,
+                          figsize=(8,6))
     
     #ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
-    ax[0].plot(simulated_niar['Forecast'],
+    ax[0,0].plot(simulated_niar['Forecast'],
              label='Forecasts')
     #plt.plot(niar1.real_time,
     #         label='Real-time realization')
-    ax[0].plot(niar1.realized,
+    ax[0,0].plot(niar1.realized,
              label='Realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
-    ax[1].plot(simulated_niar['Disg'],
+    ax[0,1].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    ax[0,1].plot(simulated_niar['Disg'],
              label='Disg')
-    ax[1].plot(simulated_niar['FE']**2,
+    ax[0,1].plot(simulated_niar['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_niar['Var'],
+    ax[0,1].plot(simulated_niar['Var'],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[0,1].legend(loc=0)
     
     #ax[2].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
-    ax[2].plot(simulated_niar['Disg'].mean(),
+    ax[1,0].plot(simulated_niar['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_niar['FE'].var(),
+    ax[1,0].plot(simulated_niar['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_niar['Var'].mean(),
+    ax[1,0].plot(simulated_niar['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
+
+    
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_niar['Var'], y=simulated_niar['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
+
+
+    corr_disg_var_niar = np.corrcoef(simulated_niar['Var'],
+                                 simulated_niar['Disg'])[0,1]
+    
+    print('Correlation between Disg and Var',str(corr_disg_var_niar)) 
+    
+    corr_fe2_var_niar = np.corrcoef(simulated_niar['Var'],
+                                simulated_niar['FE']**2)[0,1]
+    
+    print('Correlation between FE2 and Var',str(corr_fe2_var_niar)) 
 # -
 
 # #### Joint Estimation
 
 # + code_folding=[0]
 if __name__ == "__main__":
-
 
     ## for joint estimation 
 
@@ -2336,38 +2371,44 @@ if __name__ == "__main__":
     ## plot for validation 
     simulated_nisv  = nisv0.SimForecasts()
     
-    fig,ax = plt.subplots(1,3,
-                          figsize=(12,4))
+    fig,ax = plt.subplots(2,2,
+                          figsize=(8,6))
     
     #ax[0].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
-    ax[0].plot(simulated_nisv['Forecast'],
+    ax[0,0].plot(simulated_nisv['Forecast'],
              label='Forecasts')
     #plt.plot(nisv0.real_time,
     #         label='Real-time realization')
-    ax[0].plot(nisv0.realized,
+    ax[0,0].plot(nisv0.realized,
              label='Realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
-    ax[1].plot(simulated_nisv['Disg'],
+    ax[0,1].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
+    ax[0,1].plot(simulated_nisv['Disg'],
              label='Disg')
-    ax[1].plot(simulated_nisv['FE']**2,
+    ax[0,1].plot(simulated_nisv['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_nisv['Var'],
+    ax[0,1].plot(simulated_nisv['Var'],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[0,1].legend(loc=0)
     
     #ax[2].set_title(r"Simulated NI forecasts: $\sigma_\epsilon$,$\sigma_\xi$={}".format(exp_paras_fake))
-    ax[2].plot(simulated_nisv['Disg'].mean(),
+    ax[1,0].plot(simulated_nisv['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_nisv['FE'].var(),
+    ax[1,0].plot(simulated_nisv['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_nisv['Var'].mean(),
+    ax[1,0].plot(simulated_nisv['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
+
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_nisv['Var'], y=simulated_nisv['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
+
     
     corr_disg_var_nisv = np.corrcoef(simulated_nisv['Var'],
                                  simulated_nisv['Disg'])[0,1]
@@ -2638,37 +2679,43 @@ if __name__ == "__main__":
     ## plot for validation 
     simulated_dear  = dear1.SimForecasts()
     
-    fig,ax = plt.subplots(1,3,
-                          figsize=(12,4))
+    fig,ax = plt.subplots(2,2,
+                          figsize=(8,6))
     
     #ax[0].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
-    ax[0].plot(simulated_dear['Forecast'],
+    ax[0,0].plot(simulated_dear['Forecast'],
              label='Forecasts')
     #plt.plot(dear1.real_time,
     #         label='Real-time realization')
-    ax[0].plot(dear1.realized,
+    ax[0,0].plot(dear1.realized,
              label='Realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
-    ax[1].plot(simulated_dear['Disg'],
+    ax[0,1].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
+    ax[0,1].plot(simulated_dear['Disg'],
              label='Disg')
-    ax[1].plot(simulated_dear['FE']**2,
+    ax[0,1].plot(simulated_dear['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_dear['Var'],
+    ax[0,1].plot(simulated_dear['Var'],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[1,0].legend(loc=0)
     
-    ax[2].plot(simulated_dear['Disg'].mean(),
+    ax[1,0].plot(simulated_dear['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_dear['FE'].var(),
+    ax[1,0].plot(simulated_dear['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_dear['Var'].mean(),
+    ax[1,0].plot(simulated_dear['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
+
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_dear['Var'], y=simulated_dear['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
+
 # -
 
 # #### Joint Estimation 
@@ -2882,37 +2929,43 @@ if __name__ == "__main__":
     ## plot for validation 
     simulated_desv  = desv0.SimForecasts()
     
-    fig,ax = plt.subplots(1,3,
-                          figsize=(12,4))
+    fig,ax = plt.subplots(2,2,
+                          figsize=(8,6))
     
     #ax[0].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
-    ax[0].plot(simulated_desv['Forecast'],
+    ax[0,0].plot(simulated_desv['Forecast'],
              label='Forecasts')
     #plt.plot(desv0.real_time,
     #         label='Real-time realization')
-    ax[0].plot(desv0.realized,
+    ax[0,0].plot(desv0.realized,
              label='Realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
-    ax[1].plot(simulated_desv['Disg'],
+    ax[0,1].set_title(r"Simulated DE forecasts: $\theta,\sigma_\theta$={}".format(de_exp_paras_fake))
+    ax[0,1].plot(simulated_desv['Disg'],
              label='Disg')
-    ax[1].plot(simulated_desv['FE']**2,
+    ax[0,1].plot(simulated_desv['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_desv['Var'],
+    ax[0,1].plot(simulated_desv['Var'],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[0,1].legend(loc=0)
     
-    ax[2].plot(simulated_desv['Disg'].mean(),
+    ax[1,0].plot(simulated_desv['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_desv['FE'].var(),
+    ax[1,0].plot(simulated_desv['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_desv['Var'].mean(),
+    ax[1,0].plot(simulated_desv['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
+
+    
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_desv['Var'], y=simulated_desv['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
     
     corr_disg_var_desv = np.corrcoef(simulated_desv['Var'],
                                  simulated_desv['Disg'])[0,1]
@@ -3353,34 +3406,40 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     ## plot for validation 
     simulated_deniar  = deniar1.SimForecasts()
-    fig, ax = plt.subplots(1,3,figsize=(12,4))
+    fig, ax = plt.subplots(2,2,
+                           figsize=(8,6))
     
     #ax[0].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
-    ax[0].plot(simulated_deniar['Forecast'],
+    ax[0,0].plot(simulated_deniar['Forecast'],
                label='Forecasts')
-    ax[0].plot(deniar1.real_time,
+    ax[0,0].plot(deniar1.real_time,
                label='Real-time realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
-    ax[1].plot(simulated_deniar['Disg'],
+    ax[0,1].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    ax[0,1].plot(simulated_deniar['Disg'],
              label='Disg')
-    ax[1].plot(simulated_deniar['FE']**2,
+    ax[0,1].plot(simulated_deniar['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_deniar['Var'],
+    ax[0,1].plot(simulated_deniar['Var'],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[0,1].legend(loc=0)
     
-    ax[2].plot(simulated_deniar['Disg'].mean(),
+    ax[1,0].plot(simulated_deniar['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_deniar['FE'].var(),
+    ax[1,0].plot(simulated_deniar['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_deniar['Var'].mean(),
+    ax[1,0].plot(simulated_deniar['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
+
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_deniar['Var'], y=simulated_deniar['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
 
 
 # -
@@ -3584,34 +3643,40 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     ## plot for validation 
     simulated_denisv  = denisv0.SimForecasts()
-    fig, ax = plt.subplots(1,3,figsize=(12,4))
+    fig, ax = plt.subplots(2,2,
+                           figsize=(8,6))
     
     #ax[0].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
-    ax[0].plot(simulated_denisv['Forecast'],
+    ax[0,0].plot(simulated_denisv['Forecast'],
                label='Forecasts')
-    ax[0].plot(denisv0.realized,
+    ax[0,0].plot(denisv0.realized,
                label='Realization')
-    ax[0].legend(loc=0)
+    ax[0,0].legend(loc=0)
     
-    ax[1].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
-    ax[1].plot(simulated_denisv['Disg'],
+    ax[0,1].set_title(r"Simulated DENI forecasts: $\theta,\sigma_\xi$={}".format(deni_exp_paras_fake))
+    ax[0,1].plot(simulated_denisv['Disg'],
              label='Disg')
-    ax[1].plot(simulated_denisv['FE']**2,
+    ax[0,1].plot(simulated_denisv['FE']**2,
              label='FE2')
-    ax[1].plot(simulated_denisv['Var'][1:],
+    ax[0,1].plot(simulated_denisv['Var'][1:],
              label='Var')
-    ax[1].legend(loc=0)
+    ax[0,1].legend(loc=0)
     
-    ax[2].plot(simulated_denisv['Disg'].mean(),
+    ax[1,0].plot(simulated_denisv['Disg'].mean(),
                "o",
              label='Disg')
-    ax[2].plot(simulated_denisv['FE'].var(),
+    ax[1,0].plot(simulated_denisv['FE'].var(),
                "*",
              label='FE2')
-    ax[2].plot(simulated_denisv['Var'].mean(),
+    ax[1,0].plot(simulated_denisv['Var'].mean(),
                "v",
              label='Var')
-    ax[2].legend(loc=0)
+    ax[1,0].legend(loc=0)
+    
+    # Create scatter plot with a fitted line in the fourth subplot (1,1)
+    sns.regplot(x=simulated_denisv['Var'], y=simulated_denisv['FE']**2, ax=ax[1, 1])
+    ax[1, 1].set_xlabel('Var')
+    ax[1, 1].set_ylabel('FE^2')
     
     corr_disg_var_denisv = np.corrcoef(simulated_denisv['Var'],
                                  simulated_denisv['Disg'])[0,1]
