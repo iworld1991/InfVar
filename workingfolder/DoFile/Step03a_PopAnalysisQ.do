@@ -1,7 +1,7 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
+global mainfolder "/Users/tao/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
-global shadowfolder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
+global shadowfolder "/Users/tao/Dropbox/InfVar-local/workingfolder/SurveyData/"
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"
 
@@ -21,15 +21,15 @@ log using "${mainfolder}/pop_log",replace
 
 use "${folder}/SCE/InfExpSCEProbPopM",clear 
 
-merge 1:1 year month using "${mainfolder}/OtherData/RecessionDateM.dta", keep(match master)
-rename _merge  recession_merge
+*merge 1:1 year month using "${mainfolder}/OtherData/RecessionDateM.dta", keep(match master)
+*rename _merge  recession_merge
 
 merge 1:1 year month using "${mainfolder}/OtherData/InfM.dta",keep(match using master)
 rename _merge inflation_merge 
 
-merge 1:1 year month using "${shadowfolder}/MichiganSurvey/InfExpMichM.dta"
-rename inf_exp InfExpMichMed 
-rename _merge michigan_merge 
+*merge 1:1 year month using "${shadowfolder}/MichiganSurvey/InfExpMichM.dta"
+*rename inf_exp InfExpMichMed 
+*rename _merge michigan_merge 
 
 ***********************************************
 ** create quarter variable to match with spf
@@ -119,7 +119,7 @@ local Infbf    Inf1y_CPIAU Inf1yf_CPIAU Inf1y_CPICore Inf1yf_CPICore Inf1y_PCE /
 
 local Moments  Q9_mean Q9_var Q9_disg Q9_iqr ///
                Q9_fe_var Q9_fe_atv Q9_atv ///
-               CPI1y PCE1y CORECPI1y COREPCE1y InfExpMichMed ///
+               CPI1y PCE1y CORECPI1y COREPCE1y  /// *InfExpMichMed
                CPI_disg PCE_disg CORECPI_disg COREPCE_disg ///
 			   CPI_atv PCE_atv CORECPI_atv COREPCE_atv ///
 			   CPI_fe_var PCE_fe_var CORECPI_fe_var COREPCE_fe_var ///
@@ -166,14 +166,13 @@ order date year quarter
 drop if CPI1y ==. | PCE1y==.
 
 
-twoway (tsline Q9_mean) (tsline InfExpMichMed, lp("dash_dot")) ///
+twoway (tsline Q9_mean) /// *(tsline InfExpMichMed, lp("dash_dot")) 
        (tsline CPI1y, lp("shortdash")) (tsline PCE1y, lp("dash")), ///
 						 title("1-yr-ahead Expected Inflation") ///
 						 xtitle("Time") ytitle("") ///
-						 legend(label(1 "Mean Expectation(SCE)") ///
-						        label(2 "Median Expectation(Michigan)") ///
-								label(3 "Mean Expectation CPI (SPF)") ///
-								label(4 "Mean Expectation PCE (SPF)") col(1))
+						 legend(label(1 "Mean Expectation(SCE)") /// *label(2 "Median Expectation(Michigan)") ///
+								label(2 "Mean Expectation CPI (SPF)") ///
+								label(3 "Mean Expectation PCE (SPF)") col(1))
 graph export "${sum_graph_folder}/mean_medQ.png", as(png) replace
 
 
@@ -239,6 +238,37 @@ twoway (tsline PCE_disg, ytitle(" ",axis(1))) ///
 	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
 graph export "${sum_graph_folder}/var_disgSPFPCEQ.png", as(png) replace 
 */
+
+
+
+****************************************
+**** generate ar 1 real-time prediction
+****************************************
+
+gen Inf1yf_CPICore_ar_pr = .
+label var Inf1yf_CPICore_ar_pr "real-time ar 1 predicted inflation"
+
+sort date
+* Loop over each time period t
+forval t = 20/`=_N' {
+    * Restrict the sample to the time period before t
+    quietly regress Inf1yf_CPICore L.Inf1yf_CPICore if _n < `t'
+    
+    * Predict the inflation value at time t using the AR(1) model
+    predict double pred, xb
+    
+    * Store the predicted value in the new variable
+    replace Inf1yf_CPICore_ar_pr = pred if _n == `t'
+    
+    * Clean up the temporary variable
+    drop pred
+}
+
+gen Inf1yf_CPICore_ar_FE = Inf1yf_CPICore_ar_pr- Inf1yf_CPICore 
+label var Inf1yf_CPICore_ar_FE "forecast error from AR1 prediction"
+
+gen Inf1yf_CPICore_ar_FE2 = Inf1yf_CPICore_ar_FE^2
+label var Inf1yf_CPICore_ar_FE2 "forecast error square from AR1 prediction"
 
 
 *****************************************
@@ -332,7 +362,10 @@ label var COREPCE_disg "Disagreement"
 label var PRCPCEVar1mean "Average Uncertainty (RHS)"
 
 
-foreach var in Inf1yf_CPICore CORECPI1y SPFCPI_FE2 CORECPI_disg{
+label var Inf1yf_CPICore_ar_FE2 "Squared Forecast Error from AR1"
+
+
+foreach var in Inf1yf_CPICore CORECPI1y SPFCPI_FE2 CORECPI_disg Inf1yf_CPICore_ar_FE2{
 
 pwcorr `var' PRCCPIVar1mean if quarter==1, star(0.05)
 local rho: display %4.2f r(rho) 
@@ -359,6 +392,59 @@ twoway (tsline `var',ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thi
 	   justification(left) position(11) size(huge))
 graph export "${sum_graph_folder}/`var'_varSPFPCEQ.png", as(png) replace
 }
+
+* turn plots above to scatters 
+foreach var in SPFCPI_FE2 CORECPI_disg{
+    pwcorr `var' PRCCPIVar1mean if quarter==1, star(0.05)
+    local rho: display %4.2f r(rho)
+
+    // Get the labels for the variables
+    local xlabel: variable label PRCCPIVar1mean
+    local ylabel: variable label `var'
+
+    // Calculate the range for the 45-degree line
+    summarize `var' PRCCPIVar1mean if quarter==1
+    local min = min(r(min), r(min_2))
+    local max = max(r(max), r(max_2))
+
+    twoway (scatter `var' PRCCPIVar1mean, mcolor(navy) msymbol(oh) mlabel(date)) ///
+           (lfit `var' PRCCPIVar1mean, lcolor(maroon) lwidth(medthick)) ///
+           (function y=x, range(`min' `max') lcolor(black) lpattern(dash) lwidth(thin)) ///
+           if PRCCPIVar1mean!=., ///
+           title("SPF(CPI)", size(large)) xtitle("`xlabel'") ytitle("`ylabel'") ///
+           legend(order(1 "Scatter" 2 "Fitted Line" 3 "45-degree line") ///
+                  position(11) size(large) col(1)) ///
+           caption("{superscript:Corr Coeff= `rho'}", ///
+           justification(left) position(11) size(huge))
+
+    graph export "${sum_graph_folder}/scatter_`var'_varSPFCPIQ.png", as(png) replace
+}
+
+foreach var in Inf1yf_CPICore CORECPI1y Inf1yf_CPICore_ar_FE2{
+    pwcorr `var' PRCCPIVar1mean if quarter==1, star(0.05)
+    local rho: display %4.2f r(rho)
+
+    // Get the labels for the variables
+    local xlabel: variable label PRCCPIVar1mean
+    local ylabel: variable label `var'
+
+    // Calculate the range for the 45-degree line
+    summarize `var' PRCCPIVar1mean if quarter==1
+    local min = min(r(min), r(min_2))
+    local max = max(r(max), r(max_2))
+
+    twoway (scatter `var' PRCCPIVar1mean, mcolor(navy) msymbol(oh) mlabel(date)) ///
+           (lfit `var' PRCCPIVar1mean, lcolor(maroon) lwidth(medthick)) ///
+           if PRCCPIVar1mean!=., ///
+           title("SPF(CPI)", size(large)) xtitle("`xlabel'") ytitle("`ylabel'") ///
+           legend(order(1 "Scatter" 2 "Fitted Line") ///
+                  position(11) size(large) col(1)) ///
+           caption("{superscript:Corr Coeff= `rho'}", ///
+           justification(left) position(11) size(huge))
+
+    graph export "${sum_graph_folder}/scatter_`var'_varSPFCPIQ.png", as(png) replace
+}
+
 */
 
 ********************************************************************
