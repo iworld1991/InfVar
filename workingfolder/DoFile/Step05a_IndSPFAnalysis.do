@@ -1,5 +1,5 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder/"
+global mainfolder "/Users/tao/Dropbox/InfVar/workingfolder/"
 global folder "${mainfolder}/SurveyData/"
 global sum_graph_folder "${mainfolder}/graphs/ind"
 global sum_table_folder "${mainfolder}/tables"
@@ -24,8 +24,8 @@ merge 1:1 year quarter ID using "${folder}/SPF/individual/InfExpSPFDstIndQClean.
 rename _merge SPFDst_merge
 table year if SPFDst_merge ==3
 
-merge m:1 year quarter using "${mainfolder}/OtherData/InfShocksQClean.dta",keep(match using master)
-rename _merge infshocks_merge
+*merge m:1 year quarter using "${mainfolder}/OtherData/InfShocksQClean.dta",keep(match using master)
+*rename _merge infshocks_merge
 
 
 *******************************

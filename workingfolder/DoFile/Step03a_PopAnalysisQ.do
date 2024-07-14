@@ -80,6 +80,18 @@ label var SPFCPI_FE "1-yr-ahead forecast error(SPF Core CPI)"
 gen SPFPCE_FE = COREPCE1y - Inf1yf_PCECore
 label var SPFPCE_FE "1-yr-ahead forecast error(SPF Core PCE)"
 
+gen SPFCPI_gap = CORECPI1y- 2
+label var SPFCPI_gap "Expected Inflation Gap Square"
+
+gen SPFCPI_gap2 =  SPFCPI_gap^2
+label var SPFCPI_gap2 "Expected Inflation Gap Square"
+
+gen SPFPCE_gap = COREPCE1y- 2
+label var SPFPCE_gap "Expected Inflation Gap Square"
+
+gen SPFPCE_gap2 =  SPFPCE_gap^2
+label var SPFPCE_gap2 "Expected Inflation Gap Square"
+
 
 ***************************
 ***  Population Moments *** 
@@ -125,7 +137,8 @@ local Moments  Q9_mean Q9_var Q9_disg Q9_iqr ///
 			   CPI_fe_var PCE_fe_var CORECPI_fe_var COREPCE_fe_var ///
 			   CPI_fe_atv PCE_fe_atv CORECPI_fe_atv COREPCE_fe_atv ///
 			   SCE_FE SPFCPI_FE SPFPCE_FE ///
-			   PRCCPIVar1mean PRCPCEVar1mean PRCCPIVar0mean PRCPCEVar0mean 
+			   PRCCPIVar1mean PRCPCEVar1mean PRCCPIVar0mean PRCPCEVar0mean ///
+			   SPFCPI_gap SPFCPI_gap2 SPFPCE_gap SPFPCE_gap2
 				
 local MomentsRv PRCCPIMean_rv PRCPCEMean_rv  PRCCPIVar_rv PRCPCEVar_rv  ///
                 PRCCPIMeanl1  PRCCPIVarl1 PRCPCEMeanl1  PRCPCEVarl1 
@@ -172,7 +185,7 @@ twoway (tsline Q9_mean) /// *(tsline InfExpMichMed, lp("dash_dot"))
 						 xtitle("Time") ytitle("") ///
 						 legend(label(1 "Mean Expectation(SCE)") /// *label(2 "Median Expectation(Michigan)") ///
 								label(2 "Mean Expectation CPI (SPF)") ///
-								label(3 "Mean Expectation PCE (SPF)") col(1))
+								label(3 "Mean Expectation PCE (SPF)") col(1) position(6))
 graph export "${sum_graph_folder}/mean_medQ.png", as(png) replace
 
 
@@ -180,7 +193,7 @@ twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
        (tsline CORECPI_disg,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if CORECPI_disg!=., ///
 	   title("Disagreements in 1-yr-ahead Inflation") xtitle("Time") ///
-	   legend(label(1 "Disagreements (SCE)") label(2 "Disagreements(SPF)(RHS)"))
+	   legend(label(1 "Disagreements (SCE)") label(2 "Disagreements(SPF)(RHS)") position(6))
 graph export "${sum_graph_folder}/disg_disgQ.png", as(png) replace 
 
 
@@ -191,7 +204,7 @@ twoway (tsline Q9_var, ytitle(" ",axis(1)) lp("solid") ) ///
 	   title("Uncertainty in 1-yr-ahead Inflation") xtitle("Time") ///
 	   legend(label(1 "Uncertainty (SCE)")  /// 
 	          label(2 "Uncertainty (SPF CPI)(RHS)") ///
-			  label(3 "Uncertainty (SPF PCE)(RHS)") col(1)) 
+			  label(3 "Uncertainty (SPF PCE)(RHS)") col(1) position(6)) 
 			  
 graph export "${sum_graph_folder}/var_varQ.png", as(png) replace 
 
@@ -202,16 +215,15 @@ twoway (tsline SCE_FE)  (tsline SPFCPI_FE, yaxis(2) lp("dash")) ///
 						 title("1-yr-ahead Forecast Errors") ///
 						 xtitle("Time") ytitle("") ///
 						 legend(col(1) label(1 "SCE") label(2 "SPF CPI (RHS)") ///
-						                label(3 "SPF PCE(RHS)"))
+						                label(3 "SPF PCE(RHS)") position(6))
 graph export "${sum_graph_folder}/fe_feQ.png", as(png) replace
-
 
 
 twoway (tsline SPFCPI_FE, ytitle(" ",axis(1))) ///
        (tsline PRCCPIVar1mean,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if PRCCPIVar1mean!=., ///
 	   title("1-yr-ahead Expected Inflation (SPF CPI)") xtitle("Time") ///
-	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)"))
+	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)") position(6))
 graph export "${sum_graph_folder}/fe_varSPFSPIQ.png", as(png) replace 
 
 
@@ -219,7 +231,7 @@ twoway (tsline SPFPCE_FE, ytitle(" ",axis(1))) ///
        (tsline PRCPCEVar1mean if quarter==4,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if PRCPCEVar1mean!=., ///
 	   title("1-yr-ahead Expected Inflation (SPF PCE)") xtitle("Time") ///
-	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)"))
+	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)") position(6))
 graph export "${sum_graph_folder}/fe_varSPFPCEQ.png", as(png) replace 
 
 
@@ -227,7 +239,7 @@ twoway (tsline CPI_disg, ytitle(" ",axis(1))) ///
        (tsline PRCCPIVar1mean if quarter==4,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if PRCCPIVar1mean!=., ///
 	   title("1-yr-ahead Expected Inflation(SPF CPI)") xtitle("Time") ///
-	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
+	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)") position(6)) 
 graph export "${sum_graph_folder}/var_disgSPFCPIQ.png", as(png) replace 
 
 
@@ -235,7 +247,7 @@ twoway (tsline PCE_disg, ytitle(" ",axis(1))) ///
        (tsline PRCPCEVar1mean if quarter==4,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if PRCPCEVar1mean!=., ///
 	   title("1-yr-ahead Expected Inflation(SPF PCE)") xtitle("Time") ///
-	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
+	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)") position(6)) 
 graph export "${sum_graph_folder}/var_disgSPFPCEQ.png", as(png) replace 
 */
 
@@ -270,7 +282,6 @@ label var Inf1yf_CPICore_ar_FE "forecast error from AR1 prediction"
 gen Inf1yf_CPICore_ar_FE2 = Inf1yf_CPICore_ar_FE^2
 label var Inf1yf_CPICore_ar_FE2 "forecast error square from AR1 prediction"
 
-
 *****************************************
 ** These are the charts for paper draft 
 ****************************************
@@ -281,7 +292,7 @@ twoway (tsline PRCCPIMean1p25, ytitle(" ",axis(1)) lcolor(navy) lwidth(thick) lp
 	   if PRCCPIVar1p25!=. , /// 
 	   title("SPF(CPI)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of forecast") label(2 "75 pctile of forecast") ///
-	          label(3 "50 pctile of forecast") col(1)) 
+	          label(3 "50 pctile of forecast") col(1) position(6)) 
 graph export "${sum_graph_folder}/IQRmeanCPIQ.png", as(png) replace 
 
 
@@ -291,7 +302,7 @@ twoway (tsline PRCPCEMean1p25, ytitle(" ",axis(1)) lcolor(navy) lwidth(thick) lp
 	   if PRCPCEVar1p25!=. , /// 
 	   title("SPF(PCE)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of forecast") label(2 "75 pctile of forecast") ///
-	          label(3 "50 pctile of forecast") col(1)) 
+	          label(3 "50 pctile of forecast") col(1) position(6)) 
 graph export "${sum_graph_folder}/IQRmeanPCEQ.png", as(png) replace 
 
 
@@ -301,7 +312,7 @@ twoway (tsline PRCCPIVar1p25, ytitle(" ",axis(1)) lcolor(navy) lwidth(thick) lp(
 	   if PRCCPIVar1p25!=. , /// 
 	   title("SPF(CPI)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of uncertainty") label(2 "75 pctile of uncertainty") ///
-	          label(3 "50 pctile of uncertainty") col(1)) 
+	          label(3 "50 pctile of uncertainty") col(1) position(6)) 
 graph export "${sum_graph_folder}/IQRvarCPIQ.png", as(png) replace 
 
 
@@ -311,7 +322,7 @@ twoway (tsline PRCPCEVar1p25, ytitle(" ",axis(1)) lcolor(navy) lwidth(thick) lp(
 	   if PRCPCEVar1p25!=. , ///
 	   title("SPF(PCE)",size(large)) xtitle("Time") ///
 	   legend(label(1 "25 pctile of uncertainty") label(2 "75 pctile of uncertainty") ///
-	          label(3 "50 pctile of uncertainty") col(1)) 
+	          label(3 "50 pctile of uncertainty") col(1) position(6)) 
 graph export "${sum_graph_folder}/IQRvarPCEQ.png", as(png) replace 
 
 
@@ -360,12 +371,15 @@ label var SPFPCE_FE2 "Squared Average Forecast Error"
 label var PCE_disg "Disagreement"
 label var COREPCE_disg "Disagreement"
 label var PRCPCEVar1mean "Average Uncertainty (RHS)"
-
+label var SPFCPI_gap "Expected Inflation Gap"
+label var SPFCPI_gap2 "Expected Inflation Gap Square"
+label var SPFPCE_gap "Expected Inflation Gap"
+label var SPFPCE_gap2 "Expected Inflation Gap Square"
 
 label var Inf1yf_CPICore_ar_FE2 "Squared Forecast Error from AR1"
 
 
-foreach var in Inf1yf_CPICore CORECPI1y SPFCPI_FE2 CORECPI_disg Inf1yf_CPICore_ar_FE2{
+foreach var in Inf1yf_CPICore CORECPI1y SPFCPI_FE2 CORECPI_disg Inf1yf_CPICore_ar_FE2 SPFCPI_gap2{
 
 pwcorr `var' PRCCPIVar1mean if quarter==1, star(0.05)
 local rho: display %4.2f r(rho) 
@@ -373,13 +387,13 @@ twoway (tsline `var',ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thi
        (tsline PRCCPIVar1mean if quarter==1, yaxis(2) ytitle("",axis(2)) lcolor(maroon) lp("longdash") lwidth(thick)) ///
 	   if PRCCPIVar1mean!=., ///
 	   title("SPF(CPI)",size(large)) xtitle("Time") ytitle("") ///
-	   legend(size(large) col(1)) ///
+	   legend(size(large) col(1) position(6)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
 	   justification(left) position(11) size(huge))
 graph export "${sum_graph_folder}/`var'_varSPFCPIQ.png", as(png) replace
 }
 
-foreach var in Inf1yf_PCECore COREPCE1y SPFPCE_FE2 COREPCE_disg{
+foreach var in Inf1yf_PCECore COREPCE1y SPFPCE_FE2 COREPCE_disg SPFPCE_gap2{
 
 pwcorr `var' PRCPCEVar1mean if quarter==1, star(0.05)
 local rho: display %4.2f r(rho) 
@@ -387,14 +401,19 @@ twoway (tsline `var',ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thi
        (tsline PRCPCEVar1mean if quarter==1, yaxis(2) ytitle("",axis(2)) lcolor(maroon) lp("longdash") lwidth(thick)) ///
 	   if PRCPCEVar1mean!=., ///
 	   title("SPF(PCE)",size(large)) xtitle("Time") ytitle("") ///
-	   legend(size(large) col(1)) ///
+	   legend(size(large) col(2) position(6)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
 	   justification(left) position(11) size(huge))
 graph export "${sum_graph_folder}/`var'_varSPFPCEQ.png", as(png) replace
 }
 
 * turn plots above to scatters 
-foreach var in SPFCPI_FE2 CORECPI_disg{
+
+label var PRCCPIVar1mean "Average Uncertainty"
+label var PRCPCEVar1mean "Average Uncertainty"
+
+
+foreach var in SPFCPI_FE2 CORECPI_disg Inf1yf_CPICore_ar_FE2 SPFCPI_gap2{
     pwcorr `var' PRCCPIVar1mean if quarter==1, star(0.05)
     local rho: display %4.2f r(rho)
 
@@ -403,24 +422,33 @@ foreach var in SPFCPI_FE2 CORECPI_disg{
     local ylabel: variable label `var'
 
     // Calculate the range for the 45-degree line
-    summarize `var' PRCCPIVar1mean if quarter==1
-    local min = min(r(min), r(min_2))
-    local max = max(r(max), r(max_2))
+    summarize `var' if quarter==1
+    local min1 = r(min)
+    local max1 = r(max)
+
+    summarize PRCCPIVar1mean if quarter==1
+    local min2 = r(min)
+    local max2 = r(max)
+
+    local min = min(`min1', `min2')
+    local max = max(`max1', `max2')
 
     twoway (scatter `var' PRCCPIVar1mean, mcolor(navy) msymbol(oh) mlabel(date)) ///
            (lfit `var' PRCCPIVar1mean, lcolor(maroon) lwidth(medthick)) ///
            (function y=x, range(`min' `max') lcolor(black) lpattern(dash) lwidth(thin)) ///
            if PRCCPIVar1mean!=., ///
-           title("SPF(CPI)", size(large)) xtitle("`xlabel'") ytitle("`ylabel'") ///
+           title("SPF(CPI)", size(large)) xtitle("`xlabel'", size(large)) ytitle("`ylabel'", size(large)) ///
            legend(order(1 "Scatter" 2 "Fitted Line" 3 "45-degree line") ///
                   position(11) size(large) col(1)) ///
            caption("{superscript:Corr Coeff= `rho'}", ///
-           justification(left) position(11) size(huge))
+           justification(left) position(11) size(huge)) ///
+           xscale(range(`min' `max')) yscale(range(`min' `max'))
 
     graph export "${sum_graph_folder}/scatter_`var'_varSPFCPIQ.png", as(png) replace
 }
 
-foreach var in Inf1yf_CPICore CORECPI1y Inf1yf_CPICore_ar_FE2{
+
+foreach var in Inf1yf_CPICore CORECPI1y SPFCPI_gap{
     pwcorr `var' PRCCPIVar1mean if quarter==1, star(0.05)
     local rho: display %4.2f r(rho)
 
@@ -436,7 +464,7 @@ foreach var in Inf1yf_CPICore CORECPI1y Inf1yf_CPICore_ar_FE2{
     twoway (scatter `var' PRCCPIVar1mean, mcolor(navy) msymbol(oh) mlabel(date)) ///
            (lfit `var' PRCCPIVar1mean, lcolor(maroon) lwidth(medthick)) ///
            if PRCCPIVar1mean!=., ///
-           title("SPF(CPI)", size(large)) xtitle("`xlabel'") ytitle("`ylabel'") ///
+           title("SPF(CPI)", size(large)) xtitle("`xlabel'", size(large)) ytitle("`ylabel'", size(large)) ///
            legend(order(1 "Scatter" 2 "Fitted Line") ///
                   position(11) size(large) col(1)) ///
            caption("{superscript:Corr Coeff= `rho'}", ///

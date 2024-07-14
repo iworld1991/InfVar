@@ -1,7 +1,7 @@
 clear
-global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
+global mainfolder "/Users/tao/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
-global shadowfolder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
+global shadowfolder "/Users/tao/Dropbox/InfVar-local/workingfolder/SurveyData/"
 global sum_graph_folder "${mainfolder}/graphs/ind"
 global sum_table_folder "${mainfolder}/tables"
 
@@ -22,8 +22,8 @@ duplicates report year month userid
 
 rename userid ID 
 
-merge m:1 year month using "${mainfolder}/OtherData/InfShocksMClean.dta",keep(match using master)
-rename _merge infshocks_merge
+*merge m:1 year month using "${mainfolder}/OtherData/InfShocksMClean.dta",keep(match using master)
+*rename _merge infshocks_merge
 
 
 *******************************
@@ -46,6 +46,10 @@ sort ID year month
 
 gen SCE_FE = Q9_mean - Inf1y_CPIAU
 label var SCE_FE "1-yr-ahead forecast error(SCE)"
+
+gen SCE_FE2 = SCE_FE^2
+label var SCE_FE "square 1-yr-ahead forecast error(SCE)"
+
 
 *****************************************
 ****  Renaming so that more consistent **

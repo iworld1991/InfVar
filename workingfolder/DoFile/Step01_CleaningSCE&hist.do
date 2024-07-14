@@ -8,9 +8,9 @@
 
 
 clear
-global mainfolder "/Users/Myworld/Dropbox/InfVar/workingfolder"
+global mainfolder "/Users/tao/Dropbox/InfVar/workingfolder"
 global folder "${mainfolder}/SurveyData/"
-global big_data_folder "/Users/Myworld/Dropbox/InfVar-local/workingfolder/SurveyData/"
+global big_data_folder "/Users/tao/Dropbox/InfVar-local/workingfolder/SurveyData/"
 global sum_graph_folder "${mainfolder}/graphs/pop"
 global sum_table_folder "${mainfolder}/tables"
 
@@ -304,7 +304,7 @@ predict `var'_rd, residuals
 }
 
 gen Q9_var_rd = exp(lQ9_var_rd)
-
+label var Q9_var_rd "Uncertainty of 1-yr-ahead inflation exl id FE"
 
 ** variances of forecast errors 
 
@@ -504,7 +504,7 @@ restore
 local Moments Q9_mean  Q9_var Q9_iqr Q9_cent50 Q9_disg ///
               Q9_mean_rd Q9_disg_rd Q9_var_rd Q9_fe_rd ///
               Q9c_mean Q9c_var Q9c_iqr Q9c_cent50 Q9c_disg ///
-              Q9_atv Q9_fe_var Q9_fe_atv
+              Q9_atv Q9_fe_var  Q9_fe_rd_var Q9_fe_atv
 			  
 			  
 local MomentsMom Q9_meanp25 Q9_meanp50 Q9_meanp75 Q9_varp25 Q9_varp50 Q9_varp75 ///
@@ -516,7 +516,7 @@ collapse (mean) `Moments' `MomentsMom', by(date year month)
 label var Q9_mean "Average 1-yr-ahead Expected Inflation(%)"
 label var Q9_mean_rd "Average 1-year-ahead Expected Inflation(%) exl id FE"
 label var Q9_var "Average Uncertainty of 1-yr-ahead Expected Inflation"
-label var Q9_var_rd "Average 1-year-ahead Expected Inflation(%) exl id FE"
+label var Q9_var_rd "Average 1-year-ahead Uncertainty exl id FE"
 label var Q9_iqr "Average 25/75 IQR of 1-yr-ahead Expected Inflation(%)"
 label var Q9_cent50 "Average Median of 1-yr-ahead Expected Inflation(%)"
 label var Q9_disg "Disagreements of 1-yr-ahead Expected Inflation"
@@ -526,6 +526,7 @@ label var Q9_fe_rd "Average Forecast Errors exl id FE"
 label var Q9_atv "Autocovariances of 1-yr-ahead Forecasts"
 label var Q9_fe_var "Variances of 1-yr-ahead Forecast Errors"
 label var Q9_fe_atv "Autocovariances of 1-yr-ahead Forecast Errors"
+label var Q9_fe_var "Variance of 1-yr-ahead Forecast Errors exl id FE"
 
 label var Q9c_mean "Average 2-yr-ahead Expected Inflation(%)"
 label var Q9c_var "Average Uncertainty of 2-yr-ahead Expected Inflation"

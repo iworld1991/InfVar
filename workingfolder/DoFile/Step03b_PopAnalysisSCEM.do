@@ -115,14 +115,14 @@ twoway (tsline Q9_mean)  (tsline Q9_cent50,lp("dash")) /// *(tsline InfExpMichMe
 						 xtitle("Time") ytitle("") ///
 						 legend(label(1 "Mean Expectation(SCE)") ///
 						        label(2 "Median Expectation(Michigan)") ///
-								label(3 "Mean Expectation(SPF)"))
+								label(3 "Mean Expectation(SPF)")position(6))
 graph export "${sum_graph_folder}/mean_med.png", as(png) replace
 
 twoway (tsline Q9_mean, ytitle(" ",axis(1))) ///
        (tsline Q9_var,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if Q9_mean!=., ///
 	   title("1-yr-ahead Expected Inflation (SCE)") xtitle("Time") ///
-	   legend(label(1 "Average Expectation") label(2 "Average Uncertainty(RHS)"))
+	   legend(label(1 "Average Expectation") label(2 "Average Uncertainty(RHS)") position(6))
 graph export "${sum_graph_folder}/mean_var.png", as(png) replace 
 
 
@@ -131,7 +131,7 @@ twoway (tsline Q9_mean, ytitle(" ",axis(1))) ///
        (tsline Q9_disg,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if Q9_mean!=., ///
 	   title("1-yr-ahead Expected Inflation") xtitle("Time") ///
-	   legend(label(1 "Average Expectation") label(2 "Disagreements(RHS)"))
+	   legend(label(1 "Average Expectation") label(2 "Disagreements(RHS)") position(6))
 graph export "${sum_graph_folder}/mean_disg.png", as(png) replace 
 
 
@@ -139,7 +139,7 @@ twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
        (tsline CORECPI_disg,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if CORECPI_disg!=., ///
 	   title("Disagreements in 1-yr-ahead Inflation") xtitle("Time") ///
-	   legend(label(1 "Disagreements (SCE)") label(2 "Disagreements(SPF)(RHS)"))
+	   legend(label(1 "Disagreements (SCE)") label(2 "Disagreements(SPF)(RHS)") position(6))
 graph export "${sum_graph_folder}/disg_disg.png", as(png) replace 
 
 
@@ -148,7 +148,7 @@ twoway (tsline Q9_var, ytitle(" ",axis(1))) ///
 	   if Q9_var!=., ///
 	   title("Uncertainty in 1-yr-ahead Inflation") xtitle("Time") ///
 	   legend(label(1 "Uncertainty (SCE)")  /// 
-	          label(2 "Uncertainty (SPF CPI)(RHS)")) 
+	          label(2 "Uncertainty (SPF CPI)(RHS)") position(6)) 
 			  
 graph export "${sum_graph_folder}/var_var.png", as(png) replace 
 
@@ -158,7 +158,7 @@ twoway (tsline CORECPI_disg, ytitle(" ",axis(1))) ///
        (tsline PRCCPIVar1mean,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if Q9_disg!=., ///
 	   title("1-yr-ahead Expected Inflation(SPF)") xtitle("Time") ///
-	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
+	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)") position(6)) 
 graph export "${sum_graph_folder}/var_disg2.png", as(png) replace 
 
 
@@ -169,7 +169,7 @@ twoway (tsline Q9_mean) (tsline CORECPI1y,lp("longdash")) ///
 	   if Q9_mean!=., ///
 	   title("1-yr-ahead Expected Inflation") xtitle("Time") ytitle("") ///
 	   legend(label(1 "Mean Forecast(SCE)") label(2 "Mean Forecast(SPF)") label(3 "Realized Inflation(PCE)") ///
-	          label(4 "Realized Inflation(Headline CPI)") label(5 "Realized Inflation(Core CPI)"))
+	          label(4 "Realized Inflation(Headline CPI)") label(5 "Realized Inflation(Core CPI)") position(6))
 graph export "${sum_graph_folder}/mean_true.png", as(png) replace
 
 
@@ -179,7 +179,7 @@ twoway (tsline Q9_mean)  (tsline Inf1yf_PCE,lp("dash")) ///
 	   if Q9_mean!=., ///
 	   title("1-yr-ahead Expected Inflation") xtitle("Time") ytitle("") ///
 	   legend(label(1 "Mean Expectation") label(2 "Past Inflation(PCE)") ///
-	          label(3 "Past Inflation(Headline CPI)") label(4 "Past Inflation(Core CPI)"))
+	          label(3 "Past Inflation(Headline CPI)") label(4 "Past Inflation(Core CPI)") position(6))
 graph export "${sum_graph_folder}/mean_past.png", as(png) replace
 
 
@@ -189,7 +189,7 @@ twoway (tsline SCE_FE,ytitle("",axis(1)))  (tsline SPFCPI_FE, yaxis(2) lp("dash"
 						 title("1-yr-ahead Forecast Errors") ///
 						 xtitle("Time") ytitle("") ///
 						 legend(label(1 "SCE") label(2 "SPF CPI(RHS)") ///
-						 label(3 "SPF PCE(RHS)"))
+						 label(3 "SPF PCE(RHS)") position(6))
 graph export "${sum_graph_folder}/fe_fe.png", as(png) replace
 
 
@@ -198,7 +198,7 @@ twoway (tsline Q9_disg, ytitle(" ",axis(1))) ///
        (tsline Q9_var,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if Q9_disg!=., ///
 	   title("1-yr-ahead Expected Inflation(SCE)") xtitle("Time") ///
-	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)")) 
+	   legend(label(1 "Disagreements") label(2 "Average Uncertainty(RHS)") position(6)) 
 graph export "${sum_graph_folder}/var_disgSCEM.png", as(png) replace 
 
 
@@ -206,7 +206,7 @@ twoway (tsline SCE_FE, ytitle(" ",axis(1))) ///
        (tsline Q9_var,yaxis(2) ytitle("",axis(2)) lp("dash")) ///
 	   if Q9_var!=., ///
 	   title("1-yr-ahead Expected Inflation(SCE)") xtitle("Time") ///
-	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)")) 
+	   legend(label(1 "Average Forecast Error") label(2 "Average Uncertainty(RHS)") position(6)) 
 graph export "${sum_graph_folder}/fe_varSCEM.png", as(png) replace
 
 pwcorr Inf1yf_CPIAU Q9_var, star(0.05)
@@ -216,7 +216,7 @@ twoway (tsline Inf1yf_CPIAU,ytitle(" ",axis(1))lp("shortdash") lwidth(thick)) //
 	   if Q9_var!=., ///
 	   title("1-yr-ahead Expected Inflation(SCE)",size(large)) xtitle("Time") ytitle("") ///
 	   legend(label(1 "Headline CPI Inflation") ///
-	          label(2 "Average Uncertainty(RHS)") size(sml)) ///
+	          label(2 "Average Uncertainty(RHS)") size(sml) position(6)) ///
 	   caption("{superscript:Corr Coeff: `rho'}", ///
 	   justification(left) position(11) size(large))
 graph export "${sum_graph_folder}/true_varSCEM.png", as(png) replace 
@@ -228,7 +228,7 @@ graph export "${sum_graph_folder}/true_varSCEM.png", as(png) replace
 ****************************************
 
 gen Inf1yf_CPIAU_ar_pr = .
-label var Inf1yf_CPIAU_ar_pr "real-time ar 1 predicted inflation"
+label var Inf1yf_CPIAU_ar_pr "Real-time ar 1 predicted inflation"
 
 sort date
 * Loop over each time period t
@@ -247,10 +247,10 @@ forval t = 20/`=_N' {
 }
 
 gen Inf1yf_CPIAU_ar_FE = Inf1yf_CPIAU_ar_pr- Inf1yf_CPIAU 
-label var Inf1yf_CPIAU_ar_FE "forecast error from AR1 prediction"
+label var Inf1yf_CPIAU_ar_FE "AR1 Forecast Error"
 
 gen Inf1yf_CPIAU_ar_FE2 = Inf1yf_CPIAU_ar_FE^2
-label var Inf1yf_CPIAU_ar_FE2 "forecast error square from AR1 prediction"
+label var Inf1yf_CPIAU_ar_FE2 "AR1 Forecast Error Square"
 
 
 
@@ -270,13 +270,25 @@ label var `var'_abFE "Absolute Val of Average Forecast Error"
 foreach var in SCE{
 gen `var'_FE2 = `var'_FE^2
 label var `var'_FE2 "Square of Average Forecast Error"
+
 }
+
+gen  SCE_FE2_rd= Q9_fe_rd^2
+label var SCE_FE2_rd "Squared Foreacst Errors Residual"
+
+gen Q9_mean_gap = Q9_mean - 2
+label var Q9_mean_gap "Expected Inflation Gap"
+
+
+gen Q9_mean_gap2 = Q9_mean_gap^2
+label var Q9_mean_gap2 "Expected Inflation Gap Square"
+
 
 ** generate moving averages for charts 
 
 tssmooth ma Q9_varmv = Q9_var,  window(1 1 1)
 
-foreach var in Inf1yf_CPIAU Q9_mean SCE_FE SCE_FE2 Q9_disg Inf1yf_CPIAU_ar_FE2{
+foreach var in Inf1yf_CPIAU Q9_mean SCE_FE SCE_FE2 Q9_disg Inf1yf_CPIAU_ar_FE2 SCE_FE2_rd Q9_mean_gap2{
 tssmooth ma `var'mv =`var', window(1 1 1) 
 }
 label var Q9_meanmv "Expected Headline CPI Inflation"
@@ -285,16 +297,18 @@ label var SCE_FE "Average Forecast Error"
 label var SCE_FE2mv "Squared Average Forecast Error"
 label var Q9_disgmv "Disagreement"
 label var Q9_varmv "Average Uncertainty (RHS)"
-label var Inf1yf_CPIAU_ar_FE2mv "Squared Average AR Forecast Error"
+label var Inf1yf_CPIAU_ar_FE2mv "Squared AR1 Forecast Errors"
+label var SCE_FE2_rdmv "Squared Forecast Error exl ind FE"
+label var Q9_mean_gap2mv "Expected Inflation Gap Square"
 
-foreach var in Inf1yf_CPIAU Q9_mean SCE_FE2 Q9_disg Inf1yf_CPIAU_ar_FE2{
+foreach var in Inf1yf_CPIAU Q9_mean SCE_FE2 Q9_disg Inf1yf_CPIAU_ar_FE2 Q9_mean_gap2{
 pwcorr `var' Q9_var, star(0.05)
 local rho: display %4.2f r(rho) 
 twoway (tsline `var'mv,ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
        (tsline Q9_varmv, yaxis(2) ytitle("",axis(2)) lcolor(maroon) lp("longdash") lwidth(thick)) ///
 	   if Q9_var!=., ///
 	   title("SCE",size(large)) xtitle("Time") ytitle("") ///
-	   legend(size(large) col(1)) ///
+	   legend(size(large) col(1) position(6)) ///
 	   caption("{superscript:Corr Coeff= `rho'}", ///
 	   justification(left) position(11) size(huge))
 graph export "${sum_graph_folder}/`var'_varSCEM.png", as(png) replace
@@ -303,33 +317,49 @@ graph export "${sum_graph_folder}/`var'_varSCEM.png", as(png) replace
 
 * turn them into scatter plots 
 
+label var Q9_mean "Expected Headline CPI Inflation"
+label var Inf1yf_CPIAU "Realized Headline CPI Inflation"
+label var SCE_FE2 "Squared Average Forecast Error"
+label var Q9_disg "Disagreement"
+label var Q9_var "Average Uncertainty"
+label var Inf1yf_CPIAU_ar_FE2 "Squared AR1 Forecast Errors"
+label var SCE_FE2_rd "Squared Forecast Error exl ind FE"
+label var Q9_mean_gap2 "Expected Inflation Gap Square"
 
-foreach var in SCE_FE2 Q9_disg{
-pwcorr `var' Q9_var, star(0.05)
-local rho: display %4.2f r(rho) 
- // Get the labels for the variables
+foreach var in SCE_FE2 Q9_disg SCE_FE2 Inf1yf_CPIAU_ar_FE2 Q9_mean_gap2{
+    pwcorr `var' Q9_var, star(0.05)
+    local rho: display %4.2f r(rho)
+    // Get the labels for the variables
     local xlabel: variable label Q9_var
     local ylabel: variable label `var'
 
     // Calculate the range for the 45-degree line
-    summarize `var' Q9_var
-    local min = min(r(min), r(min_2))
-    local max = max(r(max), r(max_2))
-	
- twoway (scatter `var' Q9_var, mcolor(navy) msymbol(oh) mlabel(date)) ///
+    summarize `var'
+    local min1 = r(min)
+    local max1 = r(max)
+
+    summarize Q9_var
+    local min2 = r(min)
+    local max2 = r(max)
+
+    local min = min(`min1', `min2')
+    local max = max(`max1', `max2')
+
+    twoway (scatter `var' Q9_var, mcolor(navy) msymbol(oh) mlabel(date)) ///
            (lfit `var' Q9_var, lcolor(maroon) lwidth(medthick)) ///
            (function y=x, range(`min' `max') lcolor(black) lpattern(dash) lwidth(thin)) ///
            if PRCCPIVar1mean!=., ///
-           title("SCE", size(large)) xtitle("`xlabel'") ytitle("`ylabel'") ///
+           title("SCE", size(large)) xtitle("`xlabel'",size(large)) ytitle("`ylabel'",size(large)) ///
            legend(order(1 "Scatter" 2 "Fitted Line" 3 "45-degree line") ///
                   position(11) size(large) col(1)) ///
            caption("{superscript:Corr Coeff= `rho'}", ///
-           justification(left) position(11) size(huge))
-graph export "${sum_graph_folder}/scatter_`var'_varSCEM.png", as(png) replace
-
+           justification(left) position(11) size(huge)) ///
+           xscale(range(`min' `max')) yscale(range(`min' `max'))
+    graph export "${sum_graph_folder}/scatter_`var'_varSCEM.png", as(png) replace
 }
 
-foreach var in Inf1yf_CPIAU Q9_mean Inf1yf_CPIAU_ar_FE2{
+
+foreach var in Inf1yf_CPIAU Q9_mean Q9_mean_gap{
 pwcorr `var' Q9_var, star(0.05)
 local rho: display %4.2f r(rho) 
  // Get the labels for the variables
@@ -344,7 +374,7 @@ local rho: display %4.2f r(rho)
  twoway (scatter `var' Q9_var, mcolor(navy) msymbol(oh) mlabel(date)) ///
            (lfit `var' Q9_var, lcolor(maroon) lwidth(medthick)) ///
            if PRCCPIVar1mean!=., ///
-           title("SCE", size(large)) xtitle("`xlabel'") ytitle("`ylabel'") ///
+           title("SCE", size(large)) xtitle("`xlabel'",size(large)) ytitle("`ylabel'",size(large)) ///
            legend(order(1 "Scatter" 2 "Fitted Line" 3 "45-degree line") ///
                   position(11) size(large) col(1)) ///
            caption("{superscript:Corr Coeff= `rho'}", ///
@@ -353,7 +383,50 @@ graph export "${sum_graph_folder}/scatter_`var'_varSCEM.png", as(png) replace
 
 }
 
+********************
+*** using risiduals 
+*********************
 
+* did not label correctly before. relabel it.
+
+label var Q9_var_rd  "Average 1-yr-ahead Uncertainty exl ind FE"
+label var Q9_disg_rd "Disagreement exl id FE"
+
+foreach var in Q9_disg_rd{
+    pwcorr `var' Q9_var, star(0.05)
+    local rho: display %4.2f r(rho)
+    // Get the labels for the variables
+    local xlabel: variable label Q9_var_rd
+    local ylabel: variable label `var'
+
+    // Calculate the range for the 45-degree line
+    summarize `var'
+    local min1 = r(min)
+    local max1 = r(max)
+
+    summarize Q9_var_rd
+    local min2 = r(min)
+    local max2 = r(max)
+
+    local min = min(`min1', `min2')
+    local max = max(`max1', `max2')
+
+    twoway (scatter `var' Q9_var, mcolor(navy) msymbol(oh) mlabel(date)) ///
+           (lfit `var' Q9_var, lcolor(maroon) lwidth(medthick)) ///
+           (function y=x, range(`min' `max') lcolor(black) lpattern(dash) lwidth(thin)) ///
+           if PRCCPIVar1mean!=., ///
+           title("SCE", size(large)) xtitle("`xlabel'",size(large)) ytitle("`ylabel'",size(large)) ///
+           legend(order(1 "Scatter" 2 "Fitted Line" 3 "45-degree line") ///
+                  position(11) size(large) col(1)) ///
+           caption("{superscript:Corr Coeff= `rho'}", ///
+           justification(left) position(11) size(huge)) ///
+           xscale(range(`min' `max')) yscale(range(`min' `max'))
+    graph export "${sum_graph_folder}/scatter_`var'_varSCEM_rd.png", as(png) replace
+}
+
+ddd
+
+** quantile plots 
 
 twoway (tsline Q9_varp25, ytitle(" ",axis(1)) lcolor(navy) lp("shortdash") lwidth(thick)) ///
        (tsline Q9_varp75, ytitle(" ",axis(1)) lcolor(black) lp("shortdash") lwidth(thick)) ///
@@ -474,6 +547,7 @@ rename Q9_fe_rd SCE_FE_rd
 
 
 rename Q9_fe_var SCE_FEVar
+
 rename Q9_fe_atv SCE_FEATV
 rename Q9_atv SCE_ATV
 
